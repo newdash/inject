@@ -127,17 +127,16 @@ describe('Container Test Suite', () => {
     const aw = await c.getWrappedInstance(A);
 
     // all function will be transformed to 'async' function
-    expect(await aw.sum()).toBe(3);
-    expect(await aw.sub()).toBe(-1);
+    expect(await aw.sum()).toBe(3); // injected (1) + injected (2)
+    expect(await aw.sub()).toBe(-1); // injected (1) - injected (2)
+    expect(await aw.sum(15)).toBe(17); // 15 + injected (2)
+    expect(await aw.sub(15)).toBe(13); // 15 - injected (2)
+    expect(await aw.sum(undefined, 99)).toBe(100); // injected (1) + 99
+    expect(await aw.sub(undefined, 99)).toBe(-98); // injected (1) - 99
 
-    expect(await aw.sum(15)).toBe(17);
-    expect(await aw.sub(15)).toBe(13);
-
-    expect(await aw.sum(undefined, 99)).toBe(100);
-    expect(await aw.sub(undefined, 99)).toBe(-98);
-
-    // even no parameter given, and no parameter given in '_getSum'
-    // the 'this' will be replaced with a dynamic proxy
+    // even no parameter given, and no parameters given to '_getSum' function
+    // the 'this' object is replaced with a dynamic proxy
+    // and 'inject container' will automatic fullfil the `undefined` values
     expect(await aw._getSum()).toBe(3);
     expect(aw.v).toBe(15);
 

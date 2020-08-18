@@ -102,6 +102,54 @@ it('should support provide sub class instance', async () => {
 });
 ```
 
+## Instance Wrapper (Dynamic Proxy)
+
+```ts
+it('should support wrapper of instance', async () => {
+
+  class Base {
+    sub(@inject('v1') v1: number, @inject('v2') v2: number): number {
+      return v1 - v2;
+    }
+  }
+
+  class A extends Base {
+    sum(@inject('v1') v1: number, @inject('v2') v2: number): number {
+      return v1 + v2;
+    }
+    async _getV1(@inject('v1') v1?: number) {
+      return v1;
+    }
+    async _getV2(@inject('v2') v2?: number) {
+      return v2;
+    }
+    async _getSum(): Promise<number> {
+      return (await this._getV1()) + (await this._getV2());
+    }
+  }
+
+  const c = InjectContainer.New();
+  c.registerInstance('v1', 1);
+  c.registerInstance('v2', 2);
+
+  const aw = await c.getWrappedInstance(A);
+
+  // all function will be transformed to 'async' function
+  expect(await aw.sum()).toBe(3); // injected (1) + injected (2)
+  expect(await aw.sub()).toBe(-1); // injected (1) - injected (2)
+  expect(await aw.sum(15)).toBe(17); // 15 + injected (2)
+  expect(await aw.sub(15)).toBe(13); // 15 - injected (2)
+  expect(await aw.sum(undefined, 99)).toBe(100); // injected (1) + 99
+  expect(await aw.sub(undefined, 99)).toBe(-98); // injected (1) - 99
+
+  // even no parameter given, and no parameters given to '_getSum' function
+  // the 'this' object is replaced with a dynamic proxy
+  // and 'inject container' will automatic fullfil the `undefined` values
+  expect(await aw._getSum()).toBe(3);
+
+});
+```
+
 ## [CHANGELOG](./CHANGELOG.md)
 
 ## [LICENSE](./LICENSE)
