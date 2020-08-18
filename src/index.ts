@@ -1,4 +1,6 @@
+import "reflect-metadata";
 
-export const a = 1;
-
+export * from './container';
+export * from './decorators';
+export * from './provider';
 

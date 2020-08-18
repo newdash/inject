@@ -8,9 +8,16 @@
     "node": true,
     "es6": true
   },
+  "parserOptions": {
+    "ecmaVersion": 2016,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "impliedStrict": true,
+      "objectLiteralDuplicateProperties": false
+    }
+  },
   "extends": [
     "plugin:@typescript-eslint/eslint-recommended",
-    "plugin:@typescript-eslint/recommended"
   ],
   "rules": {
     "semi": [
