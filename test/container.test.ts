@@ -8,7 +8,7 @@ describe('Container Test Suite', () => {
   it('should support sub level container', async () => {
 
     const c1 = new InjectContainer();
-    const c2 = await c1.getInstance(SubLevelInjectContainer);
+    const c2 = await c1.createSubContainer();
 
     c1.registerProvider(createInstanceProvider('v1', 'v1'));
     c1.registerProvider(createInstanceProvider('v2', 'v3'));
