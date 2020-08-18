@@ -10,8 +10,27 @@ Yet another `dependency injection` container
 
 ## Quick Start
 
+```bash
+# install libs
+npm i -S reflect-metadata @newdash/inject
+```
+
+```json
+// tsconfig.json
+// remember enable decorator related flags
+{
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true
+  }
+}
+```
 
 ```ts
+import "reflect-metadata"; // import reflect lib
+import { inject } from "@newdash/inject"
+
+// async runner
 it('should support sub level container', async () => {
 
   const c1 = new InjectContainer();
