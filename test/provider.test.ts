@@ -161,7 +161,7 @@ describe('Inject Provider Test Suite', () => {
 
   });
 
-  it.skip('should support provide sub class instance', async () => {
+  it('should support provide sub class instance', async () => {
 
     class A {
       v: string
@@ -212,8 +212,9 @@ describe('Inject Provider Test Suite', () => {
 
     container.registerProvider(new BInstanceProvider);
 
-    const b2 = await container.getInstance(B);
-    expect(b2.v).toBe('b');
+    // the instance of 'C' has been cached in container
+    const c2 = await container.getInstance(B);
+    expect(c2.v).toBe('c');
 
 
   });

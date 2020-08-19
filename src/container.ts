@@ -1,6 +1,6 @@
 import { alg, Graph } from 'graphlib';
 import { WRAPPED_OBJECT_CONTAINER_PROPERTY, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_INJECT_INFO, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
-import { getClassConstructorParams, getClassInjectionInformation, getClassMethodParams, inject, InjectParameter, isTransient, LazyRef, transient } from './decorators';
+import { getClassConstructorParams, getClassMethodParams, inject, InjectParameter, isTransient, LazyRef, transient } from './decorators';
 import { createInstanceProvider, DefaultClassProvider, InstanceProvider } from './provider';
 import { Class, getOrDefault, InjectWrappedInstance, OptionalParameters } from './utils';
 
@@ -75,6 +75,9 @@ export class InjectContainer {
     if (ic.hasInProviders(type)) {
       provider = ic.wrap(ic.getProvider(type));
     }
+    else if (ic.hasSubClassProvider(type)) {
+      provider = ic.getSubClassProvider(type);
+    }
     // use default provider for classes
     else if (typeof type == 'function') {
       provider = new DefaultClassProvider(type, isTransient(type), true, ic);
@@ -97,7 +100,13 @@ export class InjectContainer {
   private async _withStore(type, producer: InstanceProvider) {
     // the type direct in store
     if (!this.hasInStore(type)) {
+
+      if (this.hasSubClassInstanceInStore(type)) {
+        return this.getSubClassInstance(type); // do not cache it
+      }
+
       const inst = await producer.provide();
+
       if (inst != undefined) {
         this.setStore(type, inst);
       }
@@ -105,6 +114,7 @@ export class InjectContainer {
         this.getParent().setStore(type, inst);
       }
     }
+
     return this.getStore(type);
   }
 
@@ -119,7 +129,7 @@ export class InjectContainer {
     return false;
   }
 
-  protected hasParentTypeInStore(type): boolean {
+  protected hasSubClassInstanceInStore(type: any): boolean {
     if (typeof type == 'function') {
       for (const [k] of this._store) {
         if (typeof k == 'function') {
@@ -132,48 +142,49 @@ export class InjectContainer {
     return false;
   }
 
+  protected getSubClassInstance(type: any): boolean {
+    if (typeof type == 'function') {
+      for (const [k, v] of this._store) {
+        // the super class maybe registered in storage
+        if (type.prototype instanceof k) {
+          return v;
+        }
+      }
+    }
+    return undefined;
+  }
+
   protected getStore(type) {
-    const rt = this._store.get(type);
-    // if (rt == undefined) {
-    //   if (typeof type == 'function') {
-    //     for (const [k, v] of this._store) {
-    //       // the super class maybe registered in storage
-    //       if (type.prototype instanceof k) {
-    //         rt = v;
-    //         break;
-    //       }
-    //     }
-    //   }
-    // }
-    return rt;
+    return this._store.get(type);
   }
 
   protected hasInProviders(type) {
-    if (this._providers.has(type)) {
-      return true;
-    }
-    // if (typeof type == 'function') {
-    //   for (const [k] of this._providers) {
-    //     if (k.prototype instanceof type) {
-    //       return true;
-    //     }
-    //   }
-    // }
-    return false;
+    return this._providers.has(type);
   }
 
   protected getProvider(type) {
-    const rt = this._providers.get(type);
-    // if (rt == undefined) {
-    //   if (typeof type == 'function') {
-    //     for (const [k, p] of this._providers) {
-    //       if (k.prototype instanceof type) {
-    //         rt = p;
-    //       }
-    //     }
-    //   }
-    // }
-    return rt;
+    return this._providers.get(type);
+  }
+
+  protected hasSubClassProvider(type) {
+    if (typeof type == 'function') {
+      for (const [k] of this._providers) {
+        if (k.prototype instanceof type) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  protected getSubClassProvider(type) {
+    if (typeof type == 'function') {
+      for (const [k, p] of this._providers) {
+        if (k.prototype instanceof type) {
+          return p;
+        }
+      }
+    }
   }
 
   /**
@@ -277,40 +288,6 @@ export class InjectContainer {
     }
 
     return method.apply(this.wrap(instance), params);
-  }
-
-
-  private async _defaultClassProvider<T extends new (...args: any[]) => any>(type: T, ctx?: Map<any, any>, ...args: any[]): Promise<InstanceType<T>> {
-
-    const info = getClassInjectionInformation(type);
-    const constructParametersInfo = getClassConstructorParams(type);
-    const constructParams = args || [];
-
-    if (constructParametersInfo.length > 0) {
-      for (let idx = 0; idx < constructParametersInfo.length; idx++) {
-        const paramInfo = constructParametersInfo[idx];
-        if (args[paramInfo.parameterIndex] == undefined) {
-          constructParams[paramInfo.parameterIndex] = await this.getInstance(paramInfo.type);
-        }
-      }
-    }
-
-    const inst = new type(...constructParams);
-
-    ctx.set(type, inst);
-
-    if (info.size > 0) {
-      const keys = info.keys();
-      for (const key of keys) {
-        const prop = info.get(key);
-        if (prop.injectType == 'classProperty') {
-          inst[key] = await this.getInstance(prop.type);
-        }
-      }
-    }
-
-    return inst;
-
   }
 
   private _getProviderParams(provider) {
@@ -419,5 +396,40 @@ export class SubLevelInjectContainer extends InjectContainer {
     return undefined;
   }
 
+
+  protected hasSubClassInstanceInStore(type: any): boolean {
+    if (super.hasSubClassInstanceInStore(type)) {
+      return true;
+    }
+    // @ts-ignore
+    return this._parent.hasSubClassInstanceInStore(type);
+  }
+
+  protected getSubClassInstance(type: any): boolean {
+    let rt = super.getSubClassInstance(type);
+    if (rt == undefined) {
+      // @ts-ignore
+      rt = this._parent.getSubClassInstance(type);
+    }
+    return rt;
+  }
+
+
+  protected hasSubClassProvider(type) {
+    if (super.hasSubClassProvider(type)) {
+      return true;
+    }
+    // @ts-ignore
+    return this._parent.hasSubClassProvider(type);
+  }
+
+  protected getSubClassProvider(type) {
+    let rt = super.getSubClassProvider(type);
+    if (rt == undefined) {
+      // @ts-ignore
+      rt = this._parent.getSubClassProvider(type);
+    }
+    return rt;
+  }
 
 }

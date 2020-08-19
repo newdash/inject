@@ -26,6 +26,8 @@ describe('Container Test Suite', () => {
 
     const c = InjectContainer.New();
     expect(await c.getInstance("a")).toBeUndefined();
+
+    // but NOT cache 'undefined' value
     c.registerInstance("a", 111);
     expect(await c.getInstance("a")).toBe(111);
 
