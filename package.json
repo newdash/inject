@@ -3,6 +3,7 @@
   "version": "0.0.9",
   "main": "lib/index.js",
   "license": "MIT",
+  "description": "typescript dependency inject container",
   "scripts": {
     "prebuild": "rimraf lib",
     "pretest": "eslint test/**/*.ts --fix",
