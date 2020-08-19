@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.12](https://github.com/newdash/inject/compare/v0.0.11...v0.0.12) (2020-08-19)
+
+
+### Features
+
+* types refactor & static method inject ([dbccf0a](https://github.com/newdash/inject/commit/dbccf0af48f5a565e6cb74b149c8b2ec4e8cd498))
+
 ### [0.0.11](https://github.com/newdash/inject/compare/v0.0.10...v0.0.11) (2020-08-19)
 
 ### [0.0.10](https://github.com/newdash/inject/compare/v0.0.9...v0.0.10) (2020-08-19)
