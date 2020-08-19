@@ -32,7 +32,7 @@ import { inject } from "@newdash/inject"
 // async runner
 it('should support sub level container', async () => {
 
-  const c1 = new InjectContainer();
+  const c1 = InjectContainer.New();
   const c2 = await c1.createSubContainer();
 
   c1.registerProvider(createInstanceProvider('v1', 'v1'));
@@ -52,15 +52,14 @@ it('should support sub level container', async () => {
 
 ```ts
 it('should support create class instance with class inject', async () => {
-  class D {
-  }
+  class D { }
   class C {
     _d: D
     constructor(@inject(D) d) {
       this._d = d;
     }
   }
-  const container = new InjectContainer();
+  const container = InjectContainer.New();
   const c = await container.getInstance(C);
   const d = await container.getInstance(D);
   expect(c._d).not.toBeUndefined();
@@ -86,7 +85,7 @@ it('should support cycle inject', async () => new Promise((resolve, reject) => {
 
   setTimeout(async () => {
     try {
-      const container = new InjectContainer();
+      const container = InjectContainer.New();
       const e = await container.getInstance(E);
       expect(e._f._e).toBe(e);
       resolve();
@@ -99,6 +98,32 @@ it('should support cycle inject', async () => new Promise((resolve, reject) => {
 }));
 ```
 
+## Provider Injection
+
+```ts
+it('should support inject the provider.provide function', async () => {
+  const uuid = v4();
+
+  class H {
+    @inject('value')
+    value: any
+  }
+
+  const container = InjectContainer.New();
+  container.registerProvider(createInstanceProvider('uuid', uuid));
+
+  class P1 implements InstanceProvider {
+    type = 'value'
+    async provide(@inject('uuid') uuid) { return uuid; }
+  }
+
+  container.registerProvider(new P1);
+  const h = await container.getInstance(H);
+  expect(h.value).toBe(uuid);
+
+});
+```
+
 ## Parent-Sub Class Injection
 
 ```ts
@@ -107,7 +132,7 @@ it('should support provide sub class instance', async () => {
   class B extends A { }
   class C extends B { }
 
-  const container = new InjectContainer();
+  const container = InjectContainer.New();
   container.registerProvider(
     createInstanceProvider(C, new C())
   );

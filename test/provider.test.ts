@@ -8,7 +8,7 @@ describe('Inject Provider Test Suite', () => {
 
     class A { }
 
-    const container = new InjectContainer();
+    const container = InjectContainer.New();
 
     expect(await container.getInstance(A)).toBeInstanceOf(A);
 
@@ -25,7 +25,7 @@ describe('Inject Provider Test Suite', () => {
 
     const testUUID = v4();
 
-    const container = new InjectContainer();
+    const container = InjectContainer.New();
 
     class IDProvider implements InstanceProvider {
       type = 'id';
@@ -45,9 +45,7 @@ describe('Inject Provider Test Suite', () => {
 
   it('should support create class instance with class inject', async () => {
 
-    class D {
-
-    }
+    class D { }
 
     class C {
       _d: D
@@ -56,7 +54,7 @@ describe('Inject Provider Test Suite', () => {
       }
     }
 
-    const container = new InjectContainer();
+    const container = InjectContainer.New();
 
     const d = await container.getInstance(D);
     const c = await container.getInstance(C);
@@ -80,7 +78,7 @@ describe('Inject Provider Test Suite', () => {
 
     setTimeout(async () => {
       try {
-        const container = new InjectContainer();
+        const container = InjectContainer.New();
         const e = await container.getInstance(E);
         expect(e._f._e).toBe(e);
         resolve();
@@ -102,7 +100,7 @@ describe('Inject Provider Test Suite', () => {
 
     }
 
-    const container = new InjectContainer();
+    const container = InjectContainer.New();
 
     container.registerProvider(createInstanceProvider('value', uuid));
     const g = await container.getInstance(G);
@@ -111,18 +109,16 @@ describe('Inject Provider Test Suite', () => {
 
   });
 
-  it('should support inject provider provider function', async () => {
+  it('should support inject the provider.provide function', async () => {
 
     const uuid = v4();
 
     class H {
-
       @inject('value')
       value: any
-
     }
 
-    const container = new InjectContainer();
+    const container = InjectContainer.New();
 
     container.registerProvider(createInstanceProvider('uuid', uuid));
 
@@ -137,7 +133,6 @@ describe('Inject Provider Test Suite', () => {
 
     expect(h.value).toBe(uuid);
 
-
   });
 
   it('should support inject container itself', async () => {
@@ -150,7 +145,7 @@ describe('Inject Provider Test Suite', () => {
 
     }
 
-    const container = new InjectContainer();
+    const container = InjectContainer.New();
 
     const i = await container.getInstance(I);
 

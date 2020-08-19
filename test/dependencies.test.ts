@@ -18,7 +18,7 @@ describe('Dependencies Check Suite', () => {
       }
     }
 
-    const container = new InjectContainer();
+    const container = InjectContainer.New();
 
     await expect(() => container.getInstance(D2)).rejects.toThrow('found cycle dependencies in: D1, D2');
 
@@ -38,7 +38,7 @@ describe('Dependencies Check Suite', () => {
       async provide(@inject('D1') d1) { }
     }
 
-    const container = new InjectContainer();
+    const container = InjectContainer.New();
 
     container.registerProvider(new D1Provider);
     container.registerProvider(new D2Provider);

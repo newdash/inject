@@ -6,7 +6,7 @@ describe('Container Test Suite', () => {
 
   it('should support sub level container', async () => {
 
-    const c1 = new InjectContainer();
+    const c1 = InjectContainer.New();
     const c2 = await c1.createSubContainer();
 
     c1.registerProvider(createInstanceProvider('v1', 'v1'));
@@ -35,7 +35,7 @@ describe('Container Test Suite', () => {
 
   it('should support transient providers', async () => {
 
-    const c1 = new InjectContainer();
+    const c1 = InjectContainer.New();
     const c2 = await c1.getInstance(SubLevelInjectContainer);
     const c3 = await c1.getInstance(SubLevelInjectContainer);
 
@@ -82,7 +82,7 @@ describe('Container Test Suite', () => {
 
   it('should support deep container hierarchy', async () => {
 
-    const c1 = new InjectContainer();
+    const c1 = InjectContainer.New();
     const c2 = await c1.getInstance(SubLevelInjectContainer);
     const c3 = await c2.getInstance(SubLevelInjectContainer);
 

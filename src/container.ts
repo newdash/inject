@@ -21,6 +21,11 @@ export class InjectContainer {
 
   private _providers: Map<any, InstanceProvider>
 
+  /**
+   * avoid create root inject container directly, 
+   * 
+   * just try the `InjectContainer.New()` to create a new container, :)
+   */
   constructor() {
     this._providers = new Map();
     this._store = new Map();
