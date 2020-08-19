@@ -51,7 +51,7 @@ export class DefaultClassProvider implements InstanceProvider {
 
   async provide(...args: any[]) {
     const type = this.type;
-    const info = getClassInjectionInformation(type);
+    const info = getClassInjectionInformation(type.prototype);
     const constructParametersInfo = getClassConstructorParams(type);
     const constructParams = args || [];
 

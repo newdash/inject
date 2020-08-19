@@ -1,7 +1,7 @@
 import isUndefined from '@newdash/newdash/isUndefined';
 import sortBy from '@newdash/newdash/sortBy';
 import { WRAPPED_OBJECT_INDICATOR, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
-import { InjectWrappedInstance } from './utils';
+import { Class, InjectWrappedInstance } from './utils';
 
 
 const KEY_INJECT = 'inject:key_inject';
@@ -29,8 +29,8 @@ export interface InjectParameter {
  * 
  * @param target 
  */
-export function getUnProxyTarget<T>(target: InjectWrappedInstance<T>): T
-export function getUnProxyTarget<T>(target: T): T
+export function getUnProxyTarget<T extends Class>(target: InjectWrappedInstance<T>): T
+export function getUnProxyTarget<T extends Class>(target: T): T
 export function getUnProxyTarget(target: any) {
   if (target[WRAPPED_OBJECT_INDICATOR] == true) {
     return getUnProxyTarget(target[WRAPPED_ORIGINAL_OBJECT_PROPERTY]);
@@ -65,9 +65,6 @@ export function isProxyDisabled(target: any, propertyKey: string): boolean {
 
 export function getClassInjectionInformation(target): Map<string, InjectInformation> {
   target = getUnProxyTarget(target);
-  if (target.prototype) {
-    return Reflect.getMetadata(KEY_INJECT_CLASS, target.prototype) || new Map<string, InjectInformation>();
-  }
   return Reflect.getMetadata(KEY_INJECT_CLASS, target) || new Map<string, InjectInformation>();
 }
 
@@ -99,9 +96,6 @@ export function getClassConstructorParams(target): InjectParameter[] {
 
 export function getClassMethodParams(target, targetKey): InjectParameter[] {
   target = getUnProxyTarget(target);
-  if (target.prototype) {
-    return Reflect.getMetadata(KEY_INJECT_PARAMS, target.prototype, targetKey) || [];
-  }
   return Reflect.getMetadata(KEY_INJECT_PARAMS, target, targetKey) || [];
 }
 

@@ -240,4 +240,22 @@ describe('Wrapper Test Suite', () => {
 
   });
 
+  it('should support inject static method', async () => {
+
+
+    class A {
+      static getV(@inject("v") v) {
+        return v;
+      }
+    }
+
+    const container = InjectContainer.New();
+    container.registerInstance("v", 123);
+    const w = container.wrap(A);
+
+    expect(await w.getV()).toBe(123);
+
+
+  });
+
 });

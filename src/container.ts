@@ -2,7 +2,7 @@ import { alg, Graph } from 'graphlib';
 import { WRAPPED_OBJECT_CONTAINER_PROPERTY, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_INJECT_INFO, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
 import { getClassConstructorParams, getClassMethodParams, inject, InjectParameter, isProxyDisabled, isTransient, LazyRef, transient } from './decorators';
 import { createInstanceProvider, DefaultClassProvider, InstanceProvider } from './provider';
-import { Class, getOrDefault, InjectWrappedInstance, OptionalParameters } from './utils';
+import { Class, getOrDefault, InjectWrappedClassType, InjectWrappedInstance, OptionalParameters } from './utils';
 
 
 /**
@@ -189,7 +189,7 @@ export class InjectContainer {
     return this._providers.has(type);
   }
 
-  protected getProvider(type) {
+  protected getProvider(type: any): any {
     return this._providers.get(type);
   }
 
@@ -204,7 +204,7 @@ export class InjectContainer {
     return false;
   }
 
-  protected getSubClassProvider(type) {
+  protected getSubClassProvider(type: any): any {
     if (typeof type == 'function') {
       for (const [k, p] of this._providers) {
         if (k.prototype instanceof type) {
@@ -214,6 +214,12 @@ export class InjectContainer {
     }
   }
 
+  /**
+   * wrap a class, so the constructor/static methods will automatic be proxy 
+   * 
+   * @param instance 
+   */
+  public wrap<T extends Class = any>(instance: T): InjectWrappedClassType<T>;
   /**
    * wrap a instance, container will proxy all method of instance
    *
@@ -303,7 +309,7 @@ export class InjectContainer {
   async injectExecute(instance, method, ...args) {
 
     const methodName = method.name;
-    const type = instance.constructor;
+    const type = instance;
     let paramsInfo = [];
 
     if (method[WRAPPED_OBJECT_METHOD_INJECT_INFO]) {
@@ -334,7 +340,7 @@ export class InjectContainer {
   }
 
   private _getProviderParams(provider) {
-    const type = provider.constructor;
+    const type = provider.constructor.prototype;
     return getClassMethodParams(type, 'provide');
   }
 

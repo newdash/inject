@@ -16,9 +16,14 @@ export type OptionalParameters<T extends Function> = T extends (...args: infer P
 export type OptionalConstructorParameters<T extends Function> = T extends new (...args: infer P) => any ? { [K in keyof P]?: P[K] } : never;
 
 
-// @ts-ignore
-export type PromiseConstructor<T> = new (...args: OptionalConstructorParameters<T>) => Promise<InstanceType<T>>
+export type PromiseConstructor<T extends Class> = new (...args: OptionalConstructorParameters<T>) => Promise<InstanceType<T>>
+
+export interface InjectWrappedClassConstructor<T extends Class> {
+  new(...args: OptionalConstructorParameters<T>): Promise<InjectWrappedInstance<InstanceType<T>>>
+}
+
+export type InjectWrappedClassType<T extends Class> = InjectWrappedInstance<T> & InjectWrappedClassConstructor<T>
 
 export type InjectWrappedInstance<T> = {
   [K in keyof T]: T[K] extends (...args: any) => any ? (...args: OptionalParameters<T[K]>) => Promise<ReturnType<T[K]>> : T[K]
-} & PromiseConstructor<T>
+}
