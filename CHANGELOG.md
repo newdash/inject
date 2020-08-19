@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.6](https://github.com/newdash/inject/compare/v0.0.5...v0.0.6) (2020-08-19)
+
+
+### Bug Fixes
+
+* type ([8b1fbc4](https://github.com/newdash/inject/commit/8b1fbc4df3514d3b16d6c2a122dba676d01fd0a7))
+
 ### [0.0.5](https://github.com/newdash/inject/compare/v0.0.4...v0.0.5) (2020-08-19)
 
 
