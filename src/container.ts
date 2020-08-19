@@ -1,5 +1,5 @@
 import { alg, Graph } from 'graphlib';
-import { WRAPPED_OBJECT_INDICATOR, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
+import { WRAPPED_OBJECT_CONTAINER_PROPERTY, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_INJECT_INFO, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
 import { getClassConstructorParams, getClassInjectionInformation, getClassMethodParams, inject, InjectParameter, isTransient, LazyRef, transient } from './decorators';
 import { createInstanceProvider, InstanceProvider } from './provider';
 import { Class, getOrDefault, InjectWrappedInstance, OptionalParameters } from './utils';
@@ -185,7 +185,7 @@ export class InjectContainer {
   public wrap(instance: number): number;
   public wrap(instance: any): any {
 
-    if (typeof instance == 'object') {
+    if (typeof instance == 'object' || typeof instance == 'function') {
 
       if (instance instanceof InjectContainer) {
         return instance;
@@ -195,19 +195,28 @@ export class InjectContainer {
         return instance;
       }
 
-      const p = new Proxy(instance, {
-        get: (target, property) => {
+      if (instance[WRAPPED_OBJECT_CONTAINER_PROPERTY] == this) {
+        return instance;
+      }
 
-          if (property == 'constructor') {
-            return instance['constructor'];
-          }
+      const p = new Proxy(instance, {
+        construct: (target, args) => {
+          return this._defaultClassProvider(target, new Map(), ...args);
+        },
+        get: (target, property) => {
 
           if (property in target) {
             const methodOrProperty = target[property];
             if (typeof methodOrProperty == 'function') {
-              return (...args: any[]) => this.injectExecute(target, methodOrProperty, ...args);
+              const proxyMethod = (...args: any[]) => this.injectExecute(target, methodOrProperty, ...args);
+              proxyMethod[WRAPPED_OBJECT_METHOD_INJECT_INFO] = getClassMethodParams(target, property);
+              return proxyMethod;
             }
             return methodOrProperty;
+          }
+
+          if (property == WRAPPED_OBJECT_CONTAINER_PROPERTY) {
+            return this;
           }
 
           if (property == WRAPPED_ORIGINAL_OBJECT_PROPERTY) {
@@ -244,7 +253,16 @@ export class InjectContainer {
 
     const methodName = method.name;
     const type = instance.constructor;
-    const paramsInfo = getClassMethodParams(type, methodName);
+    let paramsInfo = [];
+
+    if (method[WRAPPED_OBJECT_METHOD_INJECT_INFO]) {
+      // get meta from duplicate
+      paramsInfo = method[WRAPPED_OBJECT_METHOD_INJECT_INFO];
+    } else {
+      // get meta directly by reflect
+      paramsInfo = getClassMethodParams(type, methodName);
+    }
+
     const params = args || [];
 
     if (paramsInfo.length > 0) {
@@ -252,7 +270,7 @@ export class InjectContainer {
         const paramInfo = paramsInfo[idx];
         // if user has define the parameter in `injectExecute`, prefer use that
         if (args[paramInfo.parameterIndex] == undefined) {
-          params[paramInfo.parameterIndex] = await this.getInstance(paramInfo.type);
+          params[paramInfo.parameterIndex] = await this.getWrappedInstance(paramInfo.type);
         }
       }
     }
@@ -260,16 +278,19 @@ export class InjectContainer {
     return method.apply(this.wrap(instance), params);
   }
 
-  private async _defaultClassProvider<T extends new (...args: any[]) => any>(type: T, ctx?: Map<any, any>): Promise<InstanceType<T>> {
+
+  private async _defaultClassProvider<T extends new (...args: any[]) => any>(type: T, ctx?: Map<any, any>, ...args: any[]): Promise<InstanceType<T>> {
 
     const info = getClassInjectionInformation(type);
     const constructParametersInfo = getClassConstructorParams(type);
-    const constructParams = [];
+    const constructParams = args || [];
 
     if (constructParametersInfo.length > 0) {
       for (let idx = 0; idx < constructParametersInfo.length; idx++) {
         const paramInfo = constructParametersInfo[idx];
-        constructParams[paramInfo.parameterIndex] = await this.getInstance(paramInfo.type, ctx);
+        if (args[paramInfo.parameterIndex] == undefined) {
+          constructParams[paramInfo.parameterIndex] = await this.getInstance(paramInfo.type, ctx);
+        }
       }
     }
 

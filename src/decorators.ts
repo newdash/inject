@@ -19,8 +19,15 @@ export interface InjectParameter {
   parameterIndex: number;
 }
 
+export function getUnProxyClass(target) {
+  if (target[WRAPPED_OBJECT_INDICATOR] == true) {
+    return getUnProxyClass(target[WRAPPED_ORIGINAL_OBJECT_PROPERTY]);
+  }
+  return target;
+}
 
 export function getClassInjectionInformation(target): Map<string, InjectInformation> {
+  target = getUnProxyClass(target);
   if (target.prototype) {
     return Reflect.getMetadata(KEY_INJECT_CLASS, target.prototype) || new Map<string, InjectInformation>();
   }
@@ -37,6 +44,7 @@ export function transient(target) {
 }
 
 export function isTransient(target) {
+  target = getUnProxyClass(target);
   return Boolean(Reflect.getOwnMetadata(KEY_TRANSIENT, target));
 }
 
@@ -45,13 +53,12 @@ export function setClassInjectInformation(target, info) {
 }
 
 export function getClassConstructorParams(target): InjectParameter[] {
+  target = getUnProxyClass(target);
   return Reflect.getMetadata(KEY_INJECT_PARAMS, target) || [];
 }
 
 export function getClassMethodParams(target, targetKey): InjectParameter[] {
-  if (target[WRAPPED_OBJECT_INDICATOR] == true) {
-    target = target[WRAPPED_ORIGINAL_OBJECT_PROPERTY];
-  }
+  target = getUnProxyClass(target);
   if (target.prototype) {
     return Reflect.getMetadata(KEY_INJECT_PARAMS, target.prototype, targetKey) || [];
   }
