@@ -1,6 +1,6 @@
 import { alg, Graph } from 'graphlib';
 import { WRAPPED_OBJECT_CONTAINER_PROPERTY, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_INJECT_INFO, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
-import { getClassConstructorParams, getClassMethodParams, inject, InjectParameter, isTransient, LazyRef, transient } from './decorators';
+import { getClassConstructorParams, getClassMethodParams, inject, InjectParameter, isProxyDisabled, isTransient, LazyRef, transient } from './decorators';
 import { createInstanceProvider, DefaultClassProvider, InstanceProvider } from './provider';
 import { Class, getOrDefault, InjectWrappedInstance, OptionalParameters } from './utils';
 
@@ -26,8 +26,8 @@ export class InjectContainer {
     this._store = new Map();
   }
 
-  public static New() {
-    return new InjectContainer();
+  public static New(): InjectContainer {
+    return new SubLevelInjectContainer(new InjectContainer());
   }
 
   public getParent(): InjectContainer {
@@ -47,10 +47,14 @@ export class InjectContainer {
     return new SubLevelInjectContainer(this);
   }
 
-  async getInstance<T extends Class>(type: LazyRef<T>): Promise<InstanceType<T>>;
-  async getInstance<T extends Class>(type: T): Promise<InstanceType<T>>;
-  async getInstance(type: any): Promise<any>;
-  async getInstance(type: any) {
+  async getInstance<T extends Class>(type: LazyRef<T>, ctx?: InjectContainer): Promise<InstanceType<T>>;
+  async getInstance<T extends Class>(type: T, ctx?: InjectContainer): Promise<InstanceType<T>>;
+  async getInstance(type: any, ctx?: InjectContainer): Promise<any>;
+  async getInstance(type: any, ctx?: InjectContainer) {
+
+    if (ctx == undefined) {
+      ctx = await this.createSubContainer();
+    }
 
     if (type instanceof LazyRef) {
       type = type.getRef();
@@ -69,22 +73,20 @@ export class InjectContainer {
 
     let provider = undefined;
 
-    const ic = await this.createSubContainer();
-
     // user define the provider
-    if (ic.hasInProviders(type)) {
-      provider = ic.wrap(ic.getProvider(type));
+    if (ctx.hasInProviders(type)) {
+      provider = ctx.wrap(ctx.getProvider(type));
     }
-    else if (ic.hasSubClassProvider(type)) {
-      provider = ic.getSubClassProvider(type);
+    else if (ctx.hasSubClassProvider(type)) {
+      provider = ctx.wrap(ctx.getSubClassProvider(type));
     }
     // use default provider for classes
     else if (typeof type == 'function') {
-      provider = new DefaultClassProvider(type, isTransient(type), true, ic);
+      provider = new DefaultClassProvider(type, isTransient(type), ctx);
     }
 
     if (provider) {
-      return ic._withStore(type, provider);
+      return ctx._withStore(type, provider);
     }
 
     return undefined;
@@ -97,20 +99,17 @@ export class InjectContainer {
     return this.wrap(await this.getInstance(type));
   }
 
-  private async _withStore(type, producer: InstanceProvider) {
+  private async _withStore(type, provider: InstanceProvider) {
     // the type direct in store
     if (!this.hasInStore(type)) {
-
       if (this.hasSubClassInstanceInStore(type)) {
         return this.getSubClassInstance(type); // do not cache it
       }
-
-      const inst = await producer.provide();
-
+      const inst = await provider.provide();
       if (inst != undefined) {
         this.setStore(type, inst);
       }
-      if (!Boolean(producer.transient)) {
+      if (!Boolean(provider.transient)) {
         this.getParent().setStore(type, inst);
       }
     }
@@ -211,11 +210,15 @@ export class InjectContainer {
       }
 
       const p = new Proxy(instance, {
-        construct: (target, args) => {
-          const provider = new DefaultClassProvider(target, isTransient(target), true, this);
+        construct: async (target, args) => {
+          const provider = new DefaultClassProvider(target, isTransient(target), await this.createSubContainer());
           return provider.provide(...args);
         },
         get: (target, property) => {
+
+          if (isProxyDisabled(target, property as string)) {
+            return target[property];
+          }
 
           if (property in target) {
             const methodOrProperty = target[property];

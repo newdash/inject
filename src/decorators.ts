@@ -8,6 +8,9 @@ const KEY_INJECT_CLASS = 'inject:key_inject_class';
 const KEY_INJECT_PARAMS = 'inject:method_inject_params';
 const KEY_TRANSIENT = 'inject:transient';
 
+const KEY_DISABLE_PROXY = 'inject:proxy:disable';
+
+
 export interface InjectInformation {
   injectType: 'classProperty' | 'classMethod'
   parameters?: InjectParameter[]
@@ -19,15 +22,36 @@ export interface InjectParameter {
   parameterIndex: number;
 }
 
-export function getUnProxyClass(target) {
+
+
+export function getUnProxyTarget(target) {
   if (target[WRAPPED_OBJECT_INDICATOR] == true) {
-    return getUnProxyClass(target[WRAPPED_ORIGINAL_OBJECT_PROPERTY]);
+    return getUnProxyTarget(target[WRAPPED_ORIGINAL_OBJECT_PROPERTY]);
   }
   return target;
 }
 
+/**
+ * indicate the inject container DO NOT proxy this property/function
+ * 
+ * generally, some property has a function value, sometimes there will cause issue with proxy (with a new/wrong reference)
+ * 
+ * @param target 
+ * @param propertyKey 
+ * 
+ */
+export function disableProxy(target: any, propertyKey: string) {
+  target = getUnProxyTarget(target);
+  Reflect.defineMetadata(KEY_DISABLE_PROXY, true, target, propertyKey);
+}
+
+export function isProxyDisabled(target: any, propertyKey: string): boolean {
+  target = getUnProxyTarget(target);
+  return Boolean(Reflect.getMetadata(KEY_DISABLE_PROXY, target, propertyKey));
+}
+
 export function getClassInjectionInformation(target): Map<string, InjectInformation> {
-  target = getUnProxyClass(target);
+  target = getUnProxyTarget(target);
   if (target.prototype) {
     return Reflect.getMetadata(KEY_INJECT_CLASS, target.prototype) || new Map<string, InjectInformation>();
   }
@@ -44,7 +68,7 @@ export function transient(target) {
 }
 
 export function isTransient(target) {
-  target = getUnProxyClass(target);
+  target = getUnProxyTarget(target);
   if (typeof target == 'function') {
     return Boolean(Reflect.getOwnMetadata(KEY_TRANSIENT, target));
   }
@@ -56,12 +80,12 @@ export function setClassInjectInformation(target, info) {
 }
 
 export function getClassConstructorParams(target): InjectParameter[] {
-  target = getUnProxyClass(target);
+  target = getUnProxyTarget(target);
   return Reflect.getMetadata(KEY_INJECT_PARAMS, target) || [];
 }
 
 export function getClassMethodParams(target, targetKey): InjectParameter[] {
-  target = getUnProxyClass(target);
+  target = getUnProxyTarget(target);
   if (target.prototype) {
     return Reflect.getMetadata(KEY_INJECT_PARAMS, target.prototype, targetKey) || [];
   }

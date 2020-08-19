@@ -4,12 +4,9 @@ import { createInstanceProvider, inject, InjectContainer, InstanceProvider, Lazy
 
 describe('Inject Provider Test Suite', () => {
 
-
   it('should support create class without provider', async () => {
 
-    class A {
-
-    }
+    class A { }
 
     const container = new InjectContainer();
 
@@ -188,11 +185,11 @@ describe('Inject Provider Test Suite', () => {
     class CInstanceProvider implements InstanceProvider {
       type = C
       transient = false;
-      inherit = true;
+      share = true;
       async provide() { return new C(); }
     }
 
-    const container = new InjectContainer();
+    const container = InjectContainer.New();
     container.registerProvider(new CInstanceProvider);
     const a = await container.getInstance(A);
     const b = await container.getInstance(B);
@@ -206,7 +203,7 @@ describe('Inject Provider Test Suite', () => {
     class BInstanceProvider implements InstanceProvider {
       type = B
       transient = false;
-      inherit = true;
+      share = true;
       async provide() { return new B(); }
     }
 

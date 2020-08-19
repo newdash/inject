@@ -14,9 +14,9 @@ export interface InstanceProvider<T = any> {
    */
   transient?: boolean;
   /**
-   * sub container
+   * share with sub container
    */
-  inherit?: boolean;
+  share?: boolean;
   /**
    * provide/produce instance
    */
@@ -27,11 +27,9 @@ export const createInstanceProvider = (
   type: any,
   instance: any,
   transient = false,
-  inherit = true
 ) => new class implements InstanceProvider {
   transient = transient;
   type = type;
-  inherit = inherit;
   provide = async () => instance
 };
 
@@ -40,14 +38,18 @@ export class DefaultClassProvider implements InstanceProvider {
 
   type: any;
   transient?: boolean;
-  inherit?: boolean;
-
   container: InjectContainer;
 
-  constructor(type: any, transient = false, inherit = true, container: InjectContainer) {
+  /**
+   * 
+   * @param type 
+   * @param transient 
+   * @param inherit 
+   * @param container should be a sub container
+   */
+  constructor(type: any, transient = false, container: InjectContainer) {
     this.type = type;
     this.transient = transient;
-    this.inherit = inherit;
     this.container = container;
   }
 
@@ -61,7 +63,7 @@ export class DefaultClassProvider implements InstanceProvider {
       for (let idx = 0; idx < constructParametersInfo.length; idx++) {
         const paramInfo = constructParametersInfo[idx];
         if (args[paramInfo.parameterIndex] == undefined) {
-          constructParams[paramInfo.parameterIndex] = await this.container.getInstance(paramInfo.type);
+          constructParams[paramInfo.parameterIndex] = await this.container.getInstance(paramInfo.type, this.container);
         }
       }
     }
@@ -70,15 +72,23 @@ export class DefaultClassProvider implements InstanceProvider {
 
     // force store current container provided type
     // @ts-ignore
-    this.container._store.set(this.type, inst);
+    this.container.setStore(this.type, inst);
 
     if (info.size > 0) {
       const keys = info.keys();
       for (const key of keys) {
         const prop = info.get(key);
         if (prop.injectType == 'classProperty') {
-          inst[key] = await this.container.getInstance(prop.type);
+          inst[key] = await this.container.getInstance(prop.type, this.container);
         }
+      }
+    }
+
+    if (!this.transient) {
+      const parent = this.container.getParent();
+      if (parent) {
+        // @ts-ignore
+        parent.setStore(this.type, inst);
       }
     }
 
