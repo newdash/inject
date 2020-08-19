@@ -14,10 +14,6 @@ export interface InstanceProvider<T = any> {
    */
   transient?: boolean;
   /**
-   * share with sub container
-   */
-  share?: boolean;
-  /**
    * provide/produce instance
    */
   provide: (...args: any[]) => Promise<T>;

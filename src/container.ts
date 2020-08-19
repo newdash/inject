@@ -15,11 +15,13 @@ export type InjectContext = Map<any, any>
  */
 export class InjectContainer {
 
-  private _store: Map<any, any>
+  private _store: Map<any, any>;
 
   protected _parent: InjectContainer;
 
-  private _providers: Map<any, InstanceProvider>
+  protected _doNotWrapTypes: Set<any>;
+
+  private _providers: Map<any, InstanceProvider>;
 
   /**
    * avoid create root inject container directly, 
@@ -29,10 +31,22 @@ export class InjectContainer {
   constructor() {
     this._providers = new Map();
     this._store = new Map();
+    this._doNotWrapTypes = new Set();
   }
 
   public static New(): InjectContainer {
     return new SubLevelInjectContainer(new InjectContainer());
+  }
+
+  /**
+   * indicate the type should not be wrapped
+   */
+  public doNotWrap(type: any) {
+    this._doNotWrapTypes.add(type);
+  }
+
+  protected canWrap(type: any) {
+    return !(this._doNotWrapTypes.has(type));
   }
 
   public getParent(): InjectContainer {
@@ -101,7 +115,11 @@ export class InjectContainer {
   async getWrappedInstance<T extends Class>(type: T): Promise<InjectWrappedInstance<InstanceType<T>>>;
   async getWrappedInstance(type: any): Promise<any>;
   async getWrappedInstance(type: any) {
-    return this.wrap(await this.getInstance(type));
+    const inst = await this.getInstance(type);
+    if (this.canWrap(type)) {
+      return this.wrap(inst);
+    }
+    return inst;
   }
 
   private async _withStore(type, provider: InstanceProvider) {
@@ -303,7 +321,11 @@ export class InjectContainer {
       }
     }
 
-    return method.apply(this.wrap(instance), params);
+    if (this.canWrap(type)) {
+      instance = this.wrap(instance);
+    }
+
+    return method.apply(instance, params);
   }
 
   private _getProviderParams(provider) {
@@ -446,6 +468,11 @@ export class SubLevelInjectContainer extends InjectContainer {
       rt = this._parent.getSubClassProvider(type);
     }
     return rt;
+  }
+
+  protected canWrap(type: any) {
+    // @ts-ignore
+    return super.canWrap(type) || this._parent.canWrap(type);
   }
 
 }
