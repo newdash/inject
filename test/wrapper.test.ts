@@ -204,6 +204,14 @@ describe('Wrapper Test Suite', () => {
 
     const ic = InjectContainer.New();
 
+    class A {
+      constructor() {
+
+      }
+    }
+
+    const a = new A;
+
     const p = Promise.resolve(1);
 
     // no wrap for inject container
@@ -211,6 +219,8 @@ describe('Wrapper Test Suite', () => {
 
     // no wrap for promise object
     expect(ic.wrap(p)).toBe(p);
+
+    expect(ic.wrap(a).constructor).toBe(a.constructor);
 
 
   });

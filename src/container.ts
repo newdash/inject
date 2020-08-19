@@ -200,6 +200,10 @@ export class InjectContainer {
   public wrap(instance: number): number;
   public wrap(instance: any): any {
 
+    if (instance == null || instance == undefined) {
+      return instance;
+    }
+
     if (typeof instance == 'object' || typeof instance == 'function') {
 
       if (instance instanceof InjectContainer) {
@@ -222,6 +226,10 @@ export class InjectContainer {
         get: (target, property) => {
 
           if (isProxyDisabled(target, property as string)) {
+            return target[property];
+          }
+
+          if (property == 'constructor') {
             return target[property];
           }
 
