@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.0.9](https://github.com/newdash/inject/compare/v0.0.8...v0.0.9) (2020-08-19)
+
+
+### Features
+
+* support disable wrapper for type ([6aa6cc1](https://github.com/newdash/inject/commit/6aa6cc10a05675a8ebfc2b716f48f2c690d43c4c))
+
 ### [0.0.8](https://github.com/newdash/inject/compare/v0.0.6...v0.0.8) (2020-08-19)
 
 
