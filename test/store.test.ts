@@ -10,12 +10,14 @@ describe('Storage Policy Test Suite', () => {
     class C { @inject() b: B }
 
     const ic = InjectContainer.New();
+    ic.doNotWrap(A, B, C);
 
     const c = await ic.getInstance(C);
     const b = await ic.getInstance(B);
     const a = await ic.getInstance(A);
 
     expect(ic._store.size).toBe(3);
+
 
     expect(c.b).toBe(b);
     expect(c.b.a).toBe(a);
@@ -32,6 +34,7 @@ describe('Storage Policy Test Suite', () => {
     class C { @inject() b: B }
 
     const ic = InjectContainer.New();
+    ic.doNotWrap(A, B, C);
 
     const c = await ic.getInstance(C);
     const b = await ic.getInstance(B);

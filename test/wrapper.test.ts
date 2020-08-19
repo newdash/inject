@@ -222,6 +222,21 @@ describe('Wrapper Test Suite', () => {
 
     expect(ic.wrap(a).constructor).toBe(a.constructor);
 
+  });
+
+  it('should support custom ignore wrap object', async () => {
+
+    class A { @inject() date: Date }
+
+    const ic = InjectContainer.New();
+
+    ic.doNotWrap(Date); // do not wrap 'Date' class please
+
+    const a = await ic.getWrappedInstance(A);
+
+    expect(a.date.getMonth()).not.toBeInstanceOf(Promise);
+    expect(a.date.getMonth()).toBe(new Date().getMonth());
+
 
   });
 

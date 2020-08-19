@@ -41,11 +41,16 @@ export class InjectContainer {
   /**
    * indicate the type should not be wrapped
    */
-  public doNotWrap(type: any) {
-    this._doNotWrapTypes.add(type);
+  public doNotWrap(...types: any[]) {
+    types.forEach(type => {
+      this._doNotWrapTypes.add(type);
+    });
   }
 
   protected canWrap(type: any) {
+    if (type instanceof LazyRef) {
+      type = type.getRef();
+    }
     return !(this._doNotWrapTypes.has(type));
   }
 
@@ -111,11 +116,11 @@ export class InjectContainer {
     return undefined;
   }
 
-  async getWrappedInstance<T extends Class>(type: LazyRef<T>): Promise<InjectWrappedInstance<InstanceType<T>>>;
-  async getWrappedInstance<T extends Class>(type: T): Promise<InjectWrappedInstance<InstanceType<T>>>;
-  async getWrappedInstance(type: any): Promise<any>;
-  async getWrappedInstance(type: any) {
-    const inst = await this.getInstance(type);
+  async getWrappedInstance<T extends Class>(type: LazyRef<T>, ctx?: InjectContainer): Promise<InjectWrappedInstance<InstanceType<T>>>;
+  async getWrappedInstance<T extends Class>(type: T, ctx?: InjectContainer): Promise<InjectWrappedInstance<InstanceType<T>>>;
+  async getWrappedInstance(type: any, ctx?: InjectContainer): Promise<any>;
+  async getWrappedInstance(type: any, ctx?: InjectContainer) {
+    const inst = await this.getInstance(type, ctx);
     if (this.canWrap(type)) {
       return this.wrap(inst);
     }
@@ -472,7 +477,7 @@ export class SubLevelInjectContainer extends InjectContainer {
 
   protected canWrap(type: any) {
     // @ts-ignore
-    return super.canWrap(type) || this._parent.canWrap(type);
+    return super.canWrap(type) && this._parent.canWrap(type);
   }
 
 }

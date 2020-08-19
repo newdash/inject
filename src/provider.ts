@@ -75,7 +75,7 @@ export class DefaultClassProvider implements InstanceProvider {
       for (const key of keys) {
         const prop = info.get(key);
         if (prop.injectType == 'classProperty') {
-          inst[key] = await this.container.getInstance(prop.type, this.container);
+          inst[key] = await this.container.getWrappedInstance(prop.type, this.container);
         }
       }
     }

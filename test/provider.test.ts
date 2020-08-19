@@ -79,6 +79,7 @@ describe('Inject Provider Test Suite', () => {
     setTimeout(async () => {
       try {
         const container = InjectContainer.New();
+        container.doNotWrap(E, F);
         const e = await container.getInstance(E);
         expect(e._f._e).toBe(e);
         resolve();
