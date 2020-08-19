@@ -1,6 +1,7 @@
 import isUndefined from '@newdash/newdash/isUndefined';
 import sortBy from '@newdash/newdash/sortBy';
 import { WRAPPED_OBJECT_INDICATOR, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
+import { InjectWrappedInstance } from './utils';
 
 
 const KEY_INJECT = 'inject:key_inject';
@@ -23,8 +24,14 @@ export interface InjectParameter {
 }
 
 
-
-export function getUnProxyTarget(target) {
+/**
+ * objects will wrapped by IoC Container, use this function get the original object
+ * 
+ * @param target 
+ */
+export function getUnProxyTarget<T>(target: InjectWrappedInstance<T>): T
+export function getUnProxyTarget<T>(target: T): T
+export function getUnProxyTarget(target: any) {
   if (target[WRAPPED_OBJECT_INDICATOR] == true) {
     return getUnProxyTarget(target[WRAPPED_ORIGINAL_OBJECT_PROPERTY]);
   }
@@ -45,6 +52,12 @@ export function disableProxy(target: any, propertyKey: string) {
   Reflect.defineMetadata(KEY_DISABLE_PROXY, true, target, propertyKey);
 }
 
+/**
+ * check property is disabled for proxy
+ * 
+ * @param target 
+ * @param propertyKey 
+ */
 export function isProxyDisabled(target: any, propertyKey: string): boolean {
   target = getUnProxyTarget(target);
   return Boolean(Reflect.getMetadata(KEY_DISABLE_PROXY, target, propertyKey));
