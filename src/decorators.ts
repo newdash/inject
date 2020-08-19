@@ -45,7 +45,10 @@ export function transient(target) {
 
 export function isTransient(target) {
   target = getUnProxyClass(target);
-  return Boolean(Reflect.getOwnMetadata(KEY_TRANSIENT, target));
+  if (typeof target == 'function') {
+    return Boolean(Reflect.getOwnMetadata(KEY_TRANSIENT, target));
+  }
+  return false;
 }
 
 export function setClassInjectInformation(target, info) {

@@ -1,7 +1,7 @@
 import { alg, Graph } from 'graphlib';
 import { WRAPPED_OBJECT_CONTAINER_PROPERTY, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_INJECT_INFO, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
 import { getClassConstructorParams, getClassInjectionInformation, getClassMethodParams, inject, InjectParameter, isTransient, LazyRef, transient } from './decorators';
-import { createInstanceProvider, InstanceProvider } from './provider';
+import { createInstanceProvider, DefaultClassProvider, InstanceProvider } from './provider';
 import { Class, getOrDefault, InjectWrappedInstance, OptionalParameters } from './utils';
 
 
@@ -47,14 +47,10 @@ export class InjectContainer {
     return new SubLevelInjectContainer(this);
   }
 
-  async getInstance<T extends Class>(type: LazyRef<T>, ctx?: Map<any, any>): Promise<InstanceType<T>>;
-  async getInstance<T extends Class>(type: T, ctx?: Map<any, any>): Promise<InstanceType<T>>;
-  async getInstance(type: any, ctx?: Map<any, any>): Promise<any>;
-  async getInstance(type: any, ctx: Map<any, any>) {
-
-    if (ctx == undefined) {
-      ctx = new Map();
-    }
+  async getInstance<T extends Class>(type: LazyRef<T>): Promise<InstanceType<T>>;
+  async getInstance<T extends Class>(type: T): Promise<InstanceType<T>>;
+  async getInstance(type: any): Promise<any>;
+  async getInstance(type: any) {
 
     if (type instanceof LazyRef) {
       type = type.getRef();
@@ -71,109 +67,113 @@ export class InjectContainer {
     // if class has cycle dependency in constructor, throw error
     this._checkDependency(type);
 
-    // prefer use context
-    if (ctx.has(type)) {
-      return ctx.get(type);
-    }
+    let provider = undefined;
 
-    let withStore = this._withStore.bind(this);
-    let producer = undefined;
+    const ic = await this.createSubContainer();
 
     // user define the provider
-    if (this.hasInProviders(type)) {
-      const provider = this.getProvider(type);
-      if (Boolean(provider.transient) || (typeof provider.type == 'function' && isTransient(provider.type))) {
-        withStore = this._withContext.bind(this);
-      }
-      producer = () => this.injectExecute(provider, provider.provide);
+    if (ic.hasInProviders(type)) {
+      provider = ic.wrap(ic.getProvider(type));
     }
-
     // use default provider for classes
     else if (typeof type == 'function') {
-      if (isTransient(type)) {
-        withStore = this._withContext.bind(this);
-      }
-      producer = () => this._defaultClassProvider(type, ctx);
+      provider = new DefaultClassProvider(type, isTransient(type), true, ic);
     }
 
-    if (producer) {
-      return withStore(type, producer, ctx);
+    if (provider) {
+      return ic._withStore(type, provider);
     }
 
     return undefined;
   }
 
-  async getWrappedInstance<T extends Class>(type: LazyRef<T>, ctx?: Map<any, any>): Promise<InjectWrappedInstance<InstanceType<T>>>;
-  async getWrappedInstance<T extends Class>(type: T, ctx?: Map<any, any>): Promise<InjectWrappedInstance<InstanceType<T>>>;
-  async getWrappedInstance(type: any, ctx?: Map<any, any>): Promise<any>;
-  async getWrappedInstance(type: any, ctx: Map<any, any>) {
-    return this.wrap(await this.getInstance(type, ctx));
+  async getWrappedInstance<T extends Class>(type: LazyRef<T>): Promise<InjectWrappedInstance<InstanceType<T>>>;
+  async getWrappedInstance<T extends Class>(type: T): Promise<InjectWrappedInstance<InstanceType<T>>>;
+  async getWrappedInstance(type: any): Promise<any>;
+  async getWrappedInstance(type: any) {
+    return this.wrap(await this.getInstance(type));
   }
 
-  private async _withContext(type, producer, ctx) {
-    if (!ctx.has(type)) {
-      const inst = await producer();
-      ctx.set(type, inst);
-    }
-    return ctx.get(type);
-  }
-
-  private async _withStore(type, producer, ctx) {
+  private async _withStore(type, producer: InstanceProvider) {
+    // the type direct in store
     if (!this.hasInStore(type)) {
-      const inst = await producer();
-      this.setStore(type, inst);
-    }
-    const inst = this.getStore(type);
-    ctx.set(type, inst);
-    return inst;
-  }
-
-  protected hasInStore(type) {
-    if (typeof type == 'function') {
-      for (const [k] of this._store) {
-        if (k.prototype instanceof type) {
-          return true;
-        }
+      const inst = await producer.provide();
+      if (inst != undefined) {
+        this.setStore(type, inst);
+      }
+      if (!Boolean(producer.transient)) {
+        this.getParent().setStore(type, inst);
       }
     }
-    return this._store.has(type);
+    return this.getStore(type);
   }
 
   protected setStore(type, value) {
     this._store.set(type, value);
   }
 
-  protected getStore(type) {
+  protected hasInStore(type) {
+    if (this._store.has(type)) {
+      return true;
+    }
+    return false;
+  }
+
+  protected hasParentTypeInStore(type): boolean {
     if (typeof type == 'function') {
-      for (const [k, v] of this._store) {
-        if (k.prototype instanceof type) {
-          return v;
+      for (const [k] of this._store) {
+        if (typeof k == 'function') {
+          if (type.prototype instanceof k) {
+            return true;
+          }
         }
       }
     }
-    return this._store.get(type);
+    return false;
+  }
+
+  protected getStore(type) {
+    const rt = this._store.get(type);
+    // if (rt == undefined) {
+    //   if (typeof type == 'function') {
+    //     for (const [k, v] of this._store) {
+    //       // the super class maybe registered in storage
+    //       if (type.prototype instanceof k) {
+    //         rt = v;
+    //         break;
+    //       }
+    //     }
+    //   }
+    // }
+    return rt;
   }
 
   protected hasInProviders(type) {
-    if (typeof type == 'function') {
-      for (const [k] of this._providers) {
-        if (k.prototype instanceof type) {
-          return true;
-        }
-      }
+    if (this._providers.has(type)) {
+      return true;
     }
-    return this._providers.has(type);
+    // if (typeof type == 'function') {
+    //   for (const [k] of this._providers) {
+    //     if (k.prototype instanceof type) {
+    //       return true;
+    //     }
+    //   }
+    // }
+    return false;
   }
 
   protected getProvider(type) {
-    if (typeof type == 'function') {
-      for (const [k, p] of this._providers) {
-        if (k.prototype instanceof type) {
-          return p;
-        }
-      }
-    }
-    return this._providers.get(type);
+    const rt = this._providers.get(type);
+    // if (rt == undefined) {
+    //   if (typeof type == 'function') {
+    //     for (const [k, p] of this._providers) {
+    //       if (k.prototype instanceof type) {
+    //         rt = p;
+    //       }
+    //     }
+    //   }
+    // }
+    return rt;
   }
 
   /**
@@ -201,7 +201,8 @@ export class InjectContainer {
 
       const p = new Proxy(instance, {
         construct: (target, args) => {
-          return this._defaultClassProvider(target, new Map(), ...args);
+          const provider = new DefaultClassProvider(target, isTransient(target), true, this);
+          return provider.provide(...args);
         },
         get: (target, property) => {
 
@@ -289,7 +290,7 @@ export class InjectContainer {
       for (let idx = 0; idx < constructParametersInfo.length; idx++) {
         const paramInfo = constructParametersInfo[idx];
         if (args[paramInfo.parameterIndex] == undefined) {
-          constructParams[paramInfo.parameterIndex] = await this.getInstance(paramInfo.type, ctx);
+          constructParams[paramInfo.parameterIndex] = await this.getInstance(paramInfo.type);
         }
       }
     }
@@ -303,7 +304,7 @@ export class InjectContainer {
       for (const key of keys) {
         const prop = info.get(key);
         if (prop.injectType == 'classProperty') {
-          inst[key] = await this.getInstance(prop.type, ctx);
+          inst[key] = await this.getInstance(prop.type);
         }
       }
     }

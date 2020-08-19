@@ -22,6 +22,15 @@ describe('Container Test Suite', () => {
 
   });
 
+  it('should get undefined value when not provided', async () => {
+
+    const c = InjectContainer.New();
+    expect(await c.getInstance("a")).toBeUndefined();
+    c.registerInstance("a", 111);
+    expect(await c.getInstance("a")).toBe(111);
+
+  });
+
   it('should support transient providers', async () => {
 
     const c1 = new InjectContainer();
@@ -222,15 +231,16 @@ describe('Container Test Suite', () => {
     // even register provider
     c.registerInstance(A, new A(999, 100));
 
-    // also will use default class provider
+    // also will use default class provider, will not found value from store
     const a3 = await new wA(undefined, 100);
     expect(a3.v).toBe(111);
     expect(a3.a).toBe(100);
 
-    // explicit getInstance also will work
+    // but `getInstance` will apply storage, the latest constructed instance
     const a4 = await c.getInstance(A);
-    expect(a4.v).toBe(999);
+    expect(a4.v).toBe(111);
     expect(a4.a).toBe(100);
+    expect(a4).toBe(a3);
   });
 
 });

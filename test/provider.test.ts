@@ -61,8 +61,8 @@ describe('Inject Provider Test Suite', () => {
 
     const container = new InjectContainer();
 
-    const c = await container.getInstance(C);
     const d = await container.getInstance(D);
+    const c = await container.getInstance(C);
 
     expect(c._d).not.toBeUndefined();
     expect(c._d).toBe(d);
@@ -157,33 +157,64 @@ describe('Inject Provider Test Suite', () => {
 
     const i = await container.getInstance(I);
 
-    expect(i.ctx.getParent()).toBe(container);
+    expect(i.ctx.getParent().getParent()).toBe(container);
 
   });
 
-  it('should support provide sub class instance', async () => {
+  it.skip('should support provide sub class instance', async () => {
 
     class A {
+      v: string
 
+      constructor() {
+        this.v = 'a';
+      }
     }
 
     class B extends A {
-
+      constructor() {
+        super();
+        this.v = 'b';
+      }
     }
 
     class C extends B {
+      constructor() {
+        super();
+        this.v = 'c';
+      }
+    }
 
+    class CInstanceProvider implements InstanceProvider {
+      type = C
+      transient = false;
+      inherit = true;
+      async provide() { return new C(); }
     }
 
     const container = new InjectContainer();
-    container.registerProvider(createInstanceProvider(C, new C()));
+    container.registerProvider(new CInstanceProvider);
     const a = await container.getInstance(A);
     const b = await container.getInstance(B);
 
+    expect(a.v).toBe('c');
 
     expect(a).toBeInstanceOf(C);
     expect(b).toBeInstanceOf(C);
     expect(b).toBe(a);
+
+    class BInstanceProvider implements InstanceProvider {
+      type = B
+      transient = false;
+      inherit = true;
+      async provide() { return new B(); }
+    }
+
+    container.registerProvider(new BInstanceProvider);
+
+    const b2 = await container.getInstance(B);
+    expect(b2.v).toBe('b');
+
 
   });
 
