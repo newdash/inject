@@ -1,5 +1,5 @@
 import { Server } from 'http';
-import { getClassConstructorParams, getClassInjectionInformation, inject, isTransient, transient } from '../src/index';
+import { DefaultClassProvider, getClassConstructorParams, getClassInjectionInformation, getProvideInfo, getTransientInfo, inject, InjectContainer, isTransientClass, provider, transientClass } from '../src/index';
 
 describe('Inject Decorators Test Suite', () => {
 
@@ -53,15 +53,54 @@ describe('Inject Decorators Test Suite', () => {
   it('should support transient decorator', () => {
 
 
-    @transient
+    @transientClass
     class A { }
 
     class B extends A { }
 
-    expect(isTransient(A)).toBe(true);
-    expect(isTransient(B)).toBe(false);
+    expect(isTransientClass(A)).toBe(true);
+    expect(isTransientClass(B)).toBe(false);
 
 
   });
+
+  it('should support @provider decorator', () => {
+
+    @provider("v1")
+    class A {
+
+      @provider("v2")
+      createV2() { }
+
+      @provider("v3")
+      static createV3() { }
+
+      @provider("t", true)
+      provideT() { }
+
+    }
+
+    const cp1 = new DefaultClassProvider(A, true, InjectContainer.New());
+
+    // class type
+    expect(getProvideInfo(A)).toBe("v1");
+    // @ts-ignore
+    expect(getProvideInfo((new A).constructor)).toBe("v1");
+    // class method
+    expect(getProvideInfo(new A, "createV2")).toBe("v2");
+    // class static type
+    expect(getProvideInfo(A, "createV3")).toBe("v3");
+
+    expect(getTransientInfo(A, "createV3")).toBe(false);
+
+    expect(getTransientInfo(new A, "provideT")).toBe(true);
+
+    expect(getProvideInfo(cp1, "provide")).toBe(A);
+
+    expect(getTransientInfo(cp1, "provide")).toBe(true);
+
+
+  });
+
 
 });

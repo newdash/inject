@@ -1,4 +1,4 @@
-import { inject, InjectContainer, InjectWrappedInstance } from "../src";
+import { inject, InjectContainer, InjectWrappedInstance, provider } from "../src";
 
 
 describe('Example Test Suite', () => {
@@ -33,7 +33,7 @@ describe('Example Test Suite', () => {
 
     }
 
-    // alias to register simple instance provider
+    // alias to register simple instance
     ic.registerInstance("v", 42);
 
     // create an instance of 'B", 
@@ -43,6 +43,46 @@ describe('Example Test Suite', () => {
 
     expect(await b.getValue()).toBe(84);
 
+
+  });
+
+  it('should support inject instance provider', async () => {
+
+    class P1 {
+      private idx = 0
+      @inject("count")
+      count: number
+      @provider("v")
+      provide() {
+        this.idx++;
+        return this.count + this.idx;
+      }
+    }
+
+    class P2 {
+      private idx = 0
+      @inject("count")
+      count: number
+      @provider("v2", true) // transient provider
+      provide() {
+        this.idx++;
+        return this.count + this.idx;
+      }
+    }
+
+    const ic = InjectContainer.New();
+    ic.registerInstance("count", 15);
+    ic.registerProvider(P1);
+    ic.registerProvider(P2);
+
+
+    expect(await ic.getInstance("v")).toBe(16);
+    // value will be cached
+    expect(await ic.getInstance("v")).toBe(16);
+
+    expect(await ic.getInstance("v2")).toBe(16);
+    // value will NOT be cached
+    expect(await ic.getInstance("v2")).toBe(17);
 
   });
 

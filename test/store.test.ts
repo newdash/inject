@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { inject, InjectContainer, transient } from "../src";
+import { inject, InjectContainer, transientClass } from "../src";
 
 describe('Storage Policy Test Suite', () => {
 
@@ -29,7 +29,7 @@ describe('Storage Policy Test Suite', () => {
   it('should not cache instance which is transient', async () => {
 
     class A { }
-    @transient
+    @transientClass
     class B { @inject() a: A }
     class C { @inject() b: B }
 

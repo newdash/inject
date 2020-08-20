@@ -1,32 +1,24 @@
 import { InjectContainer } from "./container";
-import { getClassConstructorParams, getClassInjectionInformation } from "./decorators";
+import { getClassConstructorParams, getClassInjectionInformation, provider } from "./decorators";
 
 export interface InstanceProvider<T = any> {
-  /**
-   * the type of this provider support
-   * 
-   * could be string or constructor
-   * 
-   */
-  type: any;
-  /**
-   * will cache the provider result
-   */
-  transient?: boolean;
   /**
    * provide/produce instance
    */
   provide: (...args: any[]) => Promise<T>;
 }
 
-export const createInstanceProvider = (
-  type: any,
-  instance: any,
-  transient = false,
-) => new class implements InstanceProvider {
-  transient = transient;
-  type = type;
-  provide = async () => instance
+export const createInstanceProvider = (type: any, instance: any, transient = false) => {
+
+  const p = class {
+    provide = async () => instance
+  };
+
+  provider(type, transient)(p);
+  provider(type, transient)(p.prototype, "provide");
+
+  return new p;
+
 };
 
 
@@ -44,6 +36,7 @@ export class DefaultClassProvider implements InstanceProvider {
    * @param container should be a sub container
    */
   constructor(type: any, transient = false, container: InjectContainer) {
+    provider(type, transient)(this, "provide");
     this.type = type;
     this.transient = transient;
     this.container = container;
@@ -59,7 +52,10 @@ export class DefaultClassProvider implements InstanceProvider {
       for (let idx = 0; idx < constructParametersInfo.length; idx++) {
         const paramInfo = constructParametersInfo[idx];
         if (args[paramInfo.parameterIndex] == undefined) {
-          constructParams[paramInfo.parameterIndex] = await this.container.getInstance(paramInfo.type, this.container);
+          constructParams[paramInfo.parameterIndex] = await this.container.getWrappedInstance(
+            paramInfo.type,
+            this.container
+          );
         }
       }
     }

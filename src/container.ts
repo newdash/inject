@@ -1,6 +1,6 @@
 import { alg, Graph } from 'graphlib';
-import { WRAPPED_OBJECT_CONTAINER_PROPERTY, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_INJECT_INFO, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
-import { getClassConstructorParams, getClassMethodParams, inject, InjectParameter, isProxyDisabled, isTransient, LazyRef, transient } from './decorators';
+import { MSG_ERR_NOT_PROVIDER, WRAPPED_OBJECT_CONTAINER_PROPERTY, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_INJECT_INFO, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
+import { getClassConstructorParams, getClassMethodParams, getProvideInfo, getTransientInfo, getUnProxyTarget, inject, InjectParameter, isProviderInstance, isProviderType, isProxyDisabled, isTransientClass, LazyRef, transientClass } from './decorators';
 import { createInstanceProvider, DefaultClassProvider, InstanceProvider } from './provider';
 import { Class, getOrDefault, InjectWrappedClassType, InjectWrappedInstance, OptionalParameters } from './utils';
 
@@ -21,7 +21,7 @@ export class InjectContainer {
 
   protected _doNotWrapTypes: Set<any>;
 
-  private _providers: Map<any, InstanceProvider>;
+  private _providers: Map<any, any>;
 
   /**
    * avoid create root inject container directly, 
@@ -39,7 +39,9 @@ export class InjectContainer {
   }
 
   /**
-   * indicate the type should not be wrapped
+   * indicate the type should not be wrapped,
+   * 
+   * it means the inject container will NEVER return the Proxy of this type object
    */
   public doNotWrap(...types: any[]) {
     types.forEach(type => {
@@ -54,12 +56,25 @@ export class InjectContainer {
     return !(this._doNotWrapTypes.has(type));
   }
 
+  /**
+   * get parent inject container
+   */
   public getParent(): InjectContainer {
     return this._parent;
   }
 
-  public registerProvider(provider: InstanceProvider) {
-    this._providers.set(provider.type, provider);
+  public registerProvider(provider: InstanceProvider): void;
+  public registerProvider(provider: any): void;
+  public registerProvider(provider: any) {
+    if (isProviderInstance(provider)) {
+      this._providers.set(getProvideInfo(provider, "provide"), provider);
+    }
+    else if (isProviderType(provider)) {
+      this._providers.set(getProvideInfo(provider.prototype, "provide"), provider);
+    }
+    else {
+      throw TypeError(MSG_ERR_NOT_PROVIDER);
+    }
   }
 
   public registerInstance(type: any, instance: any, transient: boolean = false) {
@@ -79,6 +94,8 @@ export class InjectContainer {
     if (ctx == undefined) {
       ctx = await this.createSubContainer();
     }
+
+    type = getUnProxyTarget(type);
 
     if (type instanceof LazyRef) {
       type = type.getRef();
@@ -106,7 +123,12 @@ export class InjectContainer {
     }
     // use default provider for classes
     else if (typeof type == 'function') {
-      provider = new DefaultClassProvider(type, isTransient(type), ctx);
+      provider = new DefaultClassProvider(type, isTransientClass(type), ctx);
+    }
+
+    if (isProviderType(provider)) {
+      // just overwrite the provider type provider
+      provider = await this.getWrappedInstance(provider);
     }
 
     if (provider) {
@@ -128,16 +150,20 @@ export class InjectContainer {
   }
 
   private async _withStore(type, provider: InstanceProvider) {
+
     // the type direct in store
     if (!this.hasInStore(type)) {
+
       if (this.hasSubClassInstanceInStore(type)) {
         return this.getSubClassInstance(type); // do not cache it
       }
+
       const inst = await provider.provide();
+
       if (inst != undefined) {
         this.setStore(type, inst);
       }
-      if (!Boolean(provider.transient)) {
+      if (!getTransientInfo(provider, "provide")) {
         this.getParent().setStore(type, inst);
       }
     }
@@ -233,6 +259,10 @@ export class InjectContainer {
       return instance;
     }
 
+    if (['number', 'boolean', 'string', 'symbol', 'bigint'].includes(typeof instance)) {
+      return instance;
+    }
+
     if (typeof instance == 'object' || typeof instance == 'function') {
 
       if (instance instanceof InjectContainer) {
@@ -249,7 +279,11 @@ export class InjectContainer {
 
       const p = new Proxy(instance, {
         construct: async (target, args) => {
-          const provider = new DefaultClassProvider(target, isTransient(target), await this.createSubContainer());
+          const provider = new DefaultClassProvider(
+            target,
+            isTransientClass(target),
+            await this.createSubContainer()
+          );
           return provider.provide(...args);
         },
         get: (target, property) => {
@@ -405,7 +439,7 @@ export class InjectContainer {
 
 }
 
-@transient
+@transientClass
 export class SubLevelInjectContainer extends InjectContainer {
 
   constructor(@inject(InjectContainer) globalContainer: InjectContainer) {

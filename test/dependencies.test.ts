@@ -1,4 +1,4 @@
-import { inject, InjectContainer, LazyRef } from '../src';
+import { inject, InjectContainer, LazyRef, provider } from '../src';
 
 
 describe('Dependencies Check Suite', () => {
@@ -29,12 +29,12 @@ describe('Dependencies Check Suite', () => {
 
 
     class D1Provider {
-      type = 'D1'
+      @provider("D1")
       async provide(@inject('D2') d2) { }
     }
 
     class D2Provider {
-      type = 'D2'
+      @provider("D2")
       async provide(@inject('D1') d1) { }
     }
 

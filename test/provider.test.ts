@@ -1,5 +1,6 @@
 import { v4 } from 'uuid';
-import { createInstanceProvider, inject, InjectContainer, InstanceProvider, LazyRef } from '../src';
+import { createInstanceProvider, getUnProxyTarget, inject, InjectContainer, InstanceProvider, LazyRef, provider } from '../src';
+import { MSG_ERR_NOT_PROVIDER } from '../src/constants';
 
 
 describe('Inject Provider Test Suite', () => {
@@ -11,6 +12,17 @@ describe('Inject Provider Test Suite', () => {
     const container = InjectContainer.New();
 
     expect(await container.getInstance(A)).toBeInstanceOf(A);
+
+  });
+
+  it('should raise error when not valid provider', () => {
+
+    const ic = InjectContainer.New();
+
+    class A { }
+
+    expect(() => ic.registerProvider(A)).toThrow(MSG_ERR_NOT_PROVIDER);
+    expect(() => ic.registerProvider(new A)).toThrow(MSG_ERR_NOT_PROVIDER);
 
   });
 
@@ -28,7 +40,7 @@ describe('Inject Provider Test Suite', () => {
     const container = InjectContainer.New();
 
     class IDProvider implements InstanceProvider {
-      type = 'id';
+      @provider("id")
       async provide() {
         return testUUID;
       }
@@ -60,7 +72,7 @@ describe('Inject Provider Test Suite', () => {
     const c = await container.getInstance(C);
 
     expect(c._d).not.toBeUndefined();
-    expect(c._d).toBe(d);
+    expect(getUnProxyTarget(c._d)).toBe(d);
 
   });
 
@@ -124,7 +136,7 @@ describe('Inject Provider Test Suite', () => {
     container.registerProvider(createInstanceProvider('uuid', uuid));
 
     class P1 implements InstanceProvider {
-      type = 'value'
+      @provider("value")
       async provide(@inject('uuid') uuid) { return uuid; }
     }
 
@@ -179,9 +191,7 @@ describe('Inject Provider Test Suite', () => {
     }
 
     class CInstanceProvider implements InstanceProvider {
-      type = C
-      transient = false;
-      share = true;
+      @provider(C)
       async provide() { return new C(); }
     }
 
@@ -197,9 +207,7 @@ describe('Inject Provider Test Suite', () => {
     expect(b).toBe(a);
 
     class BInstanceProvider implements InstanceProvider {
-      type = B
-      transient = false;
-      share = true;
+      @provider(B)
       async provide() { return new B(); }
     }
 
@@ -209,6 +217,41 @@ describe('Inject Provider Test Suite', () => {
     const c2 = await container.getInstance(B);
     expect(c2.v).toBe('c');
 
+
+  });
+
+  it('should support get provider instance', async () => {
+
+    class VPlusProvider {
+      type = 'v-plus'
+      async provide(@inject("v") v: number) {
+        return v + 1;
+      }
+    }
+
+    const ic = InjectContainer.New();
+    ic.registerInstance("v", 1);
+    const vPlusProvider = await ic.getWrappedInstance(VPlusProvider);
+    expect(await vPlusProvider.provide()).toBe(2);
+
+
+  });
+
+  it('should support get instance by un-instance provider', async () => {
+
+    class VPlusProvider {
+
+      @provider("v-plus")
+      async provide(@inject("v") v: number) {
+        return v + 1;
+      }
+
+    }
+
+    const ic = InjectContainer.New();
+    ic.registerInstance("v", 1);
+    ic.registerProvider(VPlusProvider);
+    expect(await ic.getInstance("v-plus")).toBe(2);
 
   });
 

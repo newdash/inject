@@ -1,13 +1,17 @@
+import { isFunction } from '@newdash/newdash/isFunction';
 import isUndefined from '@newdash/newdash/isUndefined';
 import sortBy from '@newdash/newdash/sortBy';
 import { WRAPPED_OBJECT_INDICATOR, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
+import { InstanceProvider } from './provider';
 import { Class, InjectWrappedInstance } from './utils';
-
 
 const KEY_INJECT = 'inject:key_inject';
 const KEY_INJECT_CLASS = 'inject:key_inject_class';
 const KEY_INJECT_PARAMS = 'inject:method_inject_params';
-const KEY_TRANSIENT = 'inject:transient';
+const KEY_TRANSIENT = 'inject:class:transient';
+
+const KEY_PROVIDE = 'inject:provide';
+const KEY_PROVIDE_TRANSIENT = 'inject:provide:transient';
 
 const KEY_DISABLE_PROXY = 'inject:proxy:disable';
 
@@ -32,11 +36,14 @@ export interface InjectParameter {
 export function getUnProxyTarget<T extends Class>(target: InjectWrappedInstance<T>): T
 export function getUnProxyTarget<T extends Class>(target: T): T
 export function getUnProxyTarget(target: any) {
-  if (target[WRAPPED_OBJECT_INDICATOR] == true) {
-    return getUnProxyTarget(target[WRAPPED_ORIGINAL_OBJECT_PROPERTY]);
+  if (target) {
+    if (target[WRAPPED_OBJECT_INDICATOR] == true) {
+      return getUnProxyTarget(target[WRAPPED_ORIGINAL_OBJECT_PROPERTY]);
+    }
   }
   return target;
 }
+
 
 /**
  * indicate the inject container DO NOT proxy this property/function
@@ -73,11 +80,11 @@ export function getClassInjectionInformation(target): Map<string, InjectInformat
  *
  * @param target
  */
-export function transient(target) {
+export function transientClass(target) {
   Reflect.defineMetadata(KEY_TRANSIENT, true, target);
 }
 
-export function isTransient(target) {
+export function isTransientClass(target) {
   target = getUnProxyTarget(target);
   if (typeof target == 'function') {
     return Boolean(Reflect.getOwnMetadata(KEY_TRANSIENT, target));
@@ -115,6 +122,48 @@ export class LazyRef<T = any> {
     return new LazyRef<T>(type);
   }
 
+}
+
+export function isProviderType(target): target is Class<InstanceProvider> {
+  target = getUnProxyTarget(target);
+  if (target?.constructor == Function) {
+    // own 'type' and 'provide' property
+    const typeInfo = getProvideInfo(target.prototype, "provide");
+    if (!isUndefined(typeInfo)) {
+      if (isFunction(target?.prototype?.provide)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+export function isProviderInstance(target): target is InstanceProvider {
+  target = getUnProxyTarget(target);
+  const typeInfo = getProvideInfo(target, "provide") || target.type;
+  if (!isUndefined(typeInfo)) {
+    if (isFunction(target?.provide)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function provider(type?: LazyRef, transient?: boolean): (target, targetKey?) => void
+export function provider(type?: any, transient?: boolean): (target, targetKey?) => void
+export function provider(type?: any, transient = false) {
+  return function (target, targetKey?) {
+    Reflect.defineMetadata(KEY_PROVIDE, type, target, targetKey);
+    Reflect.defineMetadata(KEY_PROVIDE_TRANSIENT, transient, target, targetKey);
+  };
+}
+
+export function getTransientInfo(target: any, targetKey: any) {
+  return Boolean(Reflect.getMetadata(KEY_PROVIDE_TRANSIENT, target, targetKey));
+}
+
+export function getProvideInfo(target: any, targetKey?: any) {
+  return Reflect.getMetadata(KEY_PROVIDE, target, targetKey);
 }
 
 /**
