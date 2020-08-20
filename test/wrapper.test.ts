@@ -1,4 +1,4 @@
-import { disableProxy, getClassMethodParams, getUnProxyTarget, inject, InjectContainer } from "../src";
+import { disableProxy, getClassMethodParams, getUnProxyTarget, inject, InjectContainer, InjectWrappedInstance } from "../src";
 
 
 describe('Wrapper Test Suite', () => {
@@ -83,7 +83,7 @@ describe('Wrapper Test Suite', () => {
   });
 
 
-  it('should support inject wrapped object with ', async () => {
+  it('should support inject methods of wrapped object', async () => {
 
     class A {
       async calculate(@inject("v") v?: number) {
@@ -92,7 +92,8 @@ describe('Wrapper Test Suite', () => {
     }
 
     class B {
-      async run(@inject(A) a?: A) {
+      async run(@inject(A) a?: InjectWrappedInstance<A>) {
+        // object 'a' has been wrapped with container
         return await a.calculate();
       }
     }
@@ -122,6 +123,7 @@ describe('Wrapper Test Suite', () => {
 
     const wA = c.wrap(A);
 
+    // brilliant magically constructor injection
     const a = await new wA();
     expect(a.v).toBe(111);
 
@@ -254,7 +256,6 @@ describe('Wrapper Test Suite', () => {
     const w = container.wrap(A);
 
     expect(await w.getV()).toBe(123);
-
 
   });
 
