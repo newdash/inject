@@ -1,5 +1,5 @@
 import { v4 } from 'uuid';
-import { createInstanceProvider, getUnProxyTarget, inject, InjectContainer, InstanceProvider, LazyRef, provider } from '../src';
+import { createInstanceProvider, inject, InjectContainer, InstanceProvider, LazyRef, provider } from '../src';
 import { MSG_ERR_NOT_PROVIDER } from '../src/constants';
 
 
@@ -67,12 +67,13 @@ describe('Inject Provider Test Suite', () => {
     }
 
     const container = InjectContainer.New();
+    container.doNotWrap(C, D);
 
     const d = await container.getInstance(D);
     const c = await container.getInstance(C);
 
     expect(c._d).not.toBeUndefined();
-    expect(getUnProxyTarget(c._d)).toBe(d);
+    expect(c._d).toBe(d);
 
   });
 
