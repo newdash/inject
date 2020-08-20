@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.3](https://github.com/newdash/inject/compare/v0.2.2...v0.2.3) (2020-08-20)
+
+
+### Features
+
+* disable wrapper in property deep injection ([02da137](https://github.com/newdash/inject/commit/02da137c2943d3956413554525a7c5618cf503b6))
+
 ### [0.2.2](https://github.com/newdash/inject/compare/v0.0.14...v0.2.2) (2020-08-20)
 
 
