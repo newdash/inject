@@ -258,4 +258,27 @@ describe('Wrapper Test Suite', () => {
 
   });
 
+  it('should support wrapped by different container', async () => {
+
+    const ic1 = InjectContainer.New();
+    const ic2 = InjectContainer.New();
+
+    ic1.registerInstance("v1", 123);
+    ic2.registerInstance("v2", 42);
+
+    class A {
+
+      getValue(@inject("v1") v1, @inject("v2") v2) {
+        return [v1, v2];
+      }
+
+    }
+
+    const a = await ic1.getWrappedInstance(A);
+    const a2 = ic2.wrap(a);
+
+    expect(await a2.getValue()).toStrictEqual([123, 42]);
+
+  });
+
 });
