@@ -65,16 +65,19 @@ export class InjectContainer {
 
   public registerProvider(provider: InstanceProvider): void;
   public registerProvider(provider: Class<InstanceProvider>): void;
-  public registerProvider(provider: any) {
-    if (isProviderInstance(provider)) {
-      this._providers.set(getProvideInfo(provider, "provide"), provider);
-    }
-    else if (isProviderType(provider)) {
-      this._providers.set(getProvideInfo(provider.prototype, "provide"), provider);
-    }
-    else {
-      throw TypeError(MSG_ERR_NOT_PROVIDER);
-    }
+  public registerProvider(...providers: Array<InstanceProvider | Class<InstanceProvider>>): void;
+  public registerProvider(...providers: any[]) {
+    providers.forEach(provider => {
+      if (isProviderInstance(provider)) {
+        this._providers.set(getProvideInfo(provider, "provide"), provider);
+      }
+      else if (isProviderType(provider)) {
+        this._providers.set(getProvideInfo(provider.prototype, "provide"), provider);
+      }
+      else {
+        throw TypeError(MSG_ERR_NOT_PROVIDER);
+      }
+    });
   }
 
   public registerInstance(type: any, instance: any, transient: boolean = false) {

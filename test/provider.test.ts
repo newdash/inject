@@ -286,5 +286,25 @@ describe('Inject Provider Test Suite', () => {
 
   });
 
+  it('should support register multi providers by `injectContainer.registerProvider`', async () => {
+    const ic = InjectContainer.New();
+
+    class PV1 {
+      @provider("v1")
+      provide() { return 1; }
+    }
+
+    class PV2 {
+      @provider("v2")
+      provide() { return 2; }
+    }
+
+    ic.registerProvider(PV1, PV2);
+
+    expect(await ic.getInstance("v1")).toBe(1);
+    expect(await ic.getInstance("v2")).toBe(2);
+
+  });
+
 
 });
