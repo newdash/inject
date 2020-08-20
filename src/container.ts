@@ -64,7 +64,7 @@ export class InjectContainer {
   }
 
   public registerProvider(provider: InstanceProvider): void;
-  public registerProvider(provider: any): void;
+  public registerProvider(provider: Class<InstanceProvider>): void;
   public registerProvider(provider: any) {
     if (isProviderInstance(provider)) {
       this._providers.set(getProvideInfo(provider, "provide"), provider);

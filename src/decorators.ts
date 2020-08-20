@@ -150,7 +150,8 @@ export function isProviderInstance(target): target is InstanceProvider {
 }
 
 export function provider(type?: LazyRef, transient?: boolean): (target, targetKey?) => void
-export function provider(type?: any, transient?: boolean): (target, targetKey?) => void
+export function provider(type?: string, transient?: boolean): (target, targetKey?) => void
+export function provider(type?: Class, transient?: boolean): (target, targetKey?) => void
 export function provider(type?: any, transient = false) {
   return function (target, targetKey?) {
     Reflect.defineMetadata(KEY_PROVIDE, type, target, targetKey);
@@ -163,7 +164,11 @@ export function getTransientInfo(target: any, targetKey: any) {
 }
 
 export function getProvideInfo(target: any, targetKey?: any) {
-  return Reflect.getMetadata(KEY_PROVIDE, target, targetKey);
+  let rt = Reflect.getMetadata(KEY_PROVIDE, target, targetKey);
+  if (rt instanceof LazyRef) {
+    rt = rt.getRef();
+  }
+  return rt;
 }
 
 /**

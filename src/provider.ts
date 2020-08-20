@@ -5,7 +5,7 @@ export interface InstanceProvider<T = any> {
   /**
    * provide/produce instance
    */
-  provide: (...args: any[]) => Promise<T>;
+  provide: (...args: any[]) => any;
 }
 
 export const createInstanceProvider = (type: any, instance: any, transient = false) => {

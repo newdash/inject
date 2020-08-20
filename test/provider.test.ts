@@ -15,13 +15,15 @@ describe('Inject Provider Test Suite', () => {
 
   });
 
-  it('should raise error when not valid provider', () => {
+  it('should throw error when not a valid accepted provider', () => {
 
     const ic = InjectContainer.New();
 
     class A { }
 
+    // @ts-ignore
     expect(() => ic.registerProvider(A)).toThrow(MSG_ERR_NOT_PROVIDER);
+    // @ts-ignore
     expect(() => ic.registerProvider(new A)).toThrow(MSG_ERR_NOT_PROVIDER);
 
   });
@@ -238,7 +240,7 @@ describe('Inject Provider Test Suite', () => {
 
   });
 
-  it('should support get instance by un-instance provider', async () => {
+  it('should support get instance by provider class', async () => {
 
     class VPlusProvider {
 
@@ -253,6 +255,34 @@ describe('Inject Provider Test Suite', () => {
     ic.registerInstance("v", 1);
     ic.registerProvider(VPlusProvider);
     expect(await ic.getInstance("v-plus")).toBe(2);
+
+  });
+
+  it('should support lazy ref provider inject', async () => {
+
+    class BProvider {
+
+      @provider(LazyRef.create(() => B))
+      async provide() {
+        const rt = new B;
+        rt.v = 123;
+        return rt;
+      }
+
+    }
+
+    class B {
+      v: number
+    }
+
+    const ic = InjectContainer.New();
+    ic.registerProvider(BProvider);
+
+    const b = await ic.getInstance(B);
+    expect(b).not.toBeUndefined();
+    expect(b.v).toBe(123);
+
+
 
   });
 

@@ -1,8 +1,7 @@
 import { Server } from 'http';
-import { DefaultClassProvider, getClassConstructorParams, getClassInjectionInformation, getProvideInfo, getTransientInfo, inject, InjectContainer, isTransientClass, provider, transientClass } from '../src/index';
+import { DefaultClassProvider, getClassConstructorParams, getClassInjectionInformation, getProvideInfo, getTransientInfo, inject, InjectContainer, isTransientClass, LazyRef, provider, transientClass } from '../src/index';
 
 describe('Inject Decorators Test Suite', () => {
-
 
   it('should support use @inject parameters', () => {
 
@@ -78,7 +77,12 @@ describe('Inject Decorators Test Suite', () => {
       @provider("t", true)
       provideT() { }
 
+      @provider(LazyRef.create(() => C), true)
+      provideLazy() { }
+
     }
+
+    class C { }
 
     const cp1 = new DefaultClassProvider(A, true, InjectContainer.New());
 
@@ -88,15 +92,13 @@ describe('Inject Decorators Test Suite', () => {
     expect(getProvideInfo((new A).constructor)).toBe("v1");
     // class method
     expect(getProvideInfo(new A, "createV2")).toBe("v2");
+    // lazy ref
+    expect(getProvideInfo(new A, "provideLazy")).toBe(C);
     // class static type
     expect(getProvideInfo(A, "createV3")).toBe("v3");
-
     expect(getTransientInfo(A, "createV3")).toBe(false);
-
     expect(getTransientInfo(new A, "provideT")).toBe(true);
-
     expect(getProvideInfo(cp1, "provide")).toBe(A);
-
     expect(getTransientInfo(cp1, "provide")).toBe(true);
 
 
