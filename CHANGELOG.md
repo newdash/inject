@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.2](https://github.com/newdash/inject/compare/v0.0.14...v0.2.2) (2020-08-20)
+
+
+### Features
+
+* support register multi providers ([5ea8066](https://github.com/newdash/inject/commit/5ea80664555b5a7b54859a1ad1046a29513242a2))
+
 ### [0.0.14](https://github.com/newdash/inject/compare/v0.0.13...v0.0.14) (2020-08-20)
 
 ### [0.0.13](https://github.com/newdash/inject/compare/v0.0.12...v0.0.13) (2020-08-20)
