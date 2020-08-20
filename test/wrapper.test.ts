@@ -222,6 +222,16 @@ describe('Wrapper Test Suite', () => {
     // no wrap for promise object
     expect(ic.wrap(p)).toBe(p);
 
+    // no wrap for null
+    expect(ic.wrap(null)).toBe(null);
+
+    // no wrap for undefined
+    expect(ic.wrap(undefined)).toBe(undefined);
+
+    // no wrap for boolean
+    expect(ic.wrap(true)).toBe(true);
+
+    // no wrap for constructor
     expect(ic.wrap(a).constructor).toBe(a.constructor);
 
   });
