@@ -60,6 +60,7 @@ describe('Inject Decorators Test Suite', () => {
     expect(isTransientClass(A)).toBe(true);
     expect(isTransientClass(B)).toBe(false);
 
+    expect(isTransientClass(null)).toBe(false);
 
   });
 
