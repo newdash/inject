@@ -37,11 +37,18 @@ export function getUnProxyTarget<T extends Class>(target: InjectWrappedInstance<
 export function getUnProxyTarget<T extends Class>(target: T): T
 export function getUnProxyTarget(target: any) {
   if (target) {
-    if (target[WRAPPED_OBJECT_INDICATOR] == true) {
+    if (isWrappedObject(target)) {
       return getUnProxyTarget(target[WRAPPED_ORIGINAL_OBJECT_PROPERTY]);
     }
   }
   return target;
+}
+
+export function isWrappedObject(target: any): target is { [WRAPPED_ORIGINAL_OBJECT_PROPERTY]: any } {
+  if (target != undefined) {
+    return Boolean(target[WRAPPED_OBJECT_INDICATOR]);
+  }
+  return false;
 }
 
 
@@ -169,6 +176,17 @@ export function getProvideInfo(target: any, targetKey?: any) {
     rt = rt.getRef();
   }
   return rt;
+}
+
+/**
+ * get @inject type of the property of the class instance
+ * 
+ * @param target 
+ * @param targetKey 
+ */
+export function getPropertyInjectedType(target, targetKey) {
+  target = getUnProxyTarget(target);
+  return Reflect.getMetadata(KEY_INJECT, target, targetKey);
 }
 
 /**

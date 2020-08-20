@@ -1,6 +1,6 @@
 import { alg, Graph } from 'graphlib';
 import { MSG_ERR_NOT_PROVIDER, WRAPPED_OBJECT_CONTAINER_PROPERTY, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_INJECT_INFO, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
-import { getClassConstructorParams, getClassMethodParams, getProvideInfo, getTransientInfo, getUnProxyTarget, inject, InjectParameter, isProviderInstance, isProviderType, isProxyDisabled, isTransientClass, LazyRef, transientClass } from './decorators';
+import { getClassConstructorParams, getClassMethodParams, getPropertyInjectedType, getProvideInfo, getTransientInfo, getUnProxyTarget, inject, InjectParameter, isProviderInstance, isProviderType, isProxyDisabled, isTransientClass, LazyRef, transientClass } from './decorators';
 import { createInstanceProvider, DefaultClassProvider, InstanceProvider } from './provider';
 import { Class, getOrDefault, InjectWrappedClassType, InjectWrappedInstance, OptionalParameters } from './utils';
 
@@ -296,6 +296,12 @@ export class InjectContainer {
           }
 
           if (property == 'constructor') {
+            return target[property];
+          }
+
+          // do NOT proxy if the injected has been indicated DO NOT WRAP
+          const injectType = getPropertyInjectedType(target, property);
+          if (injectType != undefined && !this.canWrap(injectType)) {
             return target[property];
           }
 

@@ -1,5 +1,5 @@
 import { Server } from 'http';
-import { DefaultClassProvider, getClassConstructorParams, getClassInjectionInformation, getProvideInfo, getTransientInfo, inject, InjectContainer, isTransientClass, LazyRef, provider, transientClass } from '../src/index';
+import { DefaultClassProvider, getClassConstructorParams, getClassInjectionInformation, getPropertyInjectedType, getProvideInfo, getTransientInfo, inject, InjectContainer, isTransientClass, LazyRef, provider, transientClass } from '../src/index';
 
 describe('Inject Decorators Test Suite', () => {
 
@@ -46,6 +46,9 @@ describe('Inject Decorators Test Suite', () => {
     expect(methodRunInjection.parameters[1].type).toBe(Date);
     expect(methodRunInjection.parameters[1].parameterIndex).toBe(1);
 
+    const a = new A(new Date());
+
+    expect(getPropertyInjectedType(a, "_name")).toBe("userName");
 
   });
 
