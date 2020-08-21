@@ -41,7 +41,7 @@ jobs:
         npm run coverage
       env:
         CI: true
-        DEBUG: @newdash/inject:*
+        DEBUG: "@newdash/inject:*"
 
     - name: upload coverage
       uses: codecov/codecov-action@v1
