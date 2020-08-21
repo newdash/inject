@@ -5,6 +5,7 @@
     "target": "ES2015",
     "module": "CommonJS",
     "outDir": "lib",
+    "sourceMap": true,
     "esModuleInterop": true,
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
