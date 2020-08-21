@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.5](https://github.com/newdash/inject/compare/v0.2.4...v0.2.5) (2020-08-21)
+
+
+### Features
+
+* **logger:** update ([0e704ba](https://github.com/newdash/inject/commit/0e704bab790e302d1fd7d6ecd8f38bc9f8bcf642))
+* support deep constructor injection ([8051aae](https://github.com/newdash/inject/commit/8051aae11abd9c6008df000e293ccd73417d0176))
+
+
+### Bug Fixes
+
+* **ci:** update ([adec9d6](https://github.com/newdash/inject/commit/adec9d6c18f5de6bf907ed9e0e2f2b1b545eb9fc))
+
 ### [0.2.4](https://github.com/newdash/inject/compare/v0.2.3...v0.2.4) (2020-08-21)
 
 ### [0.2.3](https://github.com/newdash/inject/compare/v0.2.2...v0.2.3) (2020-08-20)
