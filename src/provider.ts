@@ -72,12 +72,7 @@ export class DefaultClassProvider implements InstanceProvider {
       }
     }
 
-    let inst = new type(...constructParams);
-
-    // process async constructors
-    if (inst instanceof Promise) {
-      inst = await inst;
-    }
+    const inst = new type(...constructParams);
 
     // force store current container provided type
     // @ts-ignore

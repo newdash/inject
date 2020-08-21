@@ -318,4 +318,23 @@ describe('Wrapper Test Suite', () => {
   });
 
 
+  it('should support wrapped type inject', async () => {
+
+    class A { @inject("aValue") aValue: number }
+
+    const ic = InjectContainer.New();
+    ic.registerInstance("aValue", 324);
+
+    const WA = ic.wrap(A);
+
+    // even with wrapper, 
+    // container will check un-wrapped instance
+    const a = await ic.getInstance(WA);
+
+    expect(a.aValue).toBe(324);
+
+  });
+
+
+
 });
