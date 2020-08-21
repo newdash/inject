@@ -190,6 +190,18 @@ export function getPropertyInjectedType(target, targetKey) {
 }
 
 /**
+ * create a new decorator for inject specific type
+ * @param type 
+ */
+export function createInjectDecorator(type?: LazyRef): (target, targetKey, parameterIndex?) => void;
+export function createInjectDecorator(type: any): (target, targetKey, parameterIndex?) => void;
+export function createInjectDecorator(type: any) {
+  return function (target, targetKey, parameterIndex) {
+    return inject(type)(target, targetKey, parameterIndex);
+  };
+}
+
+/**
  * inject parameter
  *
  * @param type
@@ -240,5 +252,4 @@ export function inject(type?: any) {
   };
 
 }
-
 

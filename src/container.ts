@@ -4,10 +4,14 @@ import { getClassConstructorParams, getClassMethodParams, getPropertyInjectedTyp
 import { createLogger } from './logger';
 import { createInstanceProvider, DefaultClassProvider, InstanceProvider } from './provider';
 import { Class, getOrDefault, InjectWrappedClassType, InjectWrappedInstance, OptionalParameters } from './utils';
-
 const containerLogger = createLogger("container");
 
 const executeLogger = createLogger("injectExecute");
+
+/**
+ * used to generate id sequence for containers
+ */
+let containerIdSequence = 0;
 
 /**
  * tmp inject context, store injection temp object in single construction
@@ -27,6 +31,10 @@ export class InjectContainer {
 
   private _providers: Map<any, any>;
 
+  private _id: number;
+
+  private _formattedId: string;
+
   /**
    * avoid create root inject container directly, 
    * 
@@ -36,6 +44,7 @@ export class InjectContainer {
     this._providers = new Map();
     this._store = new Map();
     this._doNotWrapTypes = new Set();
+    this._id = containerIdSequence++;
   }
 
   public static New(): InjectContainer {
@@ -51,6 +60,25 @@ export class InjectContainer {
     types.forEach(type => {
       this._doNotWrapTypes.add(type);
     });
+  }
+
+  /**
+   * get the id of container
+   */
+  public getId(): string {
+    if (this._formattedId == undefined) {
+      let c: InjectContainer = this;
+      const ids = [];
+      for (; ;) {
+        ids.push(c._id.toString());
+        c = c.getParent();
+        if (c == undefined) {
+          break;
+        }
+      }
+      this._formattedId = ids.reverse().join("->");
+    }
+    return this._formattedId;
   }
 
   protected canWrap(type: any) {
@@ -81,9 +109,9 @@ export class InjectContainer {
       }
       if (type != undefined) {
         if (this.hasInProviders(type)) {
-          containerLogger('overwrite provider for %O', type);
+          containerLogger('c(%o), overwrite provider for %O', this.getId(), type);
         } else {
-          containerLogger('register provider for %O', type);
+          containerLogger('c(%o), register provider for %O', this.getId(), type);
         }
         this._providers.set(type, provider);
       }
@@ -323,7 +351,7 @@ export class InjectContainer {
             if (typeof methodOrProperty == 'function') {
               const proxyMethod = (...args: any[]) => this.injectExecute(target, methodOrProperty, ...args);
               // overwrite function name
-              Object.defineProperty(proxyMethod, "name", { value: property, writable: false });
+              Object.defineProperty(proxyMethod, "name", { value: `${property.toString()}Wrapped`, writable: false });
               proxyMethod[WRAPPED_OBJECT_METHOD_INJECT_INFO] = getClassMethodParams(target, property);
               return proxyMethod;
             }
@@ -368,7 +396,7 @@ export class InjectContainer {
 
     const methodName = method.name;
     const type = instance;
-    let paramsInfo = [];
+    let paramsInfo: InjectParameter[] = [];
 
     if (method[WRAPPED_OBJECT_METHOD_INJECT_INFO]) {
       // get meta from duplicate
@@ -385,20 +413,29 @@ export class InjectContainer {
         const paramInfo = paramsInfo[idx];
         // if user has define the parameter in `injectExecute`, prefer use that
         if (args[paramInfo.parameterIndex] == undefined) {
-          params[paramInfo.parameterIndex] = await this.getWrappedInstance(paramInfo.type);
-          if (getUnProxyTarget(instance)?.constructor == Function) {
-            executeLogger("before: call static method '%s.%s', inject parameter(%o): %o",
-              getUnProxyTarget(instance)?.name,
+
+          const log = (format, typeName) => {
+            executeLogger(format,
+              this.getId(),
+              typeName,
               methodName,
               paramInfo.parameterIndex,
+              paramInfo.type,
               params[paramInfo.parameterIndex],
             );
+          };
+
+          params[paramInfo.parameterIndex] = await this.getWrappedInstance(paramInfo.type);
+          const unProxyObject = getUnProxyTarget(instance);
+          if (unProxyObject?.constructor == Function) {
+            log(
+              "c(%o), before call static method '%s.%s', inject parameter (%o: %o) with value: %o",
+              unProxyObject?.name,
+            );
           } else {
-            executeLogger("before: call '%s.%s', inject parameter(%o): %o",
-              getUnProxyTarget(instance)?.constructor?.name,
-              methodName,
-              paramInfo.parameterIndex,
-              params[paramInfo.parameterIndex],
+            log(
+              "c(%o), before call '%s.%s', inject parameter (%o: %o) with value: %o",
+              unProxyObject?.constructor?.name,
             );
           }
 

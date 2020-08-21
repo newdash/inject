@@ -1,5 +1,5 @@
 import { InjectContainer } from "./container";
-import { getClassConstructorParams, getClassInjectionInformation, getUnProxyTarget, provider } from "./decorators";
+import { getClassConstructorParams, getClassInjectionInformation, getUnProxyTarget, LazyRef, provider } from "./decorators";
 import { createLogger } from "./logger";
 
 
@@ -33,8 +33,6 @@ export class DefaultClassProvider implements InstanceProvider {
   transient?: boolean;
   container: InjectContainer;
 
-  private _logger: debug.Debugger;
-
   /**
    * 
    * @param type 
@@ -63,9 +61,11 @@ export class DefaultClassProvider implements InstanceProvider {
             paramInfo.type,
             this.container
           );
-          logger("before: create %o instance, inject constructor parameter(%o): %o",
+          logger("c(%o), before %o instance creating, inject constructor parameter (%o: %o) with value %o",
+            this.container.getId(),
             getUnProxyTarget(type),
             paramInfo.parameterIndex,
+            paramInfo.type,
             constructParams[paramInfo.parameterIndex],
           );
         }
@@ -88,10 +88,16 @@ export class DefaultClassProvider implements InstanceProvider {
       for (const key of keys) {
         const prop = info.get(key);
         if (prop.injectType == 'classProperty') {
-          inst[key] = await this.container.getWrappedInstance(prop.type, this.container);
-          logger("after: created %o instance, inject instance property(%o): %o",
+          let type = prop.type;
+          if (type instanceof LazyRef) {
+            type = type.getRef();
+          }
+          inst[key] = await this.container.getWrappedInstance(type, this.container);
+          logger("c(%o), after %o instance created, inject property (%o: %o) with value: %O",
+            this.container.getId(),
             getUnProxyTarget(type),
             key,
+            type,
             inst[key],
           );
         }

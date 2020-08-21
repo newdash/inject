@@ -1,5 +1,5 @@
 import { Server } from 'http';
-import { DefaultClassProvider, getClassConstructorParams, getClassInjectionInformation, getPropertyInjectedType, getProvideInfo, getTransientInfo, inject, InjectContainer, isTransientClass, LazyRef, provider, transientClass } from '../src/index';
+import { createInjectDecorator, DefaultClassProvider, getClassConstructorParams, getClassInjectionInformation, getPropertyInjectedType, getProvideInfo, getTransientInfo, inject, InjectContainer, isTransientClass, LazyRef, provider, transientClass } from '../src/index';
 
 describe('Inject Decorators Test Suite', () => {
 
@@ -106,6 +106,22 @@ describe('Inject Decorators Test Suite', () => {
     expect(getTransientInfo(cp1, "provide")).toBe(true);
 
 
+  });
+
+  it('should support create alias for specific type', async () => {
+
+    const ic = InjectContainer.New();
+    const injectV = createInjectDecorator("v");
+
+    class C {
+      @injectV
+      v: number
+    }
+
+    ic.registerInstance("v", 123);
+    const c = await ic.getInstance(C);
+
+    expect(c.v).toBe(123);
   });
 
 
