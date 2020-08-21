@@ -1,9 +1,13 @@
 import { alg, Graph } from 'graphlib';
 import { MSG_ERR_NOT_PROVIDER, WRAPPED_OBJECT_CONTAINER_PROPERTY, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_INJECT_INFO, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
 import { getClassConstructorParams, getClassMethodParams, getPropertyInjectedType, getProvideInfo, getTransientInfo, getUnProxyTarget, inject, InjectParameter, isProviderInstance, isProviderType, isProxyDisabled, isTransientClass, LazyRef, transientClass } from './decorators';
+import { createLogger } from './logger';
 import { createInstanceProvider, DefaultClassProvider, InstanceProvider } from './provider';
 import { Class, getOrDefault, InjectWrappedClassType, InjectWrappedInstance, OptionalParameters } from './utils';
 
+const containerLogger = createLogger("container");
+
+const executeLogger = createLogger("injectExecute");
 
 /**
  * tmp inject context, store injection temp object in single construction
@@ -22,6 +26,8 @@ export class InjectContainer {
   protected _doNotWrapTypes: Set<any>;
 
   private _providers: Map<any, any>;
+
+  private _logger: debug.Debugger;
 
   /**
    * avoid create root inject container directly, 
@@ -68,11 +74,20 @@ export class InjectContainer {
   public registerProvider(...providers: Array<InstanceProvider | Class<InstanceProvider>>): void;
   public registerProvider(...providers: any[]) {
     providers.forEach(provider => {
+      let type = getProvideInfo(provider, "provide");
       if (isProviderInstance(provider)) {
-        this._providers.set(getProvideInfo(provider, "provide"), provider);
+        type = getProvideInfo(provider, "provide");
       }
       else if (isProviderType(provider)) {
-        this._providers.set(getProvideInfo(provider.prototype, "provide"), provider);
+        type = getProvideInfo(provider.prototype, "provide");
+      }
+      if (type != undefined) {
+        if (this.hasInProviders(type)) {
+          containerLogger('overwrite provider for %O', type);
+        } else {
+          containerLogger('register provider for %O', type);
+        }
+        this._providers.set(type, provider);
       }
       else {
         throw TypeError(MSG_ERR_NOT_PROVIDER);
@@ -309,6 +324,8 @@ export class InjectContainer {
             const methodOrProperty = target[property];
             if (typeof methodOrProperty == 'function') {
               const proxyMethod = (...args: any[]) => this.injectExecute(target, methodOrProperty, ...args);
+              // overwrite function name
+              Object.defineProperty(proxyMethod, "name", { value: property, writable: false });
               proxyMethod[WRAPPED_OBJECT_METHOD_INJECT_INFO] = getClassMethodParams(target, property);
               return proxyMethod;
             }
@@ -371,6 +388,22 @@ export class InjectContainer {
         // if user has define the parameter in `injectExecute`, prefer use that
         if (args[paramInfo.parameterIndex] == undefined) {
           params[paramInfo.parameterIndex] = await this.getWrappedInstance(paramInfo.type);
+          if (getUnProxyTarget(instance)?.constructor == Function) {
+            executeLogger("before: call static method '%s.%s', inject parameter(%o): %o",
+              getUnProxyTarget(instance)?.name,
+              methodName,
+              paramInfo.parameterIndex,
+              params[paramInfo.parameterIndex],
+            );
+          } else {
+            executeLogger("before: call '%s.%s', inject parameter(%o): %o",
+              getUnProxyTarget(instance)?.constructor?.name,
+              methodName,
+              paramInfo.parameterIndex,
+              params[paramInfo.parameterIndex],
+            );
+          }
+
         }
       }
     }

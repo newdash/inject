@@ -1,5 +1,10 @@
 import { InjectContainer } from "./container";
-import { getClassConstructorParams, getClassInjectionInformation, provider } from "./decorators";
+import { getClassConstructorParams, getClassInjectionInformation, getUnProxyTarget, provider } from "./decorators";
+import { createLogger } from "./logger";
+
+
+const logger = createLogger("defaultClassProvider");
+
 
 export interface InstanceProvider<T = any> {
   /**
@@ -27,6 +32,8 @@ export class DefaultClassProvider implements InstanceProvider {
   type: any;
   transient?: boolean;
   container: InjectContainer;
+
+  private _logger: debug.Debugger;
 
   /**
    * 
@@ -56,6 +63,11 @@ export class DefaultClassProvider implements InstanceProvider {
             paramInfo.type,
             this.container
           );
+          logger("before: create %o instance, inject constructor parameter(%o): %o",
+            getUnProxyTarget(type),
+            paramInfo.parameterIndex,
+            constructParams[paramInfo.parameterIndex],
+          );
         }
       }
     }
@@ -77,6 +89,11 @@ export class DefaultClassProvider implements InstanceProvider {
         const prop = info.get(key);
         if (prop.injectType == 'classProperty') {
           inst[key] = await this.container.getWrappedInstance(prop.type, this.container);
+          logger("after: created %o instance, inject instance property(%o): %o",
+            getUnProxyTarget(type),
+            key,
+            inst[key],
+          );
         }
       }
     }

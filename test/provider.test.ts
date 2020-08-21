@@ -330,5 +330,21 @@ describe('Inject Provider Test Suite', () => {
 
   });
 
+  it('should support register provider by decorator', async () => {
+    const ic = InjectContainer.New();
+
+    // must bind `this`
+    const registerProvider = ic.registerProvider.bind(ic);
+
+    @registerProvider
+    class VProvider {
+      @provider("v")
+      provide() { return 15; }
+    }
+
+    expect(await ic.getInstance("v")).toBe(15);
+
+  });
+
 
 });
