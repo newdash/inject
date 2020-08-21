@@ -27,12 +27,10 @@ export class InjectContainer {
 
   private _providers: Map<any, any>;
 
-  private _logger: debug.Debugger;
-
   /**
    * avoid create root inject container directly, 
    * 
-   * just try the `InjectContainer.New()` to create a new container, :)
+   * please use the `InjectContainer.New()` to create a new container, :)
    */
   constructor() {
     this._providers = new Map();
