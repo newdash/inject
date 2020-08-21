@@ -1,5 +1,5 @@
 import { v4 } from 'uuid';
-import { createInstanceProvider, inject, InjectContainer, InstanceProvider, LazyRef, provider } from '../src';
+import { createInstanceProvider, inject, InjectContainer, InjectWrappedInstance, InstanceProvider, LazyRef, provider } from '../src';
 import { MSG_ERR_NOT_PROVIDER } from '../src/constants';
 
 
@@ -303,6 +303,30 @@ describe('Inject Provider Test Suite', () => {
 
     expect(await ic.getInstance("v1")).toBe(1);
     expect(await ic.getInstance("v2")).toBe(2);
+
+  });
+
+  it('should support deep constructor injection', async () => {
+
+    class A {
+      v: number
+      constructor(@inject("v") v) {
+        this.v = v;
+      }
+    }
+
+    class B {
+      a: InjectWrappedInstance<A>
+      constructor(@inject(A) a) {
+        this.a = a;
+      }
+    }
+
+    const ic = InjectContainer.New();
+    ic.registerInstance("v", 999);
+    const b = await ic.getInstance(B);
+
+    expect(b.a.v).toBe(999);
 
   });
 
