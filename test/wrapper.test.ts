@@ -1,4 +1,4 @@
-import { disableProxy, getClassMethodParams, getUnProxyTarget, inject, InjectContainer, InjectWrappedInstance, isProviderInstance } from "../src";
+import { disableProxy, getClassMethodParams, getUnProxyTarget, inject, InjectContainer, InjectWrappedInstance, isWrappedObject } from "../src";
 
 
 describe('Wrapper Test Suite', () => {
@@ -294,36 +294,34 @@ describe('Wrapper Test Suite', () => {
 
   it('should support disable wrapper in property injection', async () => {
 
-    class A {
-
-    }
-
+    class A { }
+    class C { }
     class B {
-
       @inject()
       a: A
-
+      @inject()
+      c: C
     }
 
     const ic = InjectContainer.New();
     ic.doNotWrap(A);
 
     const b = await ic.getInstance(B);
-    expect(isProviderInstance(b.a)).toBe(false);
+    expect(isWrappedObject(b.a)).toBe(false);
 
     const bw = await ic.getInstance(B);
-    expect(isProviderInstance(bw.a)).toBe(false);
-
+    expect(isWrappedObject(bw.a)).toBe(false);
+    expect(isWrappedObject(bw.c)).toBe(true);
 
   });
 
 
   it('should support wrapped type inject', async () => {
 
-    class A { @inject("aValue") aValue: number }
-
     const ic = InjectContainer.New();
-    ic.registerInstance("aValue", 324);
+    const injectAValue = ic.registerInstance("aValue", 324);
+
+    class A { @injectAValue aValue: number }
 
     const WA = ic.wrap(A);
 

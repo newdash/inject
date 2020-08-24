@@ -1,6 +1,6 @@
 import { alg, Graph } from 'graphlib';
 import { MSG_ERR_NOT_PROVIDER, WRAPPED_OBJECT_CONTAINER_PROPERTY, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_INJECT_INFO, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
-import { getClassConstructorParams, getClassMethodParams, getPropertyInjectedType, getProvideInfo, getTransientInfo, getUnProxyTarget, inject, InjectParameter, isProviderInstance, isProviderType, isProxyDisabled, isTransient, LazyRef, transient } from './decorators';
+import { createInjectDecorator, getClassConstructorParams, getClassMethodParams, getPropertyInjectedType, getProvideInfo, getTransientInfo, getUnProxyTarget, inject, InjectParameter, isProviderInstance, isProviderType, isProxyDisabled, isTransient, LazyRef, transient } from './decorators';
 import { createLogger } from './logger';
 import { createInstanceProvider, DefaultClassProvider, InstanceProvider } from './provider';
 import { Class, getOrDefault, InjectWrappedClassType, InjectWrappedInstance, OptionalParameters } from './utils';
@@ -149,8 +149,18 @@ export class InjectContainer {
     });
   }
 
+  /**
+   * register a instance into container directly
+   * 
+   * @param type 
+   * @param instance 
+   * @param transient 
+   * 
+   * @returns the inject decorator of the type
+   */
   public registerInstance(type: any, instance: any, transient: boolean = false) {
     this.registerProvider(createInstanceProvider(type, instance, transient));
+    return createInjectDecorator(type);
   }
 
   public async createSubContainer(): Promise<InjectContainer> {
