@@ -26,7 +26,7 @@ function overwriteProvider(type: any, provider: InstanceProvider, ctx: InjectCon
       ic._providers.set(type, provider);
       break;
     }
-    ic = ctx.getParent();
+    ic = ic.getParent();
     if (ic == undefined) {
       break;
     }
