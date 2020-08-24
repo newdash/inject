@@ -55,36 +55,6 @@ describe('Wrapper Test Suite', () => {
   it('should support deep wrapper for object', async () => {
 
     class A {
-      async result(@inject("v1") v1: number, @inject("v2") v2: number) {
-        return v1 + v2;
-      }
-    }
-
-    const c = InjectContainer.New();
-    const c2 = await c.createSubContainer();
-    const c3 = await c.createSubContainer();
-
-    c2.registerInstance("v1", 1);
-    c2.registerInstance("v2", 1);
-
-    c3.registerInstance("v2", 11);
-
-    const a = await c2.getInstance(A);
-    const aW = c2.wrap(a);
-    const aW2 = c2.wrap(aW);
-
-    expect(aW).toBe(aW2); // do not return wrapper again for same instance
-
-    const aWW = c3.wrap(aW);
-
-    expect(await aW.result()).toBe(2);
-    expect(await aWW.result()).toBe(12); // deep wrapper
-
-  });
-
-  it('should support deep wrapper for object with required', async () => {
-
-    class A {
       async result(@required @inject("v1") v1: number, @inject("v2") v2: number) {
         return v1 + v2;
       }
@@ -111,8 +81,6 @@ describe('Wrapper Test Suite', () => {
     expect(await aWW.result()).toBe(12); // deep wrapper
 
   });
-
-
 
   it('should support inject methods of wrapped object', async () => {
 
