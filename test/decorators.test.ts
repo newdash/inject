@@ -1,5 +1,5 @@
 import { Server } from 'http';
-import { createInjectDecorator, DefaultClassProvider, getClassConstructorParams, getClassInjectionInformation, getPropertyInjectedType, getProvideInfo, getTransientInfo, inject, InjectContainer, isTransient, LazyRef, provider, transient } from '../src/index';
+import { createInjectDecorator, DefaultClassProvider, getClassConstructorParams, getClassInjectionInformation, getNamespace, getPropertyInjectedType, getProvideInfo, getTransientInfo, inject, InjectContainer, isTransient, LazyRef, namespace, provider, transient } from '../src/index';
 
 describe('Inject Decorators Test Suite', () => {
 
@@ -122,6 +122,26 @@ describe('Inject Decorators Test Suite', () => {
     const c = await ic.getInstance(C);
 
     expect(c.v).toBe(123);
+  });
+
+  it('should support namespace', () => {
+
+
+    @namespace("inject.test.demo1")
+    class A { }
+    class B { }
+
+    @namespace("inject.test.demo2")
+    class C {
+      a = 1
+    }
+
+    expect(getNamespace(A)).toBe("inject.test.demo1");
+    expect(getNamespace(B)).toBe("");
+
+    // get namespace for instance
+    expect(getNamespace((new C))).toBe("inject.test.demo2");
+
   });
 
 

@@ -10,6 +10,8 @@ const KEY_INJECT_CLASS = 'inject:key_inject_class';
 const KEY_INJECT_PARAMS = 'inject:method_inject_params';
 const KEY_TRANSIENT = 'inject:class:transient';
 
+const KEY_NAMESPACE = "inject:namespace";
+
 const KEY_PROVIDE = 'inject:provide';
 
 const KEY_DISABLE_PROXY = 'inject:proxy:disable';
@@ -105,9 +107,34 @@ export function isTransient(target, targetKey?) {
     return Boolean(Reflect.getMetadata(KEY_TRANSIENT, target, targetKey));
   }
   if (typeof target == 'function') {
-    return Boolean(Reflect.getOwnMetadata(KEY_TRANSIENT, target, targetKey));
+    return Boolean(Reflect.getOwnMetadata(KEY_TRANSIENT, target));
   }
   return false;
+}
+
+export function namespace(nSpace) {
+  return function (target: Class) {
+    Reflect.defineMetadata(KEY_NAMESPACE, nSpace, target);
+  };
+}
+
+/**
+ * get namespace for class
+ * 
+ * @param target 
+ */
+export function getNamespace(target: Class): string
+/**
+ * get namespace for instance
+ * 
+ * @param target 
+ */
+export function getNamespace(target: any): string
+export function getNamespace(target: any): string {
+  if (target.constructor == Function) {
+    return Reflect.getOwnMetadata(KEY_NAMESPACE, target) || "";
+  }
+  return Reflect.getOwnMetadata(KEY_NAMESPACE, target?.constructor) || "";
 }
 
 export function setClassInjectInformation(target, info) {

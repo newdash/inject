@@ -59,7 +59,6 @@ export class DefaultClassProvider implements InstanceProvider {
         if (args[paramInfo.parameterIndex] == undefined) {
           constructParams[paramInfo.parameterIndex] = await this.container.getWrappedInstance(
             paramInfo.type,
-            this.container
           );
           logger("c(%o), before %o instance creating, inject constructor parameter (%o: %o) with value %o",
             this.container.getId(),

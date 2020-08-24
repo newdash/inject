@@ -37,6 +37,10 @@ function overwriteProvider(type: any, provider: InstanceProvider, ctx: InjectCon
  */
 let containerIdSequence = 0;
 
+function generateContainerId() {
+  return containerIdSequence++;
+}
+
 /**
  * tmp inject context, store injection temp object in single construction
  */
@@ -68,7 +72,7 @@ export class InjectContainer {
     this._providers = new Map();
     this._store = new Map();
     this._doNotWrapTypes = new Set();
-    this._id = containerIdSequence++;
+    this._id = generateContainerId();
   }
 
   public static New(): InjectContainer {
@@ -178,7 +182,7 @@ export class InjectContainer {
     }
 
     // if class has cycle dependency in constructor, throw error
-    this._checkDependency(type);
+    ctx._checkDependency(type);
 
     let provider = undefined;
 
