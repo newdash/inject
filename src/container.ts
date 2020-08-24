@@ -76,7 +76,7 @@ export class InjectContainer {
   }
 
   public static New(): InjectContainer {
-    return new SubLevelInjectContainer(new InjectContainer());
+    return new ChildInjectContainer(new InjectContainer());
   }
 
   /**
@@ -155,7 +155,7 @@ export class InjectContainer {
 
   public async createSubContainer(): Promise<InjectContainer> {
     // @ts-ignore
-    return new SubLevelInjectContainer(this);
+    return new ChildInjectContainer(this);
   }
 
   async getInstance<T extends Class>(type: LazyRef<T>, ctx?: InjectContainer): Promise<InstanceType<T>>;
@@ -177,7 +177,7 @@ export class InjectContainer {
     // just inject a sub container,
     // and it will useful for many scenarios
     // :)
-    if (type == InjectContainer || type == SubLevelInjectContainer) {
+    if (type == InjectContainer || type == ChildInjectContainer) {
       return await this.createSubContainer();
     }
 
@@ -557,12 +557,15 @@ export class InjectContainer {
 
 }
 
+/**
+ * child level Inject Container
+ */
 @transient
-export class SubLevelInjectContainer extends InjectContainer {
+export class ChildInjectContainer extends InjectContainer {
 
-  constructor(@inject(InjectContainer) globalContainer: InjectContainer) {
+  constructor(@inject(InjectContainer) parentContainer: InjectContainer) {
     super();
-    this._parent = globalContainer;
+    this._parent = parentContainer;
   }
 
   hasInStore(type) {

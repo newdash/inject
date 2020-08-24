@@ -1,5 +1,5 @@
 import { v4 } from 'uuid';
-import { createInstanceProvider, InjectContainer, provider, SubLevelInjectContainer, transient } from '../src';
+import { ChildInjectContainer, createInstanceProvider, InjectContainer, provider, transient } from '../src';
 
 
 describe('Container Test Suite', () => {
@@ -36,8 +36,8 @@ describe('Container Test Suite', () => {
   it('should support transient providers', async () => {
 
     const c1 = InjectContainer.New();
-    const c2 = await c1.getInstance(SubLevelInjectContainer);
-    const c3 = await c1.getInstance(SubLevelInjectContainer);
+    const c2 = await c1.getInstance(ChildInjectContainer);
+    const c3 = await c1.getInstance(ChildInjectContainer);
 
     class UUIDProvider {
       @transient
@@ -82,8 +82,8 @@ describe('Container Test Suite', () => {
   it('should support deep container hierarchy', async () => {
 
     const c1 = InjectContainer.New();
-    const c2 = await c1.getInstance(SubLevelInjectContainer);
-    const c3 = await c2.getInstance(SubLevelInjectContainer);
+    const c2 = await c1.getInstance(ChildInjectContainer);
+    const c3 = await c2.getInstance(ChildInjectContainer);
 
     c1.registerProvider(createInstanceProvider('v1', '1'));
     c1.registerProvider(createInstanceProvider('v01', '01'));
