@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.7](https://github.com/newdash/inject/compare/v0.2.6...v0.2.7) (2020-08-24)
+
+
+### Features
+
+* [#2](https://github.com/newdash/inject/issues/2) add [@requried](https://github.com/requried) decorator ([8cf2273](https://github.com/newdash/inject/commit/8cf22731db677e93e49de25650d4c3ed3c2117ff))
+* [#2](https://github.com/newdash/inject/issues/2) required check ([c0cecd2](https://github.com/newdash/inject/commit/c0cecd2bc03f077fdc7208a7f29aca62ea4ec786))
+* add [@namespace](https://github.com/namespace) ([1d869ef](https://github.com/newdash/inject/commit/1d869ef0c51115abebc61b0cc9e53ece6d9ed1cf))
+* enhance logger ([9ec810a](https://github.com/newdash/inject/commit/9ec810a1eafdd223e46a0fa741c063be660df598))
+
 ### [0.2.6](https://github.com/newdash/inject/compare/v0.2.5...v0.2.6) (2020-08-24)
 
 ### [0.2.5](https://github.com/newdash/inject/compare/v0.2.4...v0.2.5) (2020-08-21)
