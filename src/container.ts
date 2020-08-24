@@ -1,5 +1,5 @@
 import { alg, Graph } from 'graphlib';
-import { MSG_ERR_NOT_PROVIDER, WRAPPED_OBJECT_CONTAINER_PROPERTY, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_INJECT_INFO, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
+import { MSG_ERR_NOT_PROVIDER, MSG_ERR_NO_UNDEFINED, WRAPPED_OBJECT_CONTAINER_PROPERTY, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_INJECT_INFO, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
 import { createInjectDecorator, getClassConstructorParams, getClassMethodParams, getPropertyInjectedType, getProvideInfo, getTransientInfo, getUnProxyTarget, inject, InjectParameter, isProviderInstance, isProviderType, isProxyDisabled, isTransient, LazyRef, transient } from './decorators';
 import { createLogger } from './logger';
 import { createInstanceProvider, DefaultClassProvider, InstanceProvider } from './provider';
@@ -235,6 +235,7 @@ export class InjectContainer {
   public registerProvider(...providers: Array<InstanceProvider | Class<InstanceProvider>>): void;
   public registerProvider(...providers: any[]) {
     providers.forEach(provider => {
+      if (provider == undefined) { throw new TypeError(MSG_ERR_NO_UNDEFINED); }
       let type = getProvideInfo(provider, "provide");
       if (isProviderInstance(provider)) {
         type = getProvideInfo(provider, "provide");
@@ -250,9 +251,7 @@ export class InjectContainer {
         }
         this._providers.set(type, provider);
       }
-      else {
-        throw TypeError(MSG_ERR_NOT_PROVIDER);
-      }
+      else { throw new TypeError(MSG_ERR_NOT_PROVIDER); }
     });
   }
 

@@ -1,6 +1,6 @@
 import { v4 } from 'uuid';
 import { createInstanceProvider, inject, InjectContainer, InjectWrappedInstance, InstanceProvider, LazyRef, provider, transient } from '../src';
-import { MSG_ERR_NOT_PROVIDER } from '../src/constants';
+import { MSG_ERR_NOT_PROVIDER, MSG_ERR_NO_UNDEFINED } from '../src/constants';
 
 
 describe('Inject Provider Test Suite', () => {
@@ -418,6 +418,18 @@ describe('Inject Provider Test Suite', () => {
 
     expect(constructNum).toBe(1);
     expect(funcCall).toBe(3);
+
+
+  });
+
+  it('should reject "undefined" provider', () => {
+
+    const ic = InjectContainer.New();
+
+    expect((() => ic.registerProvider(undefined))).toThrow(MSG_ERR_NO_UNDEFINED);
+    expect((() => ic.registerProvider(null))).toThrow(MSG_ERR_NO_UNDEFINED);
+
+    expect((() => ic.registerInstance(undefined, "1"))).toThrow(MSG_ERR_NOT_PROVIDER);
 
 
   });

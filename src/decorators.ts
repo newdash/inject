@@ -11,6 +11,8 @@ const KEY_INJECT_CLASS = 'inject:key_inject_class';
 const KEY_INJECT_PARAMS = 'inject:method_inject_params';
 const KEY_TRANSIENT = 'inject:class:transient';
 
+const KEY_REQUIRED = 'inject:required_parameter';
+
 const KEY_NAMESPACE = "inject:namespace";
 
 const KEY_PROVIDE = 'inject:provide';
@@ -113,6 +115,26 @@ export function isTransient(target, targetKey?) {
     return Boolean(Reflect.getOwnMetadata(KEY_TRANSIENT, target));
   }
   return false;
+}
+
+export function required(target, targetKey)
+export function required(target, targetKey, parameterIndex)
+export function required(target, targetKey, parameterIndex?) {
+  if (parameterIndex != undefined) {
+    const m = Reflect.getMetadata(KEY_REQUIRED, target, targetKey) || [];
+    m[parameterIndex] = true;
+    Reflect.defineMetadata(KEY_REQUIRED, m, target, targetKey);
+  } else {
+    Reflect.defineMetadata(KEY_REQUIRED, true, target, targetKey);
+  }
+}
+
+export function isRequired(target, targetKey, parameterIndex?) {
+  if (parameterIndex != undefined) {
+    const m = Reflect.getMetadata(KEY_REQUIRED, target, targetKey) || [];
+    return Boolean(m[parameterIndex]);
+  }
+  return Boolean(Reflect.getMetadata(KEY_REQUIRED, target, targetKey));
 }
 
 export function namespace(nSpace) {

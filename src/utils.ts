@@ -6,6 +6,13 @@ export function getOrDefault(map: Map<any, any>, key, value) {
   return map.get(key);
 }
 
+export function isClass(obj: any): obj is Class {
+  if (obj?.constructor === Function) {
+    return true;
+  }
+  return false;
+}
+
 export type Class<T = any> = new (...args: any[]) => T
 
 /**

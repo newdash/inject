@@ -1,5 +1,5 @@
 import { Server } from 'http';
-import { createInjectDecorator, DefaultClassProvider, getClassConstructorParams, getClassInjectionInformation, getNamespace, getPropertyInjectedType, getProvideInfo, getTransientInfo, inject, InjectContainer, isTransient, LazyRef, namespace, provider, transient, withType } from '../src/index';
+import { createInjectDecorator, DefaultClassProvider, getClassConstructorParams, getClassInjectionInformation, getNamespace, getPropertyInjectedType, getProvideInfo, getTransientInfo, inject, InjectContainer, isRequired, isTransient, LazyRef, namespace, provider, required, transient, withType } from '../src/index';
 
 describe('Inject Decorators Test Suite', () => {
 
@@ -155,6 +155,22 @@ describe('Inject Decorators Test Suite', () => {
 
     expect(params).toHaveLength(1);
     expect(params[0].type).toBe("v");
+
+  });
+
+  it('should support @required decorator', () => {
+
+    class A {
+      @required
+      a: any
+      f(@required v: any) { }
+    }
+
+    const a = new A;
+
+    expect(isRequired(a, "a")).toBeTruthy();
+    expect(isRequired(a, "f", 0)).toBeTruthy();
+
 
   });
 
