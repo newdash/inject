@@ -11,7 +11,6 @@ const KEY_INJECT_PARAMS = 'inject:method_inject_params';
 const KEY_TRANSIENT = 'inject:class:transient';
 
 const KEY_PROVIDE = 'inject:provide';
-const KEY_PROVIDE_TRANSIENT = 'inject:provide:transient';
 
 const KEY_DISABLE_PROXY = 'inject:proxy:disable';
 
@@ -83,18 +82,30 @@ export function getClassInjectionInformation(target): Map<string, InjectInformat
 }
 
 /**
- * transient type, not singleton, do not cache it
+ * transient provider, inject container will not cache it
  *
  * @param target
  */
-export function transientClass(target) {
-  Reflect.defineMetadata(KEY_TRANSIENT, true, target);
+export function transient(target)
+/**
+ * transient type, inject container will not cache it
+ * 
+ * @param target 
+ * @param targetKey 
+ */
+export function transient(target, targetKey)
+export function transient(target, targetKey?) {
+  Reflect.defineMetadata(KEY_TRANSIENT, true, target, targetKey);
 }
 
-export function isTransientClass(target) {
+export function isTransient(target, targetKey?) {
   target = getUnProxyTarget(target);
+  if (targetKey != undefined) {
+    // for instance, must use prototype
+    return Boolean(Reflect.getMetadata(KEY_TRANSIENT, target, targetKey));
+  }
   if (typeof target == 'function') {
-    return Boolean(Reflect.getOwnMetadata(KEY_TRANSIENT, target));
+    return Boolean(Reflect.getOwnMetadata(KEY_TRANSIENT, target, targetKey));
   }
   return false;
 }
@@ -162,12 +173,12 @@ export function provider(type?: Class, transient?: boolean): (target, targetKey?
 export function provider(type?: any, transient = false) {
   return function (target, targetKey?) {
     Reflect.defineMetadata(KEY_PROVIDE, type, target, targetKey);
-    Reflect.defineMetadata(KEY_PROVIDE_TRANSIENT, transient, target, targetKey);
+    Reflect.defineMetadata(KEY_TRANSIENT, transient, target, targetKey);
   };
 }
 
 export function getTransientInfo(target: any, targetKey: any) {
-  return Boolean(Reflect.getMetadata(KEY_PROVIDE_TRANSIENT, target, targetKey));
+  return isTransient(target, targetKey);
 }
 
 export function getProvideInfo(target: any, targetKey?: any) {

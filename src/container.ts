@@ -1,6 +1,6 @@
 import { alg, Graph } from 'graphlib';
 import { MSG_ERR_NOT_PROVIDER, WRAPPED_OBJECT_CONTAINER_PROPERTY, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_INJECT_INFO, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
-import { getClassConstructorParams, getClassMethodParams, getPropertyInjectedType, getProvideInfo, getTransientInfo, getUnProxyTarget, inject, InjectParameter, isProviderInstance, isProviderType, isProxyDisabled, isTransientClass, LazyRef, transientClass } from './decorators';
+import { getClassConstructorParams, getClassMethodParams, getPropertyInjectedType, getProvideInfo, getTransientInfo, getUnProxyTarget, inject, InjectParameter, isProviderInstance, isProviderType, isProxyDisabled, isTransient, LazyRef, transient } from './decorators';
 import { createLogger } from './logger';
 import { createInstanceProvider, DefaultClassProvider, InstanceProvider } from './provider';
 import { Class, getOrDefault, InjectWrappedClassType, InjectWrappedInstance, OptionalParameters } from './utils';
@@ -8,6 +8,29 @@ import { Class, getOrDefault, InjectWrappedClassType, InjectWrappedInstance, Opt
 const containerLogger = createLogger("container");
 
 const executeLogger = createLogger("injectExecute");
+
+/**
+ * overwrite provider instance from sub to parent container
+ * 
+ * @param type 
+ * @param provider 
+ * @param ctx 
+ */
+function overwriteProvider(type: any, provider: InstanceProvider, ctx: InjectContainer) {
+  let ic: InjectContainer = ctx;
+  for (; ;) {
+    // @ts-ignore
+    if (ic._providers.has(type)) {
+      // @ts-ignore
+      ic._providers.set(type, provider);
+      break;
+    }
+    ic = ctx.getParent();
+    if (ic == undefined) {
+      break;
+    }
+  }
+}
 
 /**
  * used to generate id sequence for containers
@@ -168,12 +191,20 @@ export class InjectContainer {
     }
     // use default provider for classes
     else if (typeof type == 'function') {
-      provider = new DefaultClassProvider(type, isTransientClass(type), ctx);
+      provider = new DefaultClassProvider(type, isTransient(type), ctx);
     }
 
     if (isProviderType(provider)) {
+      let overwrite = true;
+      if (isTransient(provider)) {
+        overwrite = false;
+      }
       // just overwrite the provider type provider
-      provider = await this.getWrappedInstance(provider);
+      provider = await ctx.getWrappedInstance(provider);
+      if (overwrite) {
+        // store provider instance to parent
+        overwriteProvider(type, provider, ctx);
+      }
     }
 
     if (provider) {
@@ -260,6 +291,11 @@ export class InjectContainer {
     return this._providers.has(type);
   }
 
+  /**
+   * get provider by type
+   * 
+   * @param type 
+   */
   protected getProvider(type: any): any {
     return this._providers.get(type);
   }
@@ -326,7 +362,7 @@ export class InjectContainer {
         construct: async (target, args) => {
           const provider = new DefaultClassProvider(
             target,
-            isTransientClass(target),
+            isTransient(target),
             await this.createSubContainer()
           );
           return provider.provide(...args);
@@ -517,7 +553,7 @@ export class InjectContainer {
 
 }
 
-@transientClass
+@transient
 export class SubLevelInjectContainer extends InjectContainer {
 
   constructor(@inject(InjectContainer) globalContainer: InjectContainer) {

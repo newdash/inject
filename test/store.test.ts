@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { inject, InjectContainer, transientClass } from "../src";
+import { inject, InjectContainer, isWrappedObject, provider, transient } from "../src";
 
 describe('Storage Policy Test Suite', () => {
 
@@ -29,7 +29,7 @@ describe('Storage Policy Test Suite', () => {
   it('should not cache instance which is transient', async () => {
 
     class A { }
-    @transientClass
+    @transient
     class B { @inject() a: A }
     class C { @inject() b: B }
 
@@ -49,6 +49,44 @@ describe('Storage Policy Test Suite', () => {
     expect(c.b.a).toBe(b.a);
     expect(c.b.a).toBe(a);
     expect(b.a).toBe(a);
+
+  });
+
+  it('should not store wrapped object', async () => {
+
+    class A {
+
+      @inject("v")
+      v: number;
+    }
+
+    class B {
+
+      @inject()
+      a: A
+
+      @inject('c')
+      c: string
+
+    }
+
+    class CProvider {
+      @provider("c")
+      provide() {
+        return 'ccc';
+      }
+    }
+
+    const ic = InjectContainer.New();
+    ic.registerInstance("v", 1);
+    ic.registerProvider(CProvider);
+
+    const b = await ic.getWrappedInstance(B);
+    expect(b.a.v).toBe(1);
+
+    ic._store.forEach(value => {
+      expect(isWrappedObject(value)).toBeFalsy();
+    });
 
   });
 

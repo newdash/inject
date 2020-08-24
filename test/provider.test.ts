@@ -1,5 +1,5 @@
 import { v4 } from 'uuid';
-import { createInstanceProvider, inject, InjectContainer, InjectWrappedInstance, InstanceProvider, LazyRef, provider } from '../src';
+import { createInstanceProvider, inject, InjectContainer, InjectWrappedInstance, InstanceProvider, LazyRef, provider, transient } from '../src';
 import { MSG_ERR_NOT_PROVIDER } from '../src/constants';
 
 
@@ -345,6 +345,83 @@ describe('Inject Provider Test Suite', () => {
     expect(await ic.getInstance("v")).toBe(15);
 
   });
+
+  it('should only construct provide only once', async () => {
+
+    let constructNum = 0;
+    let funcCall = 0;
+
+    class CProvider {
+      constructor() {
+        constructNum++;
+      }
+      @provider("c")
+      provide() { funcCall++; return "CCC"; }
+    }
+
+    const ic = InjectContainer.New();
+    ic.registerProvider(CProvider);
+
+    await ic.getInstance("c");
+    await ic.getInstance("c");
+    await ic.getInstance("c");
+
+    expect(constructNum).toBe(1);
+    expect(funcCall).toBe(1);
+
+  });
+
+  it('should never cache transient provider', async () => {
+
+    let constructNum = 0;
+    let funcCall = 0;
+
+    @transient
+    class CProvider {
+      constructor() { constructNum++; }
+      @provider("c")
+      provide() { funcCall++; return "CCC"; }
+    }
+
+    const ic = InjectContainer.New();
+    ic.registerProvider(CProvider);
+
+    await ic.getInstance("c");
+    await ic.getInstance("c");
+    await ic.getInstance("c");
+
+    expect(constructNum).toBe(3);
+    expect(constructNum).toBe(3);
+
+
+  });
+
+
+  it('should cache provider but not cache value', async () => {
+
+    let constructNum = 0;
+    let funcCall = 0;
+
+    class CProvider {
+      constructor() { constructNum++; }
+      @transient
+      @provider("c")
+      provide() { funcCall++; return "CCC"; }
+    }
+
+    const ic = InjectContainer.New();
+    ic.registerProvider(CProvider);
+
+    await ic.getInstance("c");
+    await ic.getInstance("c");
+    await ic.getInstance("c");
+
+    expect(constructNum).toBe(1);
+    expect(funcCall).toBe(3);
+
+
+  });
+
 
 
 });
