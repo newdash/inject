@@ -524,6 +524,7 @@ export class InjectContainer {
       }
     }
 
+    // TO DO, 'type ' should refer the correct wrap
     if (this.canWrap(type)) {
       instance = this.wrap(instance);
     }

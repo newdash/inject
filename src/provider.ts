@@ -1,5 +1,5 @@
 import { InjectContainer } from "./container";
-import { getClassConstructorParams, getClassInjectionInformation, getUnProxyTarget, isRequired, LazyRef, provider, transient } from "./decorators";
+import { getClassConstructorParams, getClassInjectionInformation, getUnProxyTarget, isNoWrap, isRequired, LazyRef, noWrap, provider, transient } from "./decorators";
 import { RequiredNotFoundError } from "./errors";
 import { createLogger } from "./logger";
 
@@ -43,10 +43,13 @@ export class DefaultClassProvider implements InstanceProvider {
    * @param inherit 
    * @param container should be a sub container
    */
-  constructor(type: any, bTransient = false, container: InjectContainer) {
+  constructor(type: any, bTransient = false, container?: InjectContainer) {
     provider(type)(this, "provide");
     if (bTransient) {
       transient(this, "provide");
+    }
+    if (isNoWrap(type)) {
+      noWrap(this, "provide");
     }
     this.type = type;
     this.transient = bTransient;

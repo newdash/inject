@@ -11,6 +11,9 @@ const KEY_INJECT_CLASS = 'inject:key_inject_class';
 const KEY_INJECT_PARAMS = 'inject:method_inject_params';
 const KEY_TRANSIENT = 'inject:class:transient';
 
+const KEY_NO_WRAP = 'inject:no_wrap';
+
+
 const KEY_REQUIRED = 'inject:required_parameter';
 
 const KEY_NAMESPACE = "inject:namespace";
@@ -135,6 +138,27 @@ export function isRequired(target, targetKey, parameterIndex?) {
     return Boolean(m[parameterIndex]);
   }
   return Boolean(Reflect.getMetadata(KEY_REQUIRED, target, targetKey));
+}
+
+
+
+export function noWrap(target: Class);
+export function noWrap(target: any, targetKey: any);
+export function noWrap(target: any, targetKey?: any) {
+  Reflect.defineMetadata(KEY_NO_WRAP, true, target, targetKey);
+}
+
+export function isNoWrapProvider(provider) {
+  if (isProviderInstance(provider)) {
+    return isNoWrap(provider, "provide");
+  } else if (isProviderType) {
+    return isNoWrap(provider.prototype, "provide");
+  }
+  return false;
+}
+
+export function isNoWrap(target: any, targetKey?: any) {
+  return Boolean(Reflect.getMetadata(KEY_NO_WRAP, target, targetKey));
 }
 
 export function namespace(nSpace) {

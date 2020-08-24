@@ -1,5 +1,5 @@
 import { Server } from 'http';
-import { createInjectDecorator, DefaultClassProvider, getClassConstructorParams, getClassInjectionInformation, getNamespace, getPropertyInjectedType, getProvideInfo, getTransientInfo, inject, InjectContainer, isRequired, isTransient, LazyRef, namespace, provider, required, transient, withType } from '../src/index';
+import { createInjectDecorator, DefaultClassProvider, getClassConstructorParams, getClassInjectionInformation, getNamespace, getPropertyInjectedType, getProvideInfo, getTransientInfo, inject, InjectContainer, isNoWrap, isNoWrapProvider, isRequired, isTransient, LazyRef, namespace, noWrap, provider, required, transient, withType } from '../src/index';
 
 describe('Inject Decorators Test Suite', () => {
 
@@ -174,6 +174,39 @@ describe('Inject Decorators Test Suite', () => {
     expect(isRequired(a, "f", 0)).toBeTruthy();
     expect(isRequired(A, undefined, 0)).toBeTruthy();
 
+
+
+  });
+
+  it('should support @noWrap for class & provider', () => {
+
+    class A { }
+
+    @noWrap
+    class B { }
+
+    class P {
+      @noWrap
+      @provider("p")
+      provide() { }
+    }
+    class P2 {
+      @provider("p")
+      provide() { }
+    }
+
+    const aP = new DefaultClassProvider(A, undefined, InjectContainer.New());
+    const bP = new DefaultClassProvider(B, undefined, InjectContainer.New());
+
+    expect(isNoWrap(A)).toBeFalsy();
+    expect(isNoWrap(B)).toBeTruthy();
+    expect(isNoWrapProvider(P)).toBeTruthy();
+    expect(isNoWrapProvider(P2)).toBeFalsy();
+    expect(isNoWrapProvider(new P)).toBeTruthy();
+    expect(isNoWrapProvider(new P2)).toBeFalsy();
+
+    expect(isNoWrapProvider(bP)).toBeTruthy();
+    expect(isNoWrapProvider(aP)).toBeFalsy();
 
 
   });
