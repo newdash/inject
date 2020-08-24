@@ -1,5 +1,6 @@
 import { InjectContainer } from "./container";
-import { getClassConstructorParams, getClassInjectionInformation, getUnProxyTarget, LazyRef, provider, transient } from "./decorators";
+import { getClassConstructorParams, getClassInjectionInformation, getUnProxyTarget, isRequired, LazyRef, provider, transient } from "./decorators";
+import { RequiredNotFoundError } from "./errors";
 import { createLogger } from "./logger";
 
 
@@ -72,6 +73,12 @@ export class DefaultClassProvider implements InstanceProvider {
             paramInfo.type,
             constructParams[paramInfo.parameterIndex],
           );
+
+          if (constructParams[paramInfo.parameterIndex] === undefined) {
+            if (isRequired(type, undefined, paramInfo.parameterIndex)) {
+              throw new RequiredNotFoundError(type, undefined, paramInfo.parameterIndex);
+            }
+          }
         }
       }
     }
@@ -99,6 +106,11 @@ export class DefaultClassProvider implements InstanceProvider {
             type,
             inst[key],
           );
+          if (inst[key] === undefined) {
+            if (isRequired(inst, key)) {
+              throw new RequiredNotFoundError(inst, key);
+            }
+          }
         }
       }
     }

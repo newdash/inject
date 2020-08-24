@@ -164,12 +164,16 @@ describe('Inject Decorators Test Suite', () => {
       @required
       a: any
       f(@required v: any) { }
+
+      constructor(@required v?) { }
     }
 
     const a = new A;
 
     expect(isRequired(a, "a")).toBeTruthy();
     expect(isRequired(a, "f", 0)).toBeTruthy();
+    expect(isRequired(A, undefined, 0)).toBeTruthy();
+
 
 
   });

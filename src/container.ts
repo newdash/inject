@@ -1,6 +1,7 @@
 import { alg, Graph } from 'graphlib';
 import { MSG_ERR_NOT_PROVIDER, MSG_ERR_NO_UNDEFINED, WRAPPED_OBJECT_CONTAINER_PROPERTY, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_INJECT_INFO, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
-import { createInjectDecorator, getClassConstructorParams, getClassMethodParams, getPropertyInjectedType, getProvideInfo, getTransientInfo, getUnProxyTarget, inject, InjectParameter, isProviderInstance, isProviderType, isProxyDisabled, isTransient, LazyRef, transient } from './decorators';
+import { createInjectDecorator, getClassConstructorParams, getClassMethodParams, getPropertyInjectedType, getProvideInfo, getTransientInfo, getUnProxyTarget, inject, InjectParameter, isProviderInstance, isProviderType, isProxyDisabled, isRequired, isTransient, isWrappedObject, LazyRef, transient } from './decorators';
+import { RequiredNotFoundError } from './errors';
 import { createLogger } from './logger';
 import { createInstanceProvider, DefaultClassProvider, InstanceProvider } from './provider';
 import { Class, getOrDefault, InjectWrappedClassType, InjectWrappedInstance, OptionalParameters } from './utils';
@@ -501,17 +502,22 @@ export class InjectContainer {
 
           params[paramInfo.parameterIndex] = await this.getWrappedInstance(paramInfo.type);
           const unProxyObject = getUnProxyTarget(instance);
-          if (params[paramInfo.parameterIndex] != undefined) {
-            if (unProxyObject?.constructor == Function) {
-              log(
-                "c(%o), before call static method '%s.%s', inject parameter (%o: %o) with value: %o",
-                unProxyObject?.name,
-              );
-            } else {
-              log(
-                "c(%o), before call '%s.%s', inject parameter (%o: %o) with value: %o",
-                unProxyObject?.constructor?.name,
-              );
+          if (unProxyObject?.constructor == Function) {
+            log(
+              "c(%o), before call static method '%s.%s', inject parameter (%o: %o) with value: %o",
+              unProxyObject?.name,
+            );
+          } else {
+            log(
+              "c(%o), before call '%s.%s', inject parameter (%o: %o) with value: %o",
+              unProxyObject?.constructor?.name,
+            );
+          }
+          if (params[paramInfo.parameterIndex] == undefined) {
+            if (!isWrappedObject(instance)) {
+              if (isRequired(instance, methodName, paramInfo.parameterIndex)) {
+                throw new RequiredNotFoundError(type, methodName, paramInfo.parameterIndex);
+              }
             }
           }
         }

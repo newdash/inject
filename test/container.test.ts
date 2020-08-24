@@ -1,5 +1,6 @@
 import { v4 } from 'uuid';
-import { ChildInjectContainer, createInstanceProvider, InjectContainer, provider, transient } from '../src';
+import { ChildInjectContainer, createInstanceProvider, inject, InjectContainer, provider, required, transient } from '../src';
+import { RequiredNotFoundError } from '../src/errors';
 
 
 describe('Container Test Suite', () => {
@@ -99,6 +100,37 @@ describe('Container Test Suite', () => {
     expect(await c3.getInstance('v22')).toBe('22'); // from c2
     expect(await c3.getInstance('v11')).toBe('22'); // from c2
     expect(await c3.getInstance('v01')).toBe('01'); // from c1
+
+  });
+
+  it('should throw error when can not provide value for @required value', async () => {
+
+    const ic = InjectContainer.New();
+
+    class A {
+      @required
+      @inject("v")
+      aV: string;
+    }
+
+    class B {
+      constructor(@required @inject("v") bV?) { }
+    }
+
+    class C {
+      run(@required @inject("v") cV: any) {
+        return cV;
+      }
+    }
+
+    class D {
+      static run(@required @inject("v") dV: any) { }
+    }
+
+    expect(() => ic.getInstance(A)).rejects.toThrow(RequiredNotFoundError);
+    expect(() => ic.getInstance(B)).rejects.toThrow(RequiredNotFoundError);
+    expect(async () => { const c = await ic.getWrappedInstance(C); return c.run(); }).rejects.toThrow(RequiredNotFoundError);
+    expect(async () => { const d = await ic.wrap(D); return d.run(); }).rejects.toThrow(RequiredNotFoundError);
 
   });
 

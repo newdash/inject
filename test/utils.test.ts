@@ -1,4 +1,4 @@
-import { getOrDefault } from "../src/utils";
+import { getClassName, getOrDefault } from "../src/utils";
 
 
 describe('Utilities Test Suite', () => {
@@ -16,6 +16,23 @@ describe('Utilities Test Suite', () => {
 
     expect(m.size).toBe(1);
     expect(m.get(k)).toBe(v);
+
+
+  });
+
+  it('should support getClassName', () => {
+
+    class A { }
+
+    const a = new A;
+
+    expect(getClassName(A)).toBe("A");
+    expect(getClassName(a)).toBe("A");
+
+    expect(getClassName(null)).toBeUndefined();
+    expect(getClassName(undefined)).toBeUndefined();
+
+    expect(getClassName("Object")).toBe("String");
 
 
   });

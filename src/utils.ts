@@ -13,6 +13,16 @@ export function isClass(obj: any): obj is Class {
   return false;
 }
 
+export function getClassName(typeOrInstance: any): string {
+  if (typeOrInstance?.constructor == Function) {
+    return typeOrInstance.name;
+  }
+  if (typeOrInstance?.constructor?.constructor == Function) {
+    return typeOrInstance.constructor.name;
+  }
+  return undefined;
+}
+
 export type Class<T = any> = new (...args: any[]) => T
 
 /**
