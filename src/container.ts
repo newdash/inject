@@ -33,6 +33,113 @@ function overwriteProvider(type: any, provider: InstanceProvider, ctx: InjectCon
 }
 
 /**
+ * create wrapper (proxy) for object with inject container 
+ * 
+ * @param instance 
+ * @param ic 
+ */
+function createWrapper(instance: any, ic: InjectContainer) {
+
+  if (instance == null || instance == undefined) {
+    return instance;
+  }
+
+  if (['number', 'boolean', 'string', 'symbol', 'bigint'].includes(typeof instance)) {
+    return instance;
+  }
+
+  if (typeof instance == 'object' || typeof instance == 'function') {
+
+    // do NOT proxy inject container
+    if (instance instanceof InjectContainer) {
+      return instance;
+    }
+
+    // do NOT proxy promise object
+    if (instance instanceof Promise) {
+      return instance;
+    }
+
+    // if the object has been wrapped by provided container
+    if (instance[WRAPPED_OBJECT_CONTAINER_PROPERTY] == ic) {
+      return instance;
+    }
+
+    const handler: ProxyHandler<any> = {
+
+      get: (target, property) => {
+
+        if (isProxyDisabled(target, property as string)) {
+          return target[property];
+        }
+
+        if (['constructor', 'prototype'].includes(property as string)) {
+          return target[property];
+        }
+
+        // do NOT proxy if the injected has been indicated DO NOT WRAP
+        const injectType = getPropertyInjectedType(target, property);
+        // @ts-ignore
+        if (injectType != undefined && !ic.canWrap(injectType)) {
+          return target[property];
+        }
+
+        if (property in target) {
+          const methodOrProperty = target[property];
+          if (typeof methodOrProperty == 'function') {
+            const proxyMethod = (...args: any[]) => ic.injectExecute(target, methodOrProperty, ...args);
+            // overwrite function name
+            Object.defineProperty(proxyMethod, "name", {
+              value: `${property.toString()}_wrapped_by_container(${ic.getFormattedId()})`,
+              writable: false
+            });
+            proxyMethod[WRAPPED_OBJECT_METHOD_INJECT_INFO] = getClassMethodParams(target, property);
+            return proxyMethod;
+          }
+          return methodOrProperty;
+        }
+
+        if (property == WRAPPED_OBJECT_CONTAINER_PROPERTY) {
+          return ic;
+        }
+
+        if (property == WRAPPED_ORIGINAL_OBJECT_PROPERTY) {
+          return instance;
+        }
+
+        if (property == WRAPPED_OBJECT_INDICATOR) {
+          return true;
+        }
+
+        // if the property is not existed on object, return undefined
+        return undefined;
+
+      }
+
+    };
+
+    // for class, support proxy constructor
+    if (instance?.constructor == Function) {
+
+      handler.construct = async (target, args) => {
+        const provider = new DefaultClassProvider(
+          target,
+          isTransient(target),
+          await ic.createSubContainer()
+        );
+        return provider.provide(...args);
+      };
+
+    }
+
+    return new Proxy(instance, handler);
+
+  }
+
+  return instance;
+}
+
+/**
  * used to generate id sequence for containers
  */
 let containerIdSequence = 0;
@@ -85,15 +192,15 @@ export class InjectContainer {
    * it means the inject container will NEVER return the Proxy of this type object
    */
   public doNotWrap(...types: any[]) {
-    types.forEach(type => {
-      this._doNotWrapTypes.add(type);
-    });
+    types.forEach(type => { this._doNotWrapTypes.add(type); });
   }
 
   /**
-   * get the id of container
+   * get the formatted id of container
+   * 
+   * e.g. 1->2->3
    */
-  public getId(): string {
+  public getFormattedId(): string {
     if (this._formattedId == undefined) {
       let c: InjectContainer = this;
       const ids = [];
@@ -137,9 +244,9 @@ export class InjectContainer {
       }
       if (type != undefined) {
         if (this.hasInProviders(type)) {
-          containerLogger('c(%o), overwrite provider for %O', this.getId(), type);
+          containerLogger('c(%o), overwrite provider for %O', this.getFormattedId(), type);
         } else {
-          containerLogger('c(%o), register provider for %O', this.getId(), type);
+          containerLogger('c(%o), register provider for %O', this.getFormattedId(), type);
         }
         this._providers.set(type, provider);
       }
@@ -349,90 +456,7 @@ export class InjectContainer {
   public wrap<T = any>(instance: T): InjectWrappedInstance<T>;
   public wrap(instance: number): number;
   public wrap(instance: any): any {
-
-    if (instance == null || instance == undefined) {
-      return instance;
-    }
-
-    if (['number', 'boolean', 'string', 'symbol', 'bigint'].includes(typeof instance)) {
-      return instance;
-    }
-
-    if (typeof instance == 'object' || typeof instance == 'function') {
-
-      if (instance instanceof InjectContainer) {
-        return instance;
-      }
-
-      if (instance instanceof Promise) {
-        return instance;
-      }
-
-      if (instance[WRAPPED_OBJECT_CONTAINER_PROPERTY] == this) {
-        return instance;
-      }
-
-      const p = new Proxy(instance, {
-        construct: async (target, args) => {
-          const provider = new DefaultClassProvider(
-            target,
-            isTransient(target),
-            await this.createSubContainer()
-          );
-          return provider.provide(...args);
-        },
-        get: (target, property) => {
-
-          if (isProxyDisabled(target, property as string)) {
-            return target[property];
-          }
-
-          if (property == 'constructor') {
-            return target[property];
-          }
-
-          // do NOT proxy if the injected has been indicated DO NOT WRAP
-          const injectType = getPropertyInjectedType(target, property);
-          if (injectType != undefined && !this.canWrap(injectType)) {
-            return target[property];
-          }
-
-          if (property in target) {
-            const methodOrProperty = target[property];
-            if (typeof methodOrProperty == 'function') {
-              const proxyMethod = (...args: any[]) => this.injectExecute(target, methodOrProperty, ...args);
-              // overwrite function name
-              Object.defineProperty(proxyMethod, "name", { value: `${property.toString()}Wrapped`, writable: false });
-              proxyMethod[WRAPPED_OBJECT_METHOD_INJECT_INFO] = getClassMethodParams(target, property);
-              return proxyMethod;
-            }
-            return methodOrProperty;
-          }
-
-          if (property == WRAPPED_OBJECT_CONTAINER_PROPERTY) {
-            return this;
-          }
-
-          if (property == WRAPPED_ORIGINAL_OBJECT_PROPERTY) {
-            return instance;
-          }
-
-          if (property == WRAPPED_OBJECT_INDICATOR) {
-            return true;
-          }
-
-          return undefined;
-
-        }
-
-      });
-
-      return p;
-
-    }
-
-    return instance;
-
+    return createWrapper(instance, this);
   }
 
   /**
@@ -467,7 +491,7 @@ export class InjectContainer {
 
           const log = (format, typeName) => {
             executeLogger(format,
-              this.getId(),
+              this.getFormattedId(),
               typeName,
               methodName,
               paramInfo.parameterIndex,
@@ -478,18 +502,19 @@ export class InjectContainer {
 
           params[paramInfo.parameterIndex] = await this.getWrappedInstance(paramInfo.type);
           const unProxyObject = getUnProxyTarget(instance);
-          if (unProxyObject?.constructor == Function) {
-            log(
-              "c(%o), before call static method '%s.%s', inject parameter (%o: %o) with value: %o",
-              unProxyObject?.name,
-            );
-          } else {
-            log(
-              "c(%o), before call '%s.%s', inject parameter (%o: %o) with value: %o",
-              unProxyObject?.constructor?.name,
-            );
+          if (params[paramInfo.parameterIndex] != undefined) {
+            if (unProxyObject?.constructor == Function) {
+              log(
+                "c(%o), before call static method '%s.%s', inject parameter (%o: %o) with value: %o",
+                unProxyObject?.name,
+              );
+            } else {
+              log(
+                "c(%o), before call '%s.%s', inject parameter (%o: %o) with value: %o",
+                unProxyObject?.constructor?.name,
+              );
+            }
           }
-
         }
       }
     }

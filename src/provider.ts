@@ -66,7 +66,7 @@ export class DefaultClassProvider implements InstanceProvider {
             paramInfo.type,
           );
           logger("c(%o), before %o instance creating, inject constructor parameter (%o: %o) with value %o",
-            this.container.getId(),
+            this.container.getFormattedId(),
             getUnProxyTarget(type),
             paramInfo.parameterIndex,
             paramInfo.type,
@@ -93,7 +93,7 @@ export class DefaultClassProvider implements InstanceProvider {
           }
           inst[key] = await this.container.getWrappedInstance(type, this.container);
           logger("c(%o), after %o instance created, inject property (%o: %o) with value: %O",
-            this.container.getId(),
+            this.container.getFormattedId(),
             getUnProxyTarget(type),
             key,
             type,

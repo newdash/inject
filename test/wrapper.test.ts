@@ -206,11 +206,7 @@ describe('Wrapper Test Suite', () => {
 
     const ic = InjectContainer.New();
 
-    class A {
-      constructor() {
-
-      }
-    }
+    class A { constructor() { } }
 
     const a = new A;
 
@@ -233,6 +229,10 @@ describe('Wrapper Test Suite', () => {
 
     // no wrap for constructor
     expect(ic.wrap(a).constructor).toBe(a.constructor);
+
+    // no wrap for prototype
+    // @ts-ignore
+    expect(ic.wrap(a).prototype).toBe(a.prototype);
 
   });
 
@@ -330,6 +330,19 @@ describe('Wrapper Test Suite', () => {
     const a = await ic.getInstance(WA);
 
     expect(a.aValue).toBe(324);
+
+  });
+
+  it('should support use "instanceof" operator with wrapper', async () => {
+
+    const ic = InjectContainer.New();
+    class C { }
+
+    const c = await ic.getWrappedInstance(C);
+
+    expect(isWrappedObject(c)).toBeTruthy();
+    expect(c instanceof C).toBeTruthy();
+    expect(c).toBeInstanceOf(C);
 
   });
 
