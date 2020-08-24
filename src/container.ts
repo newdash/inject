@@ -4,7 +4,7 @@ import { createInjectDecorator, getClassConstructorParams, getClassMethodParams,
 import { RequiredNotFoundError } from './errors';
 import { createLogger } from './logger';
 import { createInstanceProvider, DefaultClassProvider, InstanceProvider } from './provider';
-import { Class, getOrDefault, InjectWrappedClassType, InjectWrappedInstance, OptionalParameters } from './utils';
+import { Class, getOrDefault, InjectWrappedClassType, InjectWrappedInstance, isClass, OptionalParameters } from './utils';
 
 const containerLogger = createLogger("container");
 
@@ -470,7 +470,14 @@ export class InjectContainer {
   async injectExecute(instance, method, ...args) {
 
     const methodName = method.name;
-    const type = instance;
+    let type;
+
+    if (isClass(instance)) {
+      type = instance;
+    } else {
+      type = instance?.constructor;
+    }
+
     let paramsInfo: InjectParameter[] = [];
 
     if (method[WRAPPED_OBJECT_METHOD_INJECT_INFO]) {
@@ -478,7 +485,7 @@ export class InjectContainer {
       paramsInfo = method[WRAPPED_OBJECT_METHOD_INJECT_INFO];
     } else {
       // get meta directly by reflect
-      paramsInfo = getClassMethodParams(type, methodName);
+      paramsInfo = getClassMethodParams(instance, methodName);
     }
 
     const params = args || [];
