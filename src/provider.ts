@@ -1,5 +1,5 @@
 import { InjectContainer } from "./container";
-import { getClassConstructorParams, getClassInjectionInformation, getUnProxyTarget, LazyRef, provider } from "./decorators";
+import { getClassConstructorParams, getClassInjectionInformation, getUnProxyTarget, LazyRef, provider, transient } from "./decorators";
 import { createLogger } from "./logger";
 
 
@@ -13,15 +13,17 @@ export interface InstanceProvider<T = any> {
   provide: (...args: any[]) => any;
 }
 
-export const createInstanceProvider = (type: any, instance: any, transient = false) => {
+export const createInstanceProvider = (type: any, instance: any, isTransient = false) => {
 
   const p = class {
     provide = async () => instance
   };
 
-  provider(type, transient)(p);
-  provider(type, transient)(p.prototype, "provide");
-
+  provider(type)(p);
+  provider(type)(p.prototype, "provide");
+  if (isTransient) {
+    transient(p.prototype, "provide");
+  }
   return new p;
 
 };
@@ -36,14 +38,17 @@ export class DefaultClassProvider implements InstanceProvider {
   /**
    * 
    * @param type 
-   * @param transient 
+   * @param bTransient 
    * @param inherit 
    * @param container should be a sub container
    */
-  constructor(type: any, transient = false, container: InjectContainer) {
-    provider(type, transient)(this, "provide");
+  constructor(type: any, bTransient = false, container: InjectContainer) {
+    provider(type)(this, "provide");
+    if (bTransient) {
+      transient(this, "provide");
+    }
     this.type = type;
-    this.transient = transient;
+    this.transient = bTransient;
     this.container = container;
   }
 

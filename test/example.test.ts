@@ -1,4 +1,4 @@
-import { inject, InjectContainer, InjectWrappedInstance, provider } from "../src";
+import { inject, InjectContainer, InjectWrappedInstance, provider, transient } from "../src";
 
 
 describe('Example Test Suite', () => {
@@ -63,7 +63,8 @@ describe('Example Test Suite', () => {
       private idx = 0
       @inject("count")
       count: number
-      @provider("v2", true) // transient provider
+      @transient
+      @provider("v2") // transient provider
       provide() {
         this.idx++;
         return this.count + this.idx;

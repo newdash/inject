@@ -2,6 +2,7 @@ import { isFunction } from '@newdash/newdash/isFunction';
 import isUndefined from '@newdash/newdash/isUndefined';
 import sortBy from '@newdash/newdash/sortBy';
 import { WRAPPED_OBJECT_INDICATOR, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
+import { createLogger } from './logger';
 import { InstanceProvider } from './provider';
 import { Class, InjectWrappedInstance } from './utils';
 
@@ -15,6 +16,8 @@ const KEY_NAMESPACE = "inject:namespace";
 const KEY_PROVIDE = 'inject:provide';
 
 const KEY_DISABLE_PROXY = 'inject:proxy:disable';
+
+const decoratorLogger = createLogger("decorator");
 
 
 export interface InjectInformation {
@@ -141,7 +144,12 @@ export function setClassInjectInformation(target, info) {
   Reflect.defineMetadata(KEY_INJECT_CLASS, info, target);
 }
 
-export function getClassConstructorParams(target): InjectParameter[] {
+/**
+ * get the parameters metadata of the constructor of class
+ * 
+ * @param target 
+ */
+export function getClassConstructorParams(target: Class): InjectParameter[] {
   target = getUnProxyTarget(target);
   return Reflect.getMetadata(KEY_INJECT_PARAMS, target) || [];
 }
@@ -194,15 +202,19 @@ export function isProviderInstance(target): target is InstanceProvider {
   return false;
 }
 
-export function provider(type?: LazyRef, transient?: boolean): (target, targetKey?) => void
-export function provider(type?: string, transient?: boolean): (target, targetKey?) => void
-export function provider(type?: Class, transient?: boolean): (target, targetKey?) => void
-export function provider(type?: any, transient = false) {
+export function provider(type?: LazyRef): (target, targetKey?) => void
+export function provider(type?: string): (target, targetKey?) => void
+export function provider(type?: Class): (target, targetKey?) => void
+export function provider(type?: any) {
   return function (target, targetKey?) {
     Reflect.defineMetadata(KEY_PROVIDE, type, target, targetKey);
-    Reflect.defineMetadata(KEY_TRANSIENT, transient, target, targetKey);
   };
 }
+
+/**
+ * alias of @provider decorator
+ */
+export const withType = provider;
 
 export function getTransientInfo(target: any, targetKey: any) {
   return isTransient(target, targetKey);
@@ -234,6 +246,11 @@ export function getPropertyInjectedType(target, targetKey) {
 export function createInjectDecorator(type?: LazyRef): (target, targetKey, parameterIndex?) => void;
 export function createInjectDecorator(type: any): (target, targetKey, parameterIndex?) => void;
 export function createInjectDecorator(type: any) {
+  if (isProviderType(type)) {
+    const provideType = getProvideInfo(type.prototype, "provide");
+    decoratorLogger('%o is a provider class, will use the provided type %o to create decorator', type, provideType);
+    return createInjectDecorator(provideType);
+  }
   return function (target, targetKey, parameterIndex) {
     return inject(type)(target, targetKey, parameterIndex);
   };

@@ -1,5 +1,5 @@
 import { Server } from 'http';
-import { createInjectDecorator, DefaultClassProvider, getClassConstructorParams, getClassInjectionInformation, getNamespace, getPropertyInjectedType, getProvideInfo, getTransientInfo, inject, InjectContainer, isTransient, LazyRef, namespace, provider, transient } from '../src/index';
+import { createInjectDecorator, DefaultClassProvider, getClassConstructorParams, getClassInjectionInformation, getNamespace, getPropertyInjectedType, getProvideInfo, getTransientInfo, inject, InjectContainer, isTransient, LazyRef, namespace, provider, transient, withType } from '../src/index';
 
 describe('Inject Decorators Test Suite', () => {
 
@@ -9,20 +9,15 @@ describe('Inject Decorators Test Suite', () => {
 
       @inject('userName')
       private _name: string;
-
       private _date: Date;
-
       @inject()
       private _value: Server;
-
 
       constructor(@inject(Date) date: Date) {
         this._date = date;
       }
 
-      run(@inject('ctx') ctx, @inject(Date) date) {
-
-      }
+      run(@inject('ctx') ctx, @inject(Date) date) { }
 
     }
 
@@ -78,10 +73,12 @@ describe('Inject Decorators Test Suite', () => {
       @provider("v3")
       static createV3() { }
 
-      @provider("t", true)
+      @transient
+      @provider("t")
       provideT() { }
 
-      @provider(LazyRef.create(() => C), true)
+      @transient
+      @provider(LazyRef.create(() => C))
       provideLazy() { }
 
     }
@@ -143,6 +140,24 @@ describe('Inject Decorators Test Suite', () => {
     expect(getNamespace((new C))).toBe("inject.test.demo2");
 
   });
+
+  it('should support create decorator for provider', () => {
+
+    class VProvider { @withType("v") provide() { } }
+
+    const injectV = createInjectDecorator(VProvider);
+
+    class A {
+      constructor(@injectV v) { }
+    }
+
+    const params = getClassConstructorParams(A);
+
+    expect(params).toHaveLength(1);
+    expect(params[0].type).toBe("v");
+
+  });
+
 
 
 });

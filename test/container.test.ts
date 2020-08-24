@@ -1,5 +1,5 @@
 import { v4 } from 'uuid';
-import { createInstanceProvider, InjectContainer, provider, SubLevelInjectContainer } from '../src';
+import { createInstanceProvider, InjectContainer, provider, SubLevelInjectContainer, transient } from '../src';
 
 
 describe('Container Test Suite', () => {
@@ -40,7 +40,8 @@ describe('Container Test Suite', () => {
     const c3 = await c1.getInstance(SubLevelInjectContainer);
 
     class UUIDProvider {
-      @provider("uuid", true)
+      @transient
+      @provider("uuid")
       async provide() { return v4(); }
     }
 
