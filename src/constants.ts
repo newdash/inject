@@ -8,4 +8,6 @@ export const MSG_ERR_NOT_PROVIDER = "The provider must have the 'provide' method
 
 export const MSG_ERR_NO_UNDEFINED = "Can not accept undefined value.";
 
+export const MSG_ERR_PROVIDER_DISABLE_WRAP = "Provider must could not be disable wrap.";
+
 export const MSG_ERR_PARAM_REQUIRED = "Parameter required.";

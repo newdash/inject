@@ -161,7 +161,7 @@ export function isNoWrap(target: any, targetKey?: any) {
   return Boolean(Reflect.getMetadata(KEY_NO_WRAP, target, targetKey));
 }
 
-export function namespace(nSpace) {
+export function namespace(nSpace: string) {
   return function (target: Class) {
     Reflect.defineMetadata(KEY_NAMESPACE, nSpace, target);
   };

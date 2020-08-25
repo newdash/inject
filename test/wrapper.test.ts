@@ -1,4 +1,5 @@
-import { disableProxy, getClassMethodParams, getUnProxyTarget, inject, InjectContainer, InjectWrappedInstance, isWrappedObject, required } from "../src";
+import { disableProxy, getClassMethodParams, getUnProxyTarget, inject, InjectContainer, InjectWrappedInstance, isWrappedObject, noWrap, required, withType } from "../src";
+import { MSG_ERR_PROVIDER_DISABLE_WRAP } from "../src/constants";
 
 
 describe('Wrapper Test Suite', () => {
@@ -233,6 +234,10 @@ describe('Wrapper Test Suite', () => {
     // @ts-ignore
     expect(ic.wrap(a).prototype).toBe(a.prototype);
 
+    // no wrap for same container wrapped object
+    const wa = ic.wrap(a);
+    expect(ic.wrap(wa)).toBe(wa);
+
   });
 
   it('should support custom ignore wrap object', async () => {
@@ -342,6 +347,39 @@ describe('Wrapper Test Suite', () => {
     expect(isWrappedObject(c)).toBeTruthy();
     expect(c instanceof C).toBeTruthy();
     expect(c).toBeInstanceOf(C);
+
+  });
+
+  it('should support @noWrap decorator', async () => {
+
+    @noWrap
+    class A { }
+
+    class BProvider {
+      @noWrap
+      @withType("b")
+      provide() { return {}; }
+    }
+
+    const ic = InjectContainer.New();
+    ic.registerProvider(BProvider);
+
+    // @ts-ignore
+    expect(ic.canWrap(A)).toBeFalsy();
+    // @ts-ignore
+    expect(ic.canWrap('b')).toBeFalsy();
+    // @ts-ignore
+    expect(ic.canWrap(BProvider)).toBeTruthy();
+
+    @noWrap
+    class CProvider {
+      @withType("c")
+      provide() { }
+    }
+
+    // throw error when register @noWrap provider
+    expect(() => ic.registerProvider(CProvider)).toThrow(MSG_ERR_PROVIDER_DISABLE_WRAP);
+
 
   });
 

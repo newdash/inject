@@ -6,6 +6,10 @@ export function getOrDefault(map: Map<any, any>, key, value) {
   return map.get(key);
 }
 
+/**
+ * check given value is Class object
+ * @param obj 
+ */
 export function isClass(obj: any): obj is Class {
   if (obj?.constructor === Function) {
     return true;

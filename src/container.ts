@@ -1,10 +1,11 @@
 import { alg, Graph } from 'graphlib';
-import { MSG_ERR_NOT_PROVIDER, MSG_ERR_NO_UNDEFINED, WRAPPED_OBJECT_CONTAINER_PROPERTY, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_INJECT_INFO, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
-import { createInjectDecorator, getClassConstructorParams, getClassMethodParams, getPropertyInjectedType, getProvideInfo, getTransientInfo, getUnProxyTarget, inject, InjectParameter, isProviderInstance, isProviderType, isProxyDisabled, isRequired, isTransient, isWrappedObject, LazyRef, transient } from './decorators';
+import { MSG_ERR_NOT_PROVIDER, MSG_ERR_NO_UNDEFINED, MSG_ERR_PROVIDER_DISABLE_WRAP, WRAPPED_OBJECT_METHOD_INJECT_INFO } from './constants';
+import { createInjectDecorator, getClassConstructorParams, getClassMethodParams, getProvideInfo, getTransientInfo, getUnProxyTarget, inject, InjectParameter, isNoWrap, isNoWrapProvider, isProviderInstance, isProviderType, isRequired, isTransient, isWrappedObject, LazyRef, transient } from './decorators';
 import { RequiredNotFoundError } from './errors';
 import { createLogger } from './logger';
 import { createInstanceProvider, DefaultClassProvider, InstanceProvider } from './provider';
 import { Class, getOrDefault, InjectWrappedClassType, InjectWrappedInstance, isClass, OptionalParameters } from './utils';
+import { createWrapper } from './wrapper';
 
 const containerLogger = createLogger("container");
 
@@ -33,112 +34,6 @@ function overwriteProvider(type: any, provider: InstanceProvider, ctx: InjectCon
   }
 }
 
-/**
- * create wrapper (proxy) for object with inject container 
- * 
- * @param instance 
- * @param ic 
- */
-function createWrapper(instance: any, ic: InjectContainer) {
-
-  if (instance == null || instance == undefined) {
-    return instance;
-  }
-
-  if (['number', 'boolean', 'string', 'symbol', 'bigint'].includes(typeof instance)) {
-    return instance;
-  }
-
-  if (typeof instance == 'object' || typeof instance == 'function') {
-
-    // do NOT proxy inject container
-    if (instance instanceof InjectContainer) {
-      return instance;
-    }
-
-    // do NOT proxy promise object
-    if (instance instanceof Promise) {
-      return instance;
-    }
-
-    // if the object has been wrapped by provided container
-    if (instance[WRAPPED_OBJECT_CONTAINER_PROPERTY] == ic) {
-      return instance;
-    }
-
-    const handler: ProxyHandler<any> = {
-
-      get: (target, property) => {
-
-        if (isProxyDisabled(target, property as string)) {
-          return target[property];
-        }
-
-        if (['constructor', 'prototype'].includes(property as string)) {
-          return target[property];
-        }
-
-        // do NOT proxy if the injected has been indicated DO NOT WRAP
-        const injectType = getPropertyInjectedType(target, property);
-        // @ts-ignore
-        if (injectType != undefined && !ic.canWrap(injectType)) {
-          return target[property];
-        }
-
-        if (property in target) {
-          const methodOrProperty = target[property];
-          if (typeof methodOrProperty == 'function') {
-            const proxyMethod = (...args: any[]) => ic.injectExecute(target, methodOrProperty, ...args);
-            // overwrite function name
-            Object.defineProperty(proxyMethod, "name", {
-              value: `${property.toString()}_wrapped_by_container(${ic.getFormattedId()})`,
-              writable: false
-            });
-            proxyMethod[WRAPPED_OBJECT_METHOD_INJECT_INFO] = getClassMethodParams(target, property);
-            return proxyMethod;
-          }
-          return methodOrProperty;
-        }
-
-        if (property == WRAPPED_OBJECT_CONTAINER_PROPERTY) {
-          return ic;
-        }
-
-        if (property == WRAPPED_ORIGINAL_OBJECT_PROPERTY) {
-          return instance;
-        }
-
-        if (property == WRAPPED_OBJECT_INDICATOR) {
-          return true;
-        }
-
-        // if the property is not existed on object, return undefined
-        return undefined;
-
-      }
-
-    };
-
-    // for class, support proxy constructor
-    if (instance?.constructor == Function) {
-
-      handler.construct = async (target, args) => {
-        const provider = new DefaultClassProvider(
-          target,
-          isTransient(target),
-          await ic.createSubContainer()
-        );
-        return provider.provide(...args);
-      };
-
-    }
-
-    return new Proxy(instance, handler);
-
-  }
-
-  return instance;
-}
 
 /**
  * used to generate id sequence for containers
@@ -221,6 +116,8 @@ export class InjectContainer {
     if (type instanceof LazyRef) {
       type = type.getRef();
     }
+    // if is noWrap type
+    if (isClass(type) && isNoWrap(type)) { return false; }
     return !(this._doNotWrapTypes.has(type));
   }
 
@@ -245,11 +142,18 @@ export class InjectContainer {
         type = getProvideInfo(provider.prototype, "provide");
       }
       if (type != undefined) {
+        const containerId = this.getFormattedId();
         if (this.hasInProviders(type)) {
-          containerLogger('c(%o), overwrite provider for %O', this.getFormattedId(), type);
+          containerLogger('c(%o), overwrite provider for %O', containerId, type);
         } else {
-          containerLogger('c(%o), register provider for %O', this.getFormattedId(), type);
+          containerLogger('c(%o), register provider for %O', containerId, type);
         }
+        // provider must could be wrapped, 
+        // otherwise, the 'provide' function could not be injected
+        if (isNoWrap(provider)) {
+          throw new TypeError(MSG_ERR_PROVIDER_DISABLE_WRAP);
+        }
+        if (isNoWrapProvider(provider)) { this.doNotWrap(type); }
         this._providers.set(type, provider);
       }
       else { throw new TypeError(MSG_ERR_NOT_PROVIDER); }
@@ -340,6 +244,7 @@ export class InjectContainer {
   async getWrappedInstance(type: any, ctx?: InjectContainer): Promise<any>;
   async getWrappedInstance(type: any, ctx?: InjectContainer) {
     const inst = await this.getInstance(type, ctx);
+
     if (this.canWrap(type)) {
       return this.wrap(inst);
     }
