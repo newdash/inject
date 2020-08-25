@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.8](https://github.com/newdash/inject/compare/v0.2.7...v0.2.8) (2020-08-25)
+
+
+### Features
+
+* **enhance:** noWrap ([f057bf4](https://github.com/newdash/inject/commit/f057bf46766f1a7cc5a4b1b2c85b0475b6f29871))
+* [@no](https://github.com/no)Wrap support ([fcc4e20](https://github.com/newdash/inject/commit/fcc4e20d02a57e7d0f98baa89f16ec303e7c60b8))
+
+
+### Bug Fixes
+
+* loop ([279cc3a](https://github.com/newdash/inject/commit/279cc3a0e2ccc0bf9e6288c477b1a655ce261bf1))
+
 ### [0.2.7](https://github.com/newdash/inject/compare/v0.2.6...v0.2.7) (2020-08-24)
 
 
