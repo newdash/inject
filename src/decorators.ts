@@ -158,7 +158,10 @@ export function isNoWrapProvider(provider) {
 }
 
 export function isNoWrap(target: any, targetKey?: any) {
-  return Boolean(Reflect.getMetadata(KEY_NO_WRAP, target, targetKey));
+  if (typeof target == 'object' || typeof target == 'function') {
+    return Boolean(Reflect.getMetadata(KEY_NO_WRAP, target, targetKey));
+  }
+  return false;
 }
 
 export function namespace(nSpace: string) {

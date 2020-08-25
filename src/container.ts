@@ -116,7 +116,7 @@ export class InjectContainer {
     if (type instanceof LazyRef) {
       type = type.getRef();
     }
-    // if is noWrap type
+    // class is not registered in providers, (constructed by DefaultClassProvider)
     if (isClass(type) && isNoWrap(type)) { return false; }
     return !(this._doNotWrapTypes.has(type));
   }
@@ -153,7 +153,7 @@ export class InjectContainer {
         if (isNoWrap(provider)) {
           throw new TypeError(MSG_ERR_PROVIDER_DISABLE_WRAP);
         }
-        if (isNoWrapProvider(provider)) { this.doNotWrap(type); }
+        if (isNoWrapProvider(provider) || isNoWrap(type)) { this.doNotWrap(type); }
         this._providers.set(type, provider);
       }
       else { throw new TypeError(MSG_ERR_NOT_PROVIDER); }
