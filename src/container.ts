@@ -9,8 +9,6 @@ import { createWrapper } from './wrapper';
 
 const containerLogger = createLogger("container");
 
-const executeLogger = createLogger("injectExecute");
-
 /**
  * overwrite provider instance from sub to parent container
  * 
@@ -86,7 +84,7 @@ export class InjectContainer {
 
   private _log(...args: Parameters<debug.Debugger>) {
     const [template, ...values] = args;
-    containerLogger(`container(${this.getFormattedId()}): ${template}`, ...values);
+    containerLogger(`container(%o): ${template}`, this.getFormattedId(), ...values);
   }
 
   /**
@@ -413,8 +411,7 @@ export class InjectContainer {
         if (args[paramInfo.parameterIndex] == undefined) {
 
           const log = (format, typeName) => {
-            executeLogger(format,
-              this.getFormattedId(),
+            this._log(format,
               typeName,
               methodName,
               paramInfo.parameterIndex,
@@ -425,14 +422,14 @@ export class InjectContainer {
 
           params[paramInfo.parameterIndex] = await this.getWrappedInstance(paramInfo.type);
           const unProxyObject = getUnProxyTarget(instance);
-          if (unProxyObject?.constructor == Function) {
+          if (isClass(unProxyObject)) {
             log(
-              "c(%o), before call static method '%s.%s', inject parameter (%o: %o) with value: %o",
+              "before call static method '%s.%s', inject parameter (%o: %o) with value: %O",
               unProxyObject?.name,
             );
           } else {
             log(
-              "c(%o), before call '%s.%s', inject parameter (%o: %o) with value: %o",
+              "before call '%s.%s', inject parameter (%o: %o) with value: %O",
               unProxyObject?.constructor?.name,
             );
           }
@@ -447,7 +444,6 @@ export class InjectContainer {
       }
     }
 
-    // TO DO, 'type ' should refer the correct wrap
     if (this.canWrap(type)) {
       instance = this.wrap(instance);
     }

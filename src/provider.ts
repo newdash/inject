@@ -58,7 +58,12 @@ export class DefaultClassProvider implements InstanceProvider {
 
   private _log(...args: Parameters<debug.Debugger>) {
     const [tmp, ...values] = args;
-    classProviderLogger(`type(%o), container(%o), ${tmp}`, this.type, this.container.getFormattedId(), ...values);
+    classProviderLogger(
+      `type(%o), container(%o), ${tmp}`,
+      this.type,
+      this.container.getFormattedId(),
+      ...values
+    );
   }
 
   async provide(...args: any[]) {
@@ -74,7 +79,7 @@ export class DefaultClassProvider implements InstanceProvider {
           constructParams[paramInfo.parameterIndex] = await this.container.getWrappedInstance(
             paramInfo.type,
           );
-          this._log("before %o instance creating, inject constructor parameter (%o: %o) with value %o",
+          this._log("before %o instance creating, inject constructor parameter (%o: %o) with value %O",
             getUnProxyTarget(type),
             paramInfo.parameterIndex,
             paramInfo.type,
