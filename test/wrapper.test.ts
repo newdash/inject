@@ -354,15 +354,13 @@ describe('Wrapper Test Suite', () => {
 
     @noWrap
     class A { }
-
-    class BProvider {
-      @noWrap
-      @withType("b")
-      provide() { return {}; }
-    }
+    class BProvider { @noWrap @withType("b") provide() { return {}; } }
+    class DProvider { @withType("d") provide() { return {}; } }
 
     const ic = InjectContainer.New();
     ic.registerProvider(BProvider);
+    ic.registerProvider(DProvider);
+
 
     // @ts-ignore
     expect(ic.canWrap(A)).toBeFalsy();
@@ -370,6 +368,9 @@ describe('Wrapper Test Suite', () => {
     expect(ic.canWrap('b')).toBeFalsy();
     // @ts-ignore
     expect(ic.canWrap(BProvider)).toBeTruthy();
+    // @ts-ignore
+    expect(ic.canWrap('d')).toBeTruthy();
+
 
     @noWrap
     class CProvider {

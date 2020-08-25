@@ -78,8 +78,15 @@ export class InjectContainer {
     this._id = generateContainerId();
   }
 
+
+
   public static New(): InjectContainer {
     return new ChildInjectContainer(new InjectContainer());
+  }
+
+  private _log(...args: Parameters<debug.Debugger>) {
+    const [template, ...values] = args;
+    containerLogger(`container(${this.getFormattedId()}): ${template}`, ...values);
   }
 
   /**
@@ -88,7 +95,12 @@ export class InjectContainer {
    * it means the inject container will NEVER return the Proxy of this type object
    */
   public doNotWrap(...types: any[]) {
-    types.forEach(type => { this._doNotWrapTypes.add(type); });
+    types.forEach(type => {
+      if (!this._doNotWrapTypes.has(type)) {
+        this._log('disable wrapper: %o', type);
+        this._doNotWrapTypes.add(type);
+      }
+    });
   }
 
   /**
@@ -112,7 +124,7 @@ export class InjectContainer {
     return this._formattedId;
   }
 
-  protected canWrap(type: any) {
+  protected canWrap(type: any): boolean {
     if (type instanceof LazyRef) {
       type = type.getRef();
     }
@@ -142,11 +154,10 @@ export class InjectContainer {
         type = getProvideInfo(provider.prototype, "provide");
       }
       if (type != undefined) {
-        const containerId = this.getFormattedId();
         if (this.hasInProviders(type)) {
-          containerLogger('c(%o), overwrite provider for %O', containerId, type);
+          this._log('overwrite provider: %O', type);
         } else {
-          containerLogger('c(%o), register provider for %O', containerId, type);
+          this._log('register provider: %O', type);
         }
         // provider must could be wrapped, 
         // otherwise, the 'provide' function could not be injected

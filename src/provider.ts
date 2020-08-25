@@ -4,7 +4,7 @@ import { RequiredNotFoundError } from "./errors";
 import { createLogger } from "./logger";
 
 
-const logger = createLogger("defaultClassProvider");
+const classProviderLogger = createLogger("classProvider");
 
 
 export interface InstanceProvider<T = any> {
@@ -56,6 +56,11 @@ export class DefaultClassProvider implements InstanceProvider {
     this.container = container;
   }
 
+  private _log(...args: Parameters<debug.Debugger>) {
+    const [tmp, ...values] = args;
+    classProviderLogger(`type(%o), container(%o), ${tmp}`, this.type, this.container.getFormattedId(), ...values);
+  }
+
   async provide(...args: any[]) {
     const type = this.type;
     const info = getClassInjectionInformation(type.prototype);
@@ -69,8 +74,7 @@ export class DefaultClassProvider implements InstanceProvider {
           constructParams[paramInfo.parameterIndex] = await this.container.getWrappedInstance(
             paramInfo.type,
           );
-          logger("c(%o), before %o instance creating, inject constructor parameter (%o: %o) with value %o",
-            this.container.getFormattedId(),
+          this._log("before %o instance creating, inject constructor parameter (%o: %o) with value %o",
             getUnProxyTarget(type),
             paramInfo.parameterIndex,
             paramInfo.type,
@@ -102,8 +106,7 @@ export class DefaultClassProvider implements InstanceProvider {
             type = type.getRef();
           }
           inst[key] = await this.container.getWrappedInstance(type, this.container);
-          logger("c(%o), after %o instance created, inject property (%o: %o) with value: %O",
-            this.container.getFormattedId(),
+          this._log("after %o instance created, inject property (%o: %o) with value: %o",
             getUnProxyTarget(type),
             key,
             type,

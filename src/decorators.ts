@@ -141,8 +141,17 @@ export function isRequired(target, targetKey, parameterIndex?) {
 }
 
 
-
+/**
+ * disable wrapper for class instance
+ * @param target 
+ */
 export function noWrap(target: Class);
+/**
+ * disable wrapper for provider type
+ * 
+ * @param target 
+ * @param targetKey 
+ */
 export function noWrap(target: any, targetKey: any);
 export function noWrap(target: any, targetKey?: any) {
   Reflect.defineMetadata(KEY_NO_WRAP, true, target, targetKey);
@@ -151,7 +160,7 @@ export function noWrap(target: any, targetKey?: any) {
 export function isNoWrapProvider(provider) {
   if (isProviderInstance(provider)) {
     return isNoWrap(provider, "provide");
-  } else if (isProviderType) {
+  } else if (isProviderType(provider)) {
     return isNoWrap(provider.prototype, "provide");
   }
   return false;
