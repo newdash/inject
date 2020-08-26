@@ -18,7 +18,6 @@ describe('Storage Policy Test Suite', () => {
 
     expect(ic._store.size).toBe(3);
 
-
     expect(c.b).toBe(b);
     expect(c.b.a).toBe(a);
     expect(b.a).toBe(a);
@@ -52,29 +51,19 @@ describe('Storage Policy Test Suite', () => {
 
   });
 
-  it('should not store wrapped object', async () => {
+  it('should never store wrapped object', async () => {
 
     class A {
-
-      @inject("v")
-      v: number;
+      @inject("v") v: number;
     }
 
     class B {
-
-      @inject()
-      a: A
-
-      @inject('c')
-      c: string
-
+      @inject() a: A
+      @inject('c') c: string
     }
 
     class CProvider {
-      @provider("c")
-      provide() {
-        return 'ccc';
-      }
+      @provider("c") provide() { return 'ccc'; }
     }
 
     const ic = InjectContainer.New();

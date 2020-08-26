@@ -383,36 +383,25 @@ describe('Inject Provider Test Suite', () => {
 
   });
 
-  it('should never cache transient provider', async () => {
+  it('should never cache @transient provider/value or both', async () => {
 
     let constructNum = 0;
     let funcCall = 0;
 
     @transient
-    class CProvider {
+    class AProvider {
       constructor() { constructNum++; }
-      @provider("c")
-      provide() { funcCall++; return "CCC"; }
+      @provider("a")
+      provide() { funcCall++; return "AAA"; }
     }
 
-    const ic = InjectContainer.New();
-    ic.registerProvider(CProvider);
-
-    await ic.getInstance("c");
-    await ic.getInstance("c");
-    await ic.getInstance("c");
-
-    expect(constructNum).toBe(3);
-    expect(constructNum).toBe(3);
-
-
-  });
-
-
-  it('should cache provider but not cache value', async () => {
-
-    let constructNum = 0;
-    let funcCall = 0;
+    @transient
+    class BProvider {
+      constructor() { constructNum++; }
+      @transient
+      @provider("b")
+      provide() { funcCall++; return "BBB"; }
+    }
 
     class CProvider {
       constructor() { constructNum++; }
@@ -422,17 +411,34 @@ describe('Inject Provider Test Suite', () => {
     }
 
     const ic = InjectContainer.New();
+    ic.registerProvider(AProvider);
+    ic.registerProvider(BProvider);
     ic.registerProvider(CProvider);
 
-    await ic.getInstance("c");
-    await ic.getInstance("c");
-    await ic.getInstance("c");
+    await ic.getInstance("a");
+    await ic.getInstance("a");
+    await ic.getInstance("a");
+    // provider will be instantiate every time
+    expect(constructNum).toBe(3);
+    // but value cached
+    expect(funcCall).toBe(1);
 
+    constructNum = funcCall = 0;
+    await ic.getInstance("b");
+    await ic.getInstance("b");
+    await ic.getInstance("b");
+    expect(constructNum).toBe(3);
+    expect(funcCall).toBe(3);
+
+    constructNum = funcCall = 0;
+    await ic.getInstance("c");
+    await ic.getInstance("c");
+    await ic.getInstance("c");
     expect(constructNum).toBe(1);
     expect(funcCall).toBe(3);
 
-
   });
+
 
   it('should reject "undefined" provider', () => {
 
