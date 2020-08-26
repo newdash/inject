@@ -8,6 +8,7 @@ export function getOrDefault(map: Map<any, any>, key, value) {
 
 /**
  * check given value is Class object
+ * 
  * @param obj 
  */
 export function isClass(obj: any): obj is Class {

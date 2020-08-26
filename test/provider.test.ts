@@ -1,5 +1,5 @@
 import { v4 } from 'uuid';
-import { createInstanceProvider, inject, InjectContainer, InjectWrappedInstance, InstanceProvider, LazyRef, provider, transient } from '../src';
+import { createInstanceProvider, inject, InjectContainer, InjectWrappedInstance, InstanceProvider, LazyRef, noWrap, provider, transient } from '../src';
 import { MSG_ERR_NOT_PROVIDER, MSG_ERR_NO_UNDEFINED } from '../src/constants';
 
 
@@ -104,6 +104,18 @@ describe('Inject Provider Test Suite', () => {
 
     }, 0);
   }));
+
+  it('should support cycle inject itself', async () => {
+
+    class A { @noWrap @inject() a: A }
+
+    const ic = InjectContainer.New();
+
+    const a = await ic.getInstance(A);
+
+    expect(a.a).toBe(a);
+
+  });
 
   it('should support creation instance provider', async () => {
 

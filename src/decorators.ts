@@ -218,6 +218,10 @@ export class LazyRef<T = any> {
 
 }
 
+export function lazyRef<T>(type: () => T) {
+  return LazyRef.create<T>(type);
+}
+
 export function isProviderType(target): target is Class<InstanceProvider> {
   target = getUnProxyTarget(target);
   if (target?.constructor == Function) {

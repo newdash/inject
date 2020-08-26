@@ -1,4 +1,4 @@
-import { getClassMethodParams, getUnProxyTarget, inject, InjectContainer, InjectWrappedInstance, isWrappedObject, noWrap, required, withType } from "../src";
+import { getClassMethodParams, getUnProxyTarget, inject, InjectContainer, InjectWrappedInstance, isWrappedObject, lazyRef, noWrap, required, withType } from "../src";
 import { MSG_ERR_PROVIDER_DISABLE_WRAP } from "../src/constants";
 
 
@@ -436,6 +436,24 @@ describe('Wrapper Test Suite', () => {
 
     expect(isWrappedObject(result[0])).toBeFalsy();
     expect(isWrappedObject(result[1])).toBeTruthy();
+  });
+
+  it('should support @noWrap for LazyRef', async () => {
+    const ic = InjectContainer.New();
+    class E {
+      @noWrap @inject(lazyRef(() => F)) _f: any
+      @inject(lazyRef(() => F)) _f2: any
+    }
+    class F {
+      @noWrap @inject(lazyRef(() => E)) _e: any
+      @inject(lazyRef(() => E)) _e2: any
+    }
+
+    const f = await ic.getInstance(F);
+
+    expect(isWrappedObject(f._e)).toBeFalsy();
+    expect(isWrappedObject(f._e2)).toBeTruthy();
+
   });
 
 
