@@ -188,11 +188,15 @@ describe('Inject Decorators Test Suite', () => {
     class P {
       @noWrap
       @provider("p")
-      provide() { }
+      provide(@noWrap a, b, c) { }
     }
     class P2 {
       @provider("p")
       provide() { }
+    }
+
+    class P3 {
+      constructor(@noWrap a, b) { }
     }
 
     const aP = new DefaultClassProvider(A, undefined, InjectContainer.New());
@@ -200,6 +204,17 @@ describe('Inject Decorators Test Suite', () => {
 
     expect(isNoWrap(A)).toBeFalsy();
     expect(isNoWrap(B)).toBeTruthy();
+
+    const p = new P;
+
+    expect(isNoWrap(p, 'provide', 0)).toBeTruthy();
+    expect(isNoWrap(p, 'provide', 1)).toBeFalsy();
+    expect(isNoWrap(p, 'provide', 2)).toBeFalsy();
+
+    expect(isNoWrap(P3, undefined, 0)).toBeTruthy();
+    expect(isNoWrap(P3, undefined, 1)).toBeFalsy();
+
+
     expect(isNoWrapProvider(P)).toBeTruthy();
     expect(isNoWrapProvider(P2)).toBeFalsy();
     expect(isNoWrapProvider(new P)).toBeTruthy();

@@ -13,6 +13,7 @@ const KEY_TRANSIENT = 'inject:class:transient';
 
 const KEY_NO_WRAP = 'inject:no_wrap';
 
+const KEY_PARAMETER_NO_WRAP = 'inject:parameter:no_wrap';
 
 const KEY_REQUIRED = 'inject:required_parameter';
 
@@ -58,32 +59,6 @@ export function isWrappedObject(target: any): target is { [WRAPPED_ORIGINAL_OBJE
     return Boolean(target[WRAPPED_OBJECT_INDICATOR]);
   }
   return false;
-}
-
-
-/**
- * indicate the inject container DO NOT proxy this property/function
- * 
- * generally, some property has a function value, sometimes there will cause issue with proxy (with a new/wrong reference)
- * 
- * @param target 
- * @param propertyKey 
- * 
- */
-export function disableProxy(target: any, propertyKey: string) {
-  target = getUnProxyTarget(target);
-  Reflect.defineMetadata(KEY_DISABLE_PROXY, true, target, propertyKey);
-}
-
-/**
- * check property is disabled for proxy
- * 
- * @param target 
- * @param propertyKey 
- */
-export function isProxyDisabled(target: any, propertyKey: string): boolean {
-  target = getUnProxyTarget(target);
-  return Boolean(Reflect.getMetadata(KEY_DISABLE_PROXY, target, propertyKey));
 }
 
 export function getClassInjectionInformation(target): Map<string, InjectInformation> {
@@ -142,19 +117,19 @@ export function isRequired(target, targetKey, parameterIndex?) {
 
 
 /**
- * disable wrapper for class instance
- * @param target 
- */
-export function noWrap(target: Class);
-/**
- * disable wrapper for provider type
+ * disable wrapper for provider type/class instance
  * 
  * @param target 
  * @param targetKey 
  */
-export function noWrap(target: any, targetKey: any);
-export function noWrap(target: any, targetKey?: any) {
-  Reflect.defineMetadata(KEY_NO_WRAP, true, target, targetKey);
+export function noWrap(target: any, targetKey?: any, parameterIndex?: any) {
+  if (typeof parameterIndex == 'number') {
+    const parametersNoWrap = Reflect.getMetadata(KEY_PARAMETER_NO_WRAP, target, targetKey) || [];
+    parametersNoWrap[parameterIndex] = true;
+    Reflect.defineMetadata(KEY_PARAMETER_NO_WRAP, parametersNoWrap, target, targetKey);
+  } else {
+    Reflect.defineMetadata(KEY_NO_WRAP, true, target, targetKey);
+  }
 }
 
 export function isNoWrapProvider(provider) {
@@ -166,7 +141,15 @@ export function isNoWrapProvider(provider) {
   return false;
 }
 
-export function isNoWrap(target: any, targetKey?: any) {
+export function isNoWrap(classType: any)
+export function isNoWrap(target: any, propertyName: string)
+export function isNoWrap(target: any, methodName: any, parameterIndex: number)
+export function isNoWrap(target: any, targetKey?: any, parameterIndex?: any) {
+  if (typeof parameterIndex == 'number') {
+    return Boolean(
+      (Reflect.getMetadata(KEY_PARAMETER_NO_WRAP, target, targetKey) || [])[parameterIndex]
+    );
+  }
   if (typeof target == 'object' || typeof target == 'function') {
     return Boolean(Reflect.getMetadata(KEY_NO_WRAP, target, targetKey));
   }

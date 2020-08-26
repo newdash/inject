@@ -76,17 +76,27 @@ export class DefaultClassProvider implements InstanceProvider {
       for (let idx = 0; idx < constructParametersInfo.length; idx++) {
         const paramInfo = constructParametersInfo[idx];
         if (args[paramInfo.parameterIndex] == undefined) {
-          constructParams[paramInfo.parameterIndex] = await this.container.getWrappedInstance(
-            paramInfo.type,
-          );
+          let paramValue = undefined;
+          if (isNoWrap(type, undefined, paramInfo.parameterIndex)) {
+            paramValue = await this.container.getInstance(
+              paramInfo.type,
+            );
+          } else {
+            paramValue = await this.container.getWrappedInstance(
+              paramInfo.type,
+            );
+          }
+
+          constructParams[paramInfo.parameterIndex] = paramValue;
+
           this._log("before %o instance creating, inject constructor parameter (%o: %o) with value %O",
             getUnProxyTarget(type),
             paramInfo.parameterIndex,
             paramInfo.type,
-            constructParams[paramInfo.parameterIndex],
+            paramValue,
           );
 
-          if (constructParams[paramInfo.parameterIndex] === undefined) {
+          if (paramValue === undefined) {
             if (isRequired(type, undefined, paramInfo.parameterIndex)) {
               throw new RequiredNotFoundError(type, undefined, paramInfo.parameterIndex);
             }
@@ -110,7 +120,12 @@ export class DefaultClassProvider implements InstanceProvider {
           if (type instanceof LazyRef) {
             type = type.getRef();
           }
-          inst[key] = await this.container.getWrappedInstance(type, this.container);
+          // if the instance decorate this field disable wrapper
+          if (isNoWrap(inst, key)) {
+            inst[key] = await this.container.getInstance(type, this.container);
+          } else {
+            inst[key] = await this.container.getWrappedInstance(type, this.container);
+          }
           this._log("after %o instance created, inject property (%o: %o) with value: %o",
             getUnProxyTarget(type),
             key,

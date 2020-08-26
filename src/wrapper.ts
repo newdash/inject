@@ -1,6 +1,6 @@
 import { WRAPPED_OBJECT_CONTAINER_PROPERTY, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_INJECT_INFO, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from "./constants";
 import { InjectContainer } from "./container";
-import { getClassMethodParams, getPropertyInjectedType, isProxyDisabled, isTransient } from "./decorators";
+import { getClassMethodParams, getPropertyInjectedType, isNoWrap, isTransient } from "./decorators";
 import { DefaultClassProvider } from "./provider";
 
 /**
@@ -43,7 +43,7 @@ export function createWrapper(instance: any, ic: InjectContainer) {
 
       get: (target, property) => {
 
-        if (isProxyDisabled(target, property as string)) {
+        if (isNoWrap(target, property as string)) {
           return target[property];
         }
 

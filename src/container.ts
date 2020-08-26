@@ -419,8 +419,11 @@ export class InjectContainer {
               params[paramInfo.parameterIndex],
             );
           };
-
-          params[paramInfo.parameterIndex] = await this.getWrappedInstance(paramInfo.type);
+          if (isNoWrap(instance, methodName, paramInfo.parameterIndex)) {
+            params[paramInfo.parameterIndex] = await this.getInstance(paramInfo.type);
+          } else {
+            params[paramInfo.parameterIndex] = await this.getWrappedInstance(paramInfo.type);
+          }
           const unProxyObject = getUnProxyTarget(instance);
           if (isClass(unProxyObject)) {
             log(

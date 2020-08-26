@@ -1,4 +1,4 @@
-import { disableProxy, getClassMethodParams, getUnProxyTarget, inject, InjectContainer, InjectWrappedInstance, isWrappedObject, noWrap, required, withType } from "../src";
+import { getClassMethodParams, getUnProxyTarget, inject, InjectContainer, InjectWrappedInstance, isWrappedObject, noWrap, required, withType } from "../src";
 import { MSG_ERR_PROVIDER_DISABLE_WRAP } from "../src/constants";
 
 
@@ -188,7 +188,7 @@ describe('Wrapper Test Suite', () => {
   it('should support no proxy access', async () => {
 
     class A {
-      @disableProxy
+      @noWrap
       run(@inject("a") a) {
         return a;
       }
@@ -381,7 +381,61 @@ describe('Wrapper Test Suite', () => {
     // throw error when register @noWrap provider
     expect(() => ic.registerProvider(CProvider)).toThrow(MSG_ERR_PROVIDER_DISABLE_WRAP);
 
+  });
 
+  it('should support @noWrap for class constructors', async () => {
+
+    class A { }
+    class B {
+      a1: InjectWrappedInstance<A>
+      a2: A
+      constructor(@inject(A) a1, @inject(A) @noWrap a2) {
+        this.a1 = a1;
+        this.a2 = a2;
+      }
+    }
+    const ic = InjectContainer.New();
+
+    const b = await ic.getInstance(B);
+
+    expect(isWrappedObject(b.a1)).toBeTruthy();
+    expect(isWrappedObject(b.a2)).toBeFalsy();
+
+  });
+
+  it('should support @noWrap for class properties', async () => {
+
+    const ic = InjectContainer.New();
+
+    class D { }
+
+    class E {
+      @inject() @noWrap d: D
+      @inject() d2: D
+    }
+
+    const e = await ic.getInstance(E);
+
+    expect(isWrappedObject(e.d2)).toBeTruthy();
+    expect(isWrappedObject(e.d)).toBeFalsy();
+
+  });
+
+  it('should support @noWrap for method', async () => {
+
+    const ic = InjectContainer.New();
+
+    class A { }
+
+    class F {
+      run(@inject(A) @noWrap v1, @inject(A) v2) { return [v1, v2]; }
+    }
+
+    const f = await ic.getWrappedInstance(F);
+    const result = await f.run();
+
+    expect(isWrappedObject(result[0])).toBeFalsy();
+    expect(isWrappedObject(result[1])).toBeTruthy();
   });
 
 
