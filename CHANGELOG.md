@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.11](https://github.com/newdash/inject/compare/v0.2.9...v0.2.11) (2020-08-26)
+
+
+### Features
+
+* enhanced [@no](https://github.com/no)Wrap decorator ([83001dc](https://github.com/newdash/inject/commit/83001dcfeea87cc8514186d4df9eb0e54441bea7))
+
 ### [0.2.10](https://github.com/newdash/inject/compare/v0.2.9...v0.2.10) (2020-08-25)
 
 ### [0.2.9](https://github.com/newdash/inject/compare/v0.2.8...v0.2.9) (2020-08-25)
