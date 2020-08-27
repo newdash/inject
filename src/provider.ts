@@ -39,18 +39,14 @@ export class DefaultClassProvider implements InstanceProvider {
   /**
    * 
    * @param type 
-   * @param bTransient 
+   * @param bTransient is transient for type
    * @param inherit 
    * @param container should be a sub container
    */
   constructor(type: any, bTransient = false, container?: InjectContainer) {
     provider(type)(this, "provide");
-    if (bTransient) {
-      transient(this, "provide");
-    }
-    if (isNoWrap(type)) {
-      noWrap(this, "provide");
-    }
+    if (bTransient) { transient(this, "provide"); }
+    if (isNoWrap(type)) { noWrap(this, "provide"); }
     this.type = type;
     this.transient = bTransient;
     this.container = container;
@@ -120,8 +116,8 @@ export class DefaultClassProvider implements InstanceProvider {
     this.container.setStore(this.type, inst);
 
     if (info.size > 0) {
-      const keys = info.keys();
-      for (const propertyName of keys) {
+      const propertiesNames = info.keys();
+      for (const propertyName of propertiesNames) {
         const propInjectMetadata = info.get(propertyName);
         if (propInjectMetadata.injectType == 'classProperty') {
           let type = propInjectMetadata.type;
@@ -149,14 +145,6 @@ export class DefaultClassProvider implements InstanceProvider {
             }
           }
         }
-      }
-    }
-
-    if (!this.transient) {
-      const parent = this.container.getParent();
-      if (parent) {
-        // @ts-ignore
-        parent.setStore(this.type, inst);
       }
     }
 

@@ -18,6 +18,11 @@ export function isClass(obj: any): obj is Class {
   return false;
 }
 
+/**
+ * get class name from type or instance
+ * 
+ * @param typeOrInstance 
+ */
 export function getClassName(typeOrInstance: any): string {
   if (typeOrInstance?.constructor == Function) {
     return typeOrInstance.name;

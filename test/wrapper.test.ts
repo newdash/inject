@@ -113,11 +113,9 @@ describe('Wrapper Test Suite', () => {
     c.registerInstance("v", 111);
 
     class A {
-      v: number
-      a: number
+      v: number; a: number;
       constructor(@inject("v") v: number, a: number) {
-        this.v = v;
-        this.a = a;
+        this.v = v; this.a = a;
       }
     }
 

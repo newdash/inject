@@ -1,7 +1,8 @@
 import { WRAPPED_OBJECT_CONTAINER_PROPERTY, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_INJECT_INFO, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from "./constants";
 import { InjectContainer } from "./container";
-import { getClassMethodParams, getPropertyInjectedType, isNoWrap, isTransient } from "./decorators";
+import { getClassMethodParams, getPropertyInjectedType, getUnProxyTarget, isNoWrap, isTransient } from "./decorators";
 import { DefaultClassProvider } from "./provider";
+import { isClass } from "./utils";
 
 /**
  * create wrapper (proxy) for object with inject container 
@@ -93,15 +94,23 @@ export function createWrapper(instance: any, ic: InjectContainer) {
     };
 
     // for class, support proxy constructor
-    if (instance?.constructor == Function) {
+    if (isClass(instance)) {
 
       handler.construct = async (target, args) => {
+        target = getUnProxyTarget(target);
         const provider = new DefaultClassProvider(
           target,
           isTransient(target),
           await ic.createSubContainer()
         );
-        return provider.provide(...args);
+        const inst = await provider.provide(...args);
+        // the proxies constructor will FORCE overwrite storage
+        // with `new wrappedClass()`
+        if (!isTransient(target)) {
+          // @ts-ignore
+          ic.setStore(target, inst);
+        }
+        return inst;
       };
 
     }

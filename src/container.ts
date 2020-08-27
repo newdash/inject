@@ -261,7 +261,7 @@ export class InjectContainer {
     return inst;
   }
 
-  private async _withStore(type, provider: InstanceProvider) {
+  private async _withStore(type, provider: InstanceProvider, ...args: any[]) {
 
     // the type direct in store
     if (!this.hasInStore(type)) {
@@ -270,7 +270,7 @@ export class InjectContainer {
         return this.getSubClassInstance(type); // do not cache it
       }
 
-      const inst = await provider.provide();
+      const inst = await provider.provide(...args);
 
       if (getTransientInfo(provider, "provide")) {
         return inst;

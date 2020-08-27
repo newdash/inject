@@ -95,19 +95,16 @@ export function isTransient(target, targetKey?) {
 export function required(target, targetKey)
 export function required(target, targetKey, parameterIndex)
 export function required(target, targetKey, parameterIndex?) {
-  if (parameterIndex != undefined) {
-    const m = Reflect.getMetadata(KEY_REQUIRED, target, targetKey) || [];
-    m[parameterIndex] = true;
-    Reflect.defineMetadata(KEY_REQUIRED, m, target, targetKey);
+  if (typeof parameterIndex == 'number') {
+    Reflect.defineMetadata(KEY_REQUIRED, true, target, `${targetKey}_param_${parameterIndex}`);
   } else {
     Reflect.defineMetadata(KEY_REQUIRED, true, target, targetKey);
   }
 }
 
 export function isRequired(target, targetKey, parameterIndex?) {
-  if (parameterIndex != undefined) {
-    const m = Reflect.getMetadata(KEY_REQUIRED, target, targetKey) || [];
-    return Boolean(m[parameterIndex]);
+  if (typeof parameterIndex == 'number') {
+    return Boolean(Reflect.getMetadata(KEY_REQUIRED, target, `${targetKey}_param_${parameterIndex}`));
   }
   return Boolean(Reflect.getMetadata(KEY_REQUIRED, target, targetKey));
 }
@@ -238,6 +235,10 @@ export class LazyRef<T = any> {
 
 }
 
+/**
+ * @alias LazyRef.create
+ * @param type 
+ */
 export function lazyRef<T>(type: () => T) {
   return LazyRef.create<T>(type);
 }
@@ -281,11 +282,21 @@ export function provider(type?: any) {
  */
 export const withType = provider;
 
+/**
+ * get transient information
+ * 
+ * @param target 
+ * @param targetKey 
+ */
 export function getTransientInfo(target: any, targetKey: any) {
   target = getUnProxyTarget(target);
   return isTransient(target, targetKey);
 }
 
+
+/**
+ * get provide type information
+ */
 export function getProvideInfo(target: any, targetKey?: any) {
   let rt = Reflect.getMetadata(KEY_PROVIDE, target, targetKey);
   if (rt instanceof LazyRef) {
