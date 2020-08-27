@@ -1,4 +1,5 @@
-import { getClassName, getOrDefault } from "../src/utils";
+// @ts-nocheck
+import { getClassName, getOrDefault, isClassDecorator, isClassMethodDecorator, isClassMethodParameterDecorator, isClassPropertyDecorator, isClassStaticMethodDecorator, isClassStaticPropertyDecorator } from "../src/utils";
 
 
 describe('Utilities Test Suite', () => {
@@ -33,6 +34,39 @@ describe('Utilities Test Suite', () => {
     expect(getClassName(undefined)).toBeUndefined();
 
     expect(getClassName("Object")).toBe("String");
+
+
+  });
+
+  it('should support decorator checker', () => {
+
+    let tmp = undefined;
+    function dec(target, targetKey?, paramOrDesc?) {
+      tmp = [target, targetKey, paramOrDesc];
+    }
+
+    @dec
+    class A { }
+    expect(isClassDecorator(...tmp)).toBeTruthy();
+
+    class B { @dec a: number }
+    expect(isClassPropertyDecorator(...tmp)).toBeTruthy();
+    expect(isClassMethodDecorator(...tmp)).toBeFalsy();
+
+    class C { @dec run() { } }
+    expect(isClassMethodDecorator(...tmp)).toBeTruthy();
+    expect(isClassPropertyDecorator(...tmp)).toBeFalsy();
+
+    class D { run(@dec a?) { } }
+    expect(isClassMethodParameterDecorator(...tmp)).toBeTruthy();
+
+    class E { @dec static a }
+    expect(isClassStaticPropertyDecorator(...tmp)).toBeTruthy();
+    expect(isClassStaticMethodDecorator(...tmp)).toBeFalsy();
+
+    class F { @dec static a() { } }
+    expect(isClassStaticMethodDecorator(...tmp)).toBeTruthy();
+    expect(isClassStaticPropertyDecorator(...tmp)).toBeFalsy();
 
 
   });

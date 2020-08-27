@@ -3,7 +3,7 @@ import isUndefined from '@newdash/newdash/isUndefined';
 import { WRAPPED_OBJECT_INDICATOR, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
 import { createLogger } from './logger';
 import { InstanceProvider } from './provider';
-import { Class, InjectWrappedInstance, isClassConstructorParameterDecorator, isClassDecorator, isClassMethodDecorator, isClassMethodParameterDecorator, isClassPropertyDecorator } from './utils';
+import { Class, InjectWrappedInstance, isClassConstructorParameterDecorator, isClassDecorator, isClassMethodDecorator, isClassMethodParameterDecorator, isClassPropertyDecorator, isClassStaticMethodDecorator, isClassStaticMethodParametersDecorator, isClassStaticPropertyDecorator } from './utils';
 
 const KEY_INJECT = 'inject:key_inject';
 const KEY_INJECT_CLASS = 'inject:key_inject_class';
@@ -392,25 +392,46 @@ function getInjectParameter(target: any, targetKey?: any, parameterIndexOrDesc?:
       rt.push(getInjectParameter(target, targetKey, idx));
     }
     return rt;
-  } else if (isClassConstructorParameterDecorator(target, targetKey, parameterIndexOrDesc)) {
+  }
+  else if (isClassConstructorParameterDecorator(target, targetKey, parameterIndexOrDesc)) {
     // constructor parameter
     return Reflect.getOwnMetadata(KEY_INJECT_META_PARAM, target, `__constructor__param__${parameterIndexOrDesc}`) || defaultValue;
-  } else if (isClassMethodDecorator(target, targetKey, parameterIndexOrDesc)) {
+  }
+  else if (isClassStaticMethodParametersDecorator(target, targetKey, parameterIndexOrDesc)) {
+    return Reflect.getMetadata(KEY_INJECT_META_PARAM, target,
+      `__static__${targetKey}__method__param__${parameterIndexOrDesc}`
+    ) || defaultValue;
+  }
+  else if (isClassStaticPropertyDecorator(target, targetKey, parameterIndexOrDesc)) {
+    return Reflect.getOwnMetadata(KEY_INJECT_META_PARAM, target, targetKey) || defaultValue;
+  }
+  else if (isClassStaticMethodDecorator(target, targetKey, parameterIndexOrDesc)) {
+    const rt = [];
+    const paramLength = target[targetKey].length || 0;
+    for (let idx = 0; idx < paramLength; idx++) {
+      rt.push(getInjectParameter(target, targetKey, idx));
+    }
+    return rt;
+  }
+  else if (isClassMethodParameterDecorator(target, targetKey, parameterIndexOrDesc)) {
+    return Reflect.getMetadata(
+      KEY_INJECT_META_PARAM,
+      target,
+      `${targetKey}__method__param__${parameterIndexOrDesc}`
+    ) || defaultValue;
+  }
+  else if (isClassPropertyDecorator(target, targetKey, parameterIndexOrDesc)) {
+    return Reflect.getMetadata(KEY_INJECT_META_PARAM, target, targetKey) || defaultValue;
+  }
+  else if (isClassMethodDecorator(target, targetKey, parameterIndexOrDesc)) {
     const rt = [];
     const methodParamLength = target[targetKey].length || 0;
     for (let idx = 0; idx < methodParamLength; idx++) {
       rt.push(getInjectParameter(target, targetKey, idx));
     }
     return rt;
-  } else if (isClassMethodParameterDecorator(target, targetKey, parameterIndexOrDesc)) {
-    return Reflect.getMetadata(
-      KEY_INJECT_META_PARAM,
-      target,
-      `${targetKey}__method__param__${parameterIndexOrDesc}`
-    ) || defaultValue;
-  } else if (isClassPropertyDecorator(target, targetKey, parameterIndexOrDesc)) {
-    return Reflect.getMetadata(KEY_INJECT_META_PARAM, target, targetKey) || defaultValue;
   }
+
 
   return defaultValue;
 
@@ -419,10 +440,20 @@ function getInjectParameter(target: any, targetKey?: any, parameterIndexOrDesc?:
 function param(key: string, value: any) {
   return function (target: any, targetKey: any, parameterIndex?: number) {
     if (isClassConstructorParameterDecorator(target, targetKey, parameterIndex)) {
+      // constructor parameter
       const paramsMeta = getInjectParameter(target, targetKey, parameterIndex);
       paramsMeta[key] = value;
-      // constructor parameter
       Reflect.defineMetadata(KEY_INJECT_META_PARAM, paramsMeta, target, `__constructor__param__${parameterIndex}`);
+    }
+    else if (isClassStaticMethodParametersDecorator(target, targetKey, parameterIndex)) {
+      const paramsMeta = getInjectParameter(target, targetKey, parameterIndex);
+      paramsMeta[key] = value;
+      Reflect.defineMetadata(KEY_INJECT_META_PARAM, paramsMeta, target, `__static__${targetKey}__method__param__${parameterIndex}`);
+    }
+    else if (isClassStaticPropertyDecorator(target, targetKey, parameterIndex)) {
+      const paramsMeta = getInjectParameter(target, targetKey, parameterIndex);
+      paramsMeta[key] = value;
+      Reflect.defineMetadata(KEY_INJECT_META_PARAM, paramsMeta, target, targetKey);
     }
     else if (isClassMethodParameterDecorator(target, targetKey, parameterIndex)) {
       // class method parameter
@@ -437,6 +468,7 @@ function param(key: string, value: any) {
       paramsMeta[key] = value;
       Reflect.defineMetadata(KEY_INJECT_META_PARAM, paramsMeta, target, targetKey);
     }
+
   };
 }
 

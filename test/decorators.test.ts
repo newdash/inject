@@ -61,11 +61,10 @@ describe('Decorators Test Suite', () => {
     class A {
 
       @inject("C") @inject.param("v", 245) a: A;
-
       @inject.param("v", 42) @inject("C") a2: A;
-
+      @inject.param("v", 43) static a3: any;
       run(@inject("C") @inject.param("v", 123) c) { }
-
+      static exec(@inject("B") @inject.param("v", 84) v) { }
       constructor(@inject("V") @inject.param("v", 1) v?, @inject("v2") v2?) { }
 
     }
@@ -89,6 +88,15 @@ describe('Decorators Test Suite', () => {
     expect(property_a_param.v).toBe(245);
     const property_a2_param = inject.getInjectParameter(a, "a2");
     expect(property_a2_param.v).toBe(42);
+
+    const static_method_exec_param_0 = inject.getInjectParameter(A, "exec", 0);
+    expect(static_method_exec_param_0.v).toBe(84);
+
+    const static_method_exec_params = inject.getInjectParameter(A, "exec", {});
+    expect(static_method_exec_params).toHaveLength(1);
+
+    const static_property_a3_param = inject.getInjectParameter(A, "a3");
+    expect(static_property_a3_param.v).toBe(43);
 
   });
 

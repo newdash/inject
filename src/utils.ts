@@ -28,24 +28,78 @@ export function getClassName(typeOrInstance: any): string {
   return undefined;
 }
 
+/**
+ * is class decorator
+ * 
+ * @param target 
+ * @param targetKey 
+ * @param parameterIndex 
+ */
 export function isClassDecorator(target: any, targetKey?: any, parameterIndex?: any) {
   return isClass(target) && targetKey == undefined && parameterIndex == undefined;
 }
 
+/**
+ * is class static method parameter decorator
+ * 
+ * @param target 
+ * @param targetKey 
+ * @param parameterIndex 
+ */
+export function isClassStaticMethodParametersDecorator(target, targetKey, parameterIndex) {
+  return isClass(target) && targetKey != undefined && typeof parameterIndex == 'number';
+}
+
+export function isClassStaticMethodDecorator(target, targetKey, parameterIndex) {
+  return isClass(target) && targetKey != undefined && typeof parameterIndex == 'object';
+}
+
+export function isClassStaticPropertyDecorator(target, targetKey, parameterIndex) {
+  return isClass(target) && targetKey != undefined && parameterIndex == undefined;
+}
+
+/**
+ * is class constructor parameter decorator
+ * 
+ * @param target 
+ * @param targetKey 
+ * @param parameterIndex 
+ */
 export function isClassConstructorParameterDecorator(target, targetKey, parameterIndex) {
   return isClass(target) && targetKey == undefined && typeof parameterIndex != undefined;
 }
 
+/**
+ * is class method decorator
+ * 
+ * @param target 
+ * @param targetKey 
+ * @param desc 
+ */
 export function isClassMethodDecorator(target, targetKey, desc) {
-  return target !== undefined && targetKey !== undefined && typeof desc == 'object';
+  return target !== undefined && !isClass(target) && targetKey !== undefined && typeof desc == 'object';
 }
 
+/**
+ * is class method parameter decorator
+ * 
+ * @param target 
+ * @param targetKey 
+ * @param parameterIndex 
+ */
 export function isClassMethodParameterDecorator(target, targetKey, parameterIndex) {
-  return target !== undefined && targetKey !== undefined && typeof parameterIndex == 'number';
+  return target !== undefined && !isClass(target) && targetKey !== undefined && typeof parameterIndex == 'number';
 }
 
+/**
+ * is class property decorator
+ * 
+ * @param target 
+ * @param targetKey 
+ * @param parameterIndex 
+ */
 export function isClassPropertyDecorator(target, targetKey, parameterIndex) {
-  return target !== undefined && targetKey !== undefined && parameterIndex == undefined;
+  return target !== undefined && !isClass(target) && targetKey !== undefined && parameterIndex == undefined;
 }
 
 export type Class<T = any> = new (...args: any[]) => T
