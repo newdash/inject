@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.12](https://github.com/newdash/inject/compare/v0.2.11...v0.2.12) (2020-08-27)
+
+
+### Features
+
+* [#4](https://github.com/newdash/inject/issues/4) [@inject](https://github.com/inject).param decorator ([d9c5ac0](https://github.com/newdash/inject/commit/d9c5ac0f4176a8db7f5838aaaba2e36e552df464))
+* [#4](https://github.com/newdash/inject/issues/4) [@inject](https://github.com/inject).param.require() support ([0d41087](https://github.com/newdash/inject/commit/0d41087d7764ac83078c0ffd2d4133ec63616e0d))
+* [#4](https://github.com/newdash/inject/issues/4) inject param support ([edf25ba](https://github.com/newdash/inject/commit/edf25ba480bf0891b229344029e791ae20f260a4))
+* [#4](https://github.com/newdash/inject/issues/4) support inject param ([c533202](https://github.com/newdash/inject/commit/c533202fb87f6fd513767f22ac4c8919c01100da))
+
 ### [0.2.11](https://github.com/newdash/inject/compare/v0.2.9...v0.2.11) (2020-08-26)
 
 
