@@ -100,17 +100,15 @@ describe('Decorators Test Suite', () => {
 
   });
 
-  it('should support transient decorator', () => {
+  it('should support @transient decorator', () => {
 
 
     @transient
     class A { }
-
     class B extends A { }
 
     expect(isTransient(A)).toBe(true);
     expect(isTransient(B)).toBe(false);
-
     expect(isTransient(null)).toBe(false);
 
   });
@@ -279,6 +277,21 @@ describe('Decorators Test Suite', () => {
 
   });
 
+
+  it('should support @inject.param.require() decorator', () => {
+
+    class A {
+      exec(@inject.param.require("a") a) { }
+      static exec2(@inject.param.require("42") a) { }
+    }
+
+    const a = new A();
+
+    expect(inject.param.getRequiredParamName(a, "exec", 0)).toBe("a");
+    expect(inject.param.getRequiredParamName(A, "exec2", 0)).toBe("42");
+
+
+  });
 
 
 });

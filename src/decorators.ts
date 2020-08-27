@@ -10,7 +10,8 @@ const KEY_INJECT_CLASS = 'inject:key_inject_class';
 const KEY_INJECT_PARAMETERS = 'inject:method_inject_parameters';
 const KEY_TRANSIENT = 'inject:class:transient';
 
-const KEY_INJECT_META_PARAM = 'inject:meta:param_provider';
+const KEY_INJECT_META_PARAM = 'inject:meta:provide_param';
+const KEY_INJECT_META_PARAM_INJECT = 'inject:meta:inject_param';
 
 const KEY_NO_WRAP = 'inject:no_wrap';
 
@@ -471,6 +472,20 @@ function param(key: string, value: any) {
 
   };
 }
+
+function getRequiredParamName(target, targetKey, parameterIndex): string {
+  target = getUnProxyTarget(target);
+  return Reflect.getMetadata(KEY_INJECT_META_PARAM_INJECT, target, `${targetKey}_param_${parameterIndex}`);
+}
+
+function injectParam(paramName: string): ParameterDecorator {
+  return function (target: any, targetKey: any, parameterIndex: number) {
+    Reflect.defineMetadata(KEY_INJECT_META_PARAM_INJECT, paramName, target, `${targetKey}_param_${parameterIndex}`);
+  };
+}
+
+param['require'] = injectParam;
+param['getRequiredParamName'] = getRequiredParamName;
 
 inject['param'] = param;
 inject['getInjectParameter'] = getInjectParameter;
