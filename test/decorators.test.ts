@@ -61,7 +61,7 @@ describe('Decorators Test Suite', () => {
     class A {
 
       @inject("C") @inject.param("v", 245) a: A;
-      @inject.param("v", 42) @inject("C") a2: A;
+      @inject.param("v", 42) @inject.param("v2", 43) @inject("C") a2: A;
       @inject.param("v", 43) static a3: any;
       run(@inject("C") @inject.param("v", 123) c) { }
       static exec(@inject("B") @inject.param("v", 84) v) { }
@@ -88,6 +88,7 @@ describe('Decorators Test Suite', () => {
     expect(property_a_param.v).toBe(245);
     const property_a2_param = inject.getInjectParameter(a, "a2");
     expect(property_a2_param.v).toBe(42);
+    expect(property_a2_param.v2).toBe(43);
 
     const static_method_exec_param_0 = inject.getInjectParameter(A, "exec", 0);
     expect(static_method_exec_param_0.v).toBe(84);
@@ -276,22 +277,5 @@ describe('Decorators Test Suite', () => {
 
 
   });
-
-
-  it('should support @inject.param.require() decorator', () => {
-
-    class A {
-      exec(@inject.param.require("a") a) { }
-      static exec2(@inject.param.require("42") a) { }
-    }
-
-    const a = new A();
-
-    expect(inject.param.getRequiredParamName(a, "exec", 0)).toBe("a");
-    expect(inject.param.getRequiredParamName(A, "exec2", 0)).toBe("42");
-
-
-  });
-
 
 });

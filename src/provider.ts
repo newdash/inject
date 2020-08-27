@@ -1,5 +1,5 @@
 import { InjectContainer } from "./container";
-import { getClassConstructorParams, getClassInjectionInformation, getUnProxyTarget, isNoWrap, isRequired, LazyRef, noWrap, provider, transient } from "./decorators";
+import { getClassConstructorParams, getClassInjectionInformation, getUnProxyTarget, inject, isNoWrap, isRequired, LazyRef, noWrap, provider, transient } from "./decorators";
 import { RequiredNotFoundError } from "./errors";
 import { createLogger } from "./logger";
 
@@ -66,25 +66,33 @@ export class DefaultClassProvider implements InstanceProvider {
     );
   }
 
+  private _registerInjectParam(ic: InjectContainer, injectParams: any) {
+    Object.keys(injectParams).forEach(key => {
+      const value = injectParams[key];
+      this._log("provide transient param %o with value: %O", key, value);
+      ic.registerInstance(key, value, true);
+    });
+  }
+
   async provide(...args: any[]) {
     const type = this.type;
     const info = getClassInjectionInformation(type.prototype);
     const constructParametersInfo = getClassConstructorParams(type);
     const constructParams = args || [];
+    const ic = this.container;
 
     if (constructParametersInfo.length > 0) {
       for (let idx = 0; idx < constructParametersInfo.length; idx++) {
         const paramInfo = constructParametersInfo[idx];
         if (args[paramInfo.parameterIndex] == undefined) {
+
+          this._registerInjectParam(ic, inject.getInjectParameter(type, undefined, paramInfo.parameterIndex));
+
           let paramValue = undefined;
           if (isNoWrap(type, undefined, paramInfo.parameterIndex)) {
-            paramValue = await this.container.getInstance(
-              paramInfo.type,
-            );
+            paramValue = await ic.getInstance(paramInfo.type, ic);
           } else {
-            paramValue = await this.container.getWrappedInstance(
-              paramInfo.type,
-            );
+            paramValue = await ic.getWrappedInstance(paramInfo.type, ic);
           }
 
           constructParams[paramInfo.parameterIndex] = paramValue;
@@ -113,28 +121,31 @@ export class DefaultClassProvider implements InstanceProvider {
 
     if (info.size > 0) {
       const keys = info.keys();
-      for (const key of keys) {
-        const prop = info.get(key);
-        if (prop.injectType == 'classProperty') {
-          let type = prop.type;
+      for (const propertyName of keys) {
+        const propInjectMetadata = info.get(propertyName);
+        if (propInjectMetadata.injectType == 'classProperty') {
+          let type = propInjectMetadata.type;
           if (type instanceof LazyRef) {
             type = type.getRef();
           }
+
+          this._registerInjectParam(ic, inject.getInjectParameter(inst, propertyName));
+
           // if the instance decorate this field disable wrapper
-          if (isNoWrap(inst, key)) {
-            inst[key] = await this.container.getInstance(type, this.container);
+          if (isNoWrap(inst, propertyName)) {
+            inst[propertyName] = await ic.getInstance(type, ic);
           } else {
-            inst[key] = await this.container.getWrappedInstance(type, this.container);
+            inst[propertyName] = await ic.getWrappedInstance(type, ic);
           }
           this._log("after %o instance created, inject property (%o: %o) with value: %o",
             getUnProxyTarget(type),
-            key,
+            propertyName,
             type,
-            inst[key],
+            inst[propertyName],
           );
-          if (inst[key] === undefined) {
-            if (isRequired(inst, key)) {
-              throw new RequiredNotFoundError(inst, key);
+          if (inst[propertyName] === undefined) {
+            if (isRequired(inst, propertyName)) {
+              throw new RequiredNotFoundError(inst, propertyName);
             }
           }
         }

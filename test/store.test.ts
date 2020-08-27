@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { inject, InjectContainer, isWrappedObject, provider, transient } from "../src";
+import { inject, InjectContainer, isWrappedObject, noWrap, provider, transient } from "../src";
 
 describe('Storage Policy Test Suite', () => {
 
@@ -26,14 +26,13 @@ describe('Storage Policy Test Suite', () => {
   });
 
   it('should not cache instance which is transient', async () => {
-
+    @noWrap
     class A { }
     @transient
-    class B { @inject() a: A }
-    class C { @inject() b: B }
+    class B { @inject() @noWrap a: A }
+    class C { @inject() @noWrap b: B }
 
     const ic = InjectContainer.New();
-    ic.doNotWrap(A, B, C);
 
     const c = await ic.getInstance(C);
     const b = await ic.getInstance(B);

@@ -216,6 +216,7 @@ export class InjectContainer {
 
     let provider = undefined;
 
+    // prefer use context as 'container'
     // user define the provider
     if (ctx.hasInProviders(type)) {
       provider = ctx.wrap(ctx.getProvider(type));
@@ -271,12 +272,14 @@ export class InjectContainer {
 
       const inst = await provider.provide();
 
-      if (inst != undefined) {
-        this.setStore(type, inst);
+      if (getTransientInfo(provider, "provide")) {
+        return inst;
       }
-      if (!getTransientInfo(provider, "provide")) {
+
+      if (inst != undefined) {
         this.getParent().setStore(type, inst);
       }
+
     }
 
     return this.getStore(type);
@@ -392,21 +395,21 @@ export class InjectContainer {
       type = instance?.constructor;
     }
 
-    let paramsInfo: InjectParameter[] = [];
+    let methodInjectionParameterMetadata: InjectParameter[] = [];
 
     if (method[WRAPPED_OBJECT_METHOD_INJECT_INFO]) {
       // get meta from duplicate
-      paramsInfo = method[WRAPPED_OBJECT_METHOD_INJECT_INFO];
+      methodInjectionParameterMetadata = method[WRAPPED_OBJECT_METHOD_INJECT_INFO];
     } else {
       // get meta directly by reflect
-      paramsInfo = getClassMethodParams(instance, methodName);
+      methodInjectionParameterMetadata = getClassMethodParams(instance, methodName);
     }
 
-    const params = args || [];
+    const methodParameters = args || [];
 
-    if (paramsInfo.length > 0) {
-      for (let idx = 0; idx < paramsInfo.length; idx++) {
-        const paramInfo = paramsInfo[idx];
+    if (methodInjectionParameterMetadata.length > 0) {
+      for (let idx = 0; idx < methodInjectionParameterMetadata.length; idx++) {
+        const paramInfo = methodInjectionParameterMetadata[idx];
         // if user has define the parameter in `injectExecute`, prefer use that
         if (args[paramInfo.parameterIndex] == undefined) {
 
@@ -416,13 +419,13 @@ export class InjectContainer {
               methodName,
               paramInfo.parameterIndex,
               paramInfo.type,
-              params[paramInfo.parameterIndex],
+              methodParameters[paramInfo.parameterIndex],
             );
           };
           if (isNoWrap(instance, methodName, paramInfo.parameterIndex)) {
-            params[paramInfo.parameterIndex] = await this.getInstance(paramInfo.type);
+            methodParameters[paramInfo.parameterIndex] = await this.getInstance(paramInfo.type);
           } else {
-            params[paramInfo.parameterIndex] = await this.getWrappedInstance(paramInfo.type);
+            methodParameters[paramInfo.parameterIndex] = await this.getWrappedInstance(paramInfo.type);
           }
           const unProxyObject = getUnProxyTarget(instance);
           if (isClass(unProxyObject)) {
@@ -436,7 +439,7 @@ export class InjectContainer {
               unProxyObject?.constructor?.name,
             );
           }
-          if (params[paramInfo.parameterIndex] == undefined) {
+          if (methodParameters[paramInfo.parameterIndex] == undefined) {
             if (!isWrappedObject(instance)) {
               if (isRequired(instance, methodName, paramInfo.parameterIndex)) {
                 throw new RequiredNotFoundError(type, methodName, paramInfo.parameterIndex);
@@ -451,7 +454,7 @@ export class InjectContainer {
       instance = this.wrap(instance);
     }
 
-    return method.apply(instance, params);
+    return method.apply(instance, methodParameters);
   }
 
   private _getProviderParams(provider) {

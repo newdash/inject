@@ -3,7 +3,7 @@ import isUndefined from '@newdash/newdash/isUndefined';
 import { WRAPPED_OBJECT_INDICATOR, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
 import { createLogger } from './logger';
 import { InstanceProvider } from './provider';
-import { Class, InjectWrappedInstance, isClassConstructorParameterDecorator, isClassDecorator, isClassMethodDecorator, isClassMethodParameterDecorator, isClassPropertyDecorator, isClassStaticMethodDecorator, isClassStaticMethodParametersDecorator, isClassStaticPropertyDecorator } from './utils';
+import { Class, InjectWrappedInstance, isClass, isClassConstructorParameterDecorator, isClassDecorator, isClassMethodDecorator, isClassMethodParameterDecorator, isClassPropertyDecorator, isClassStaticMethodDecorator, isClassStaticMethodParametersDecorator, isClassStaticPropertyDecorator } from './utils';
 
 const KEY_INJECT = 'inject:key_inject';
 const KEY_INJECT_CLASS = 'inject:key_inject_class';
@@ -11,7 +11,6 @@ const KEY_INJECT_PARAMETERS = 'inject:method_inject_parameters';
 const KEY_TRANSIENT = 'inject:class:transient';
 
 const KEY_INJECT_META_PARAM = 'inject:meta:provide_param';
-const KEY_INJECT_META_PARAM_INJECT = 'inject:meta:inject_param';
 
 const KEY_NO_WRAP = 'inject:no_wrap';
 
@@ -70,14 +69,14 @@ export function getClassInjectionInformation(target): Map<string, InjectInformat
  *
  * @param target
  */
-export function transient(target)
+export function transient(target: Class): void;
 /**
  * transient type, inject container will not cache it
  * 
  * @param target 
  * @param targetKey 
  */
-export function transient(target, targetKey)
+export function transient(target: any, targetKey: any): void;
 export function transient(target, targetKey?) {
   Reflect.defineMetadata(KEY_TRANSIENT, true, target, targetKey);
 }
@@ -87,8 +86,7 @@ export function isTransient(target, targetKey?) {
   if (targetKey != undefined) {
     // for instance, must use prototype
     return Boolean(Reflect.getMetadata(KEY_TRANSIENT, target, targetKey));
-  }
-  if (typeof target == 'function') {
+  } else if (isClass(target)) {
     return Boolean(Reflect.getOwnMetadata(KEY_TRANSIENT, target));
   }
   return false;
@@ -284,6 +282,7 @@ export function provider(type?: any) {
 export const withType = provider;
 
 export function getTransientInfo(target: any, targetKey: any) {
+  target = getUnProxyTarget(target);
   return isTransient(target, targetKey);
 }
 
@@ -438,6 +437,12 @@ function getInjectParameter(target: any, targetKey?: any, parameterIndexOrDesc?:
 
 }
 
+/**
+ * provide param (name: value) to provider
+ * 
+ * @param key 
+ * @param value 
+ */
 function param(key: string, value: any) {
   return function (target: any, targetKey: any, parameterIndex?: number) {
     if (isClassConstructorParameterDecorator(target, targetKey, parameterIndex)) {
@@ -472,20 +477,6 @@ function param(key: string, value: any) {
 
   };
 }
-
-function getRequiredParamName(target, targetKey, parameterIndex): string {
-  target = getUnProxyTarget(target);
-  return Reflect.getMetadata(KEY_INJECT_META_PARAM_INJECT, target, `${targetKey}_param_${parameterIndex}`);
-}
-
-function injectParam(paramName: string): ParameterDecorator {
-  return function (target: any, targetKey: any, parameterIndex: number) {
-    Reflect.defineMetadata(KEY_INJECT_META_PARAM_INJECT, paramName, target, `${targetKey}_param_${parameterIndex}`);
-  };
-}
-
-param['require'] = injectParam;
-param['getRequiredParamName'] = getRequiredParamName;
 
 inject['param'] = param;
 inject['getInjectParameter'] = getInjectParameter;

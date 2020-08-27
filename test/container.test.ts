@@ -1,5 +1,5 @@
 import { v4 } from 'uuid';
-import { ChildInjectContainer, createInstanceProvider, inject, InjectContainer, provider, required, transient } from '../src';
+import { ChildInjectContainer, createInstanceProvider, inject, InjectContainer, noWrap, provider, required, transient, withType } from '../src';
 import { RequiredNotFoundError } from '../src/errors';
 
 
@@ -131,6 +131,52 @@ describe('Container Test Suite', () => {
     expect(() => ic.getInstance(B)).rejects.toThrow(RequiredNotFoundError);
     expect(async () => { const c = await ic.getWrappedInstance(C); return c.run(); }).rejects.toThrow(RequiredNotFoundError);
     expect(async () => { const d = await ic.wrap(D); return d.run(); }).rejects.toThrow(RequiredNotFoundError);
+
+  });
+
+  it('should support inject @inject.param() parameters', async () => {
+
+    @transient
+    class A { @inject("a") a: number }
+
+    class B { @inject.param("a", 1) @noWrap @inject(A) a: A }
+
+    class C {
+      a: A
+      constructor(@inject.param("a", 42) @noWrap @inject(A) a: A) { this.a = a; }
+    }
+
+    class AnswerProvider {
+      @transient
+      @withType("answer")
+      provide(@inject("base") @noWrap base: number) {
+        return base + 41;
+      }
+    }
+
+    class E {
+      @inject.param("base", 1) @inject("answer")
+      theRealAnswer: number;
+      @inject.param("base", 99) @inject("answer")
+      anotherAnswer: number;
+    }
+
+    const ic = InjectContainer.New();
+
+    const b = await ic.getInstance(B);
+    // @ts-ignore
+    expect(ic._providers.size).toBe(0);
+    expect(b.a.a).toBe(1);
+
+    const c = await ic.getInstance(C);
+    expect(c.a.a).toBe(42);
+
+    ic.registerProvider(AnswerProvider);
+    const e = await ic.getInstance(E);
+    expect(e.theRealAnswer).toBe(42);
+    expect(e.anotherAnswer).toBe(140);
+
+
 
   });
 
