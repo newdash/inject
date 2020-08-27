@@ -1,9 +1,9 @@
 import { Server } from 'http';
 import { createInjectDecorator, DefaultClassProvider, getClassConstructorParams, getClassInjectionInformation, getNamespace, getPropertyInjectedType, getProvideInfo, getTransientInfo, inject, InjectContainer, isNoWrap, isNoWrapProvider, isRequired, isTransient, LazyRef, namespace, noWrap, provider, required, transient, withType } from '../src/index';
 
-describe('Inject Decorators Test Suite', () => {
+describe('Decorators Test Suite', () => {
 
-  it('should support use @inject parameters', () => {
+  it('should support use @inject() with parameters', () => {
 
     class A {
 
@@ -19,6 +19,8 @@ describe('Inject Decorators Test Suite', () => {
 
       run(@inject('ctx') ctx, @inject(Date) date) { }
 
+      run2(@inject('ctx') ctx, date, @inject("v") v) { }
+
     }
 
     const constructParams = getClassConstructorParams(A);
@@ -29,21 +31,64 @@ describe('Inject Decorators Test Suite', () => {
 
     const injections = getClassInjectionInformation(A.prototype);
 
-    expect(injections.size).toBe(3);
+    expect(injections.size).toBe(4);
 
-    const methodRunInjection = injections.get('run');
+    const method_run_parameters = injections.get('run');
+    expect(method_run_parameters.injectType).toBe('classMethod');
+    expect(method_run_parameters.parameters).toHaveLength(2);
+    expect(method_run_parameters.parameters[0].type).toBe('ctx');
+    expect(method_run_parameters.parameters[0].parameterIndex).toBe(0);
+    expect(method_run_parameters.parameters[1].type).toBe(Date);
+    expect(method_run_parameters.parameters[1].parameterIndex).toBe(1);
 
-    expect(methodRunInjection.injectType).toBe('classMethod');
-    expect(methodRunInjection.parameters).toHaveLength(2);
-
-    expect(methodRunInjection.parameters[0].type).toBe('ctx');
-    expect(methodRunInjection.parameters[0].parameterIndex).toBe(0);
-    expect(methodRunInjection.parameters[1].type).toBe(Date);
-    expect(methodRunInjection.parameters[1].parameterIndex).toBe(1);
+    const method_run2_parameters = injections.get('run2');
+    expect(method_run2_parameters.parameters).toHaveLength(3);
+    expect(method_run2_parameters.parameters[0].type).toBe('ctx');
+    expect(method_run2_parameters.parameters[0].parameterIndex).toBe(0);
+    expect(method_run2_parameters.parameters[1]).toBeUndefined();
+    expect(method_run2_parameters.parameters[2].type).toBe("v");
+    expect(method_run2_parameters.parameters[2].parameterIndex).toBe(2);
 
     const a = new A(new Date());
 
     expect(getPropertyInjectedType(a, "_name")).toBe("userName");
+
+  });
+
+  it('should support @inject.param() decorator', async () => {
+
+
+    class A {
+
+      @inject("C") @inject.param("v", 245) a: A;
+
+      @inject.param("v", 42) @inject("C") a2: A;
+
+      run(@inject("C") @inject.param("v", 123) c) { }
+
+      constructor(@inject("V") @inject.param("v", 1) v?, @inject("v2") v2?) { }
+
+    }
+
+    const a = new A;
+
+    const constructor_param_0 = inject.getInjectParameter(A, undefined, 0);
+    expect(constructor_param_0.v).toBe(1);
+
+    const constructor_params = inject.getInjectParameter(A);
+    expect(constructor_params).toHaveLength(2);
+    expect(constructor_params[0]).toBe(constructor_param_0);
+    expect(Object.keys(constructor_params[1])).toHaveLength(0);
+
+    const method_run_param_0 = inject.getInjectParameter(a, "run", 0);
+    expect(method_run_param_0.v).toBe(123);
+    const method_run_params = inject.getInjectParameter(a, "run", {});
+    expect(method_run_params).toHaveLength(1);
+
+    const property_a_param = inject.getInjectParameter(a, "a");
+    expect(property_a_param.v).toBe(245);
+    const property_a2_param = inject.getInjectParameter(a, "a2");
+    expect(property_a2_param.v).toBe(42);
 
   });
 

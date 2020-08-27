@@ -28,6 +28,26 @@ export function getClassName(typeOrInstance: any): string {
   return undefined;
 }
 
+export function isClassDecorator(target: any, targetKey?: any, parameterIndex?: any) {
+  return isClass(target) && targetKey == undefined && parameterIndex == undefined;
+}
+
+export function isClassConstructorParameterDecorator(target, targetKey, parameterIndex) {
+  return isClass(target) && targetKey == undefined && typeof parameterIndex != undefined;
+}
+
+export function isClassMethodDecorator(target, targetKey, desc) {
+  return target !== undefined && targetKey !== undefined && typeof desc == 'object';
+}
+
+export function isClassMethodParameterDecorator(target, targetKey, parameterIndex) {
+  return target !== undefined && targetKey !== undefined && typeof parameterIndex == 'number';
+}
+
+export function isClassPropertyDecorator(target, targetKey, parameterIndex) {
+  return target !== undefined && targetKey !== undefined && parameterIndex == undefined;
+}
+
 export type Class<T = any> = new (...args: any[]) => T
 
 /**

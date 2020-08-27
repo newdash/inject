@@ -1,15 +1,16 @@
 import { isFunction } from '@newdash/newdash/isFunction';
 import isUndefined from '@newdash/newdash/isUndefined';
-import sortBy from '@newdash/newdash/sortBy';
 import { WRAPPED_OBJECT_INDICATOR, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
 import { createLogger } from './logger';
 import { InstanceProvider } from './provider';
-import { Class, InjectWrappedInstance } from './utils';
+import { Class, InjectWrappedInstance, isClassConstructorParameterDecorator, isClassDecorator, isClassMethodDecorator, isClassMethodParameterDecorator, isClassPropertyDecorator } from './utils';
 
 const KEY_INJECT = 'inject:key_inject';
 const KEY_INJECT_CLASS = 'inject:key_inject_class';
-const KEY_INJECT_PARAMS = 'inject:method_inject_params';
+const KEY_INJECT_PARAMETERS = 'inject:method_inject_parameters';
 const KEY_TRANSIENT = 'inject:class:transient';
+
+const KEY_INJECT_META_PARAM = 'inject:meta:param_provider';
 
 const KEY_NO_WRAP = 'inject:no_wrap';
 
@@ -21,10 +22,7 @@ const KEY_NAMESPACE = "inject:namespace";
 
 const KEY_PROVIDE = 'inject:provide';
 
-const KEY_DISABLE_PROXY = 'inject:proxy:disable';
-
 const decoratorLogger = createLogger("decorator");
-
 
 export interface InjectInformation {
   injectType: 'classProperty' | 'classMethod'
@@ -123,7 +121,10 @@ export function isRequired(target, targetKey, parameterIndex?) {
  * @param targetKey 
  */
 export function noWrap(target: any, targetKey?: any, parameterIndex?: any) {
-  if (typeof parameterIndex == 'number') {
+  if (
+    isClassMethodParameterDecorator(target, targetKey, parameterIndex) ||
+    isClassConstructorParameterDecorator(target, targetKey, parameterIndex)
+  ) {
     const parametersNoWrap = Reflect.getMetadata(KEY_PARAMETER_NO_WRAP, target, targetKey) || [];
     parametersNoWrap[parameterIndex] = true;
     Reflect.defineMetadata(KEY_PARAMETER_NO_WRAP, parametersNoWrap, target, targetKey);
@@ -145,7 +146,10 @@ export function isNoWrap(classType: any)
 export function isNoWrap(target: any, propertyName: string)
 export function isNoWrap(target: any, methodName: any, parameterIndex: number)
 export function isNoWrap(target: any, targetKey?: any, parameterIndex?: any) {
-  if (typeof parameterIndex == 'number') {
+  if (
+    isClassMethodParameterDecorator(target, targetKey, parameterIndex) ||
+    isClassConstructorParameterDecorator(target, targetKey, parameterIndex)
+  ) {
     return Boolean(
       (Reflect.getMetadata(KEY_PARAMETER_NO_WRAP, target, targetKey) || [])[parameterIndex]
     );
@@ -192,12 +196,29 @@ export function setClassInjectInformation(target, info) {
  */
 export function getClassConstructorParams(target: Class): InjectParameter[] {
   target = getUnProxyTarget(target);
-  return Reflect.getMetadata(KEY_INJECT_PARAMS, target) || [];
+  return (Reflect.getMetadata(KEY_INJECT_PARAMETERS, target) || []).filter(item => item != undefined);
+}
+
+export function setClassConstructorParams(target: Class, parameters: InjectParameter[]) {
+  Reflect.defineMetadata(KEY_INJECT_PARAMETERS, parameters, target);
 }
 
 export function getClassMethodParams(target, targetKey): InjectParameter[] {
   target = getUnProxyTarget(target);
-  return Reflect.getMetadata(KEY_INJECT_PARAMS, target, targetKey) || [];
+  return (Reflect.getMetadata(KEY_INJECT_PARAMETERS, target, targetKey) || []).filter(item => item != undefined);
+}
+
+export function setClassMethodParameter(target: any, targetKey: any, param: InjectParameter) {
+  const params = getClassMethodParams(target, targetKey);
+  params[param.parameterIndex] = {
+    ...params[param.parameterIndex],
+    ...param
+  };
+  Reflect.defineMetadata(KEY_INJECT_PARAMETERS, params, target, targetKey);
+}
+
+export function setClassMethodParams(target: any, targetKey: any, params: InjectParameter[]) {
+  Reflect.defineMetadata(KEY_INJECT_PARAMETERS, params, target, targetKey);
 }
 
 export class LazyRef<T = any> {
@@ -306,50 +327,118 @@ export function createInjectDecorator(type: any) {
  *
  * @param type
  */
-export function inject(type?: LazyRef): (target, targetKey, parameterIndex?) => void
-export function inject(type?: any): (target, targetKey, parameterIndex?) => void
+export function inject(type: LazyRef): ParameterDecorator & PropertyDecorator;
+export function inject(type: Class): ParameterDecorator & PropertyDecorator;
+export function inject(type: string): ParameterDecorator & PropertyDecorator;
+export function inject(): PropertyDecorator;
 export function inject(type?: any) {
 
   return function (target, targetKey?, parameterIndex?) {
 
-    const classInjections = getClassInjectionInformation(target);
+    const classInjectMeta = getClassInjectionInformation(target);
 
     if (!isUndefined(targetKey)) {
 
       const reflectType = Reflect.getMetadata('design:type', target, targetKey);
 
-      if (!isUndefined(parameterIndex)) {
+      if (typeof parameterIndex == 'number') {
+
+        const param: InjectParameter = { type, parameterIndex };
 
         // inject type into class method parameter
-        let params = Reflect.getMetadata(KEY_INJECT_PARAMS, target, targetKey) || [];
-        params.push({ type, parameterIndex });
+        const params = Reflect.getMetadata(KEY_INJECT_PARAMETERS, target, targetKey) || [];
 
-        params = sortBy(params, 'parameterIndex');
-        Reflect.defineMetadata(KEY_INJECT_PARAMS, params, target, targetKey);
-        classInjections.set(targetKey, { injectType: 'classMethod', parameters: params });
+        params[parameterIndex] = param;
+
+        setClassMethodParams(target, targetKey, params);
+
+        classInjectMeta.set(targetKey, { injectType: 'classMethod', parameters: params });
 
       } else {
-
 
         // reflect type from framework
         // inject type into class property
         Reflect.defineMetadata(KEY_INJECT, type || reflectType, target, targetKey);
 
-        classInjections.set(targetKey, { injectType: 'classProperty', type: type || reflectType });
+        classInjectMeta.set(targetKey, { injectType: 'classProperty', type: type || reflectType });
 
       }
 
     } else if (!isUndefined(target) && !isUndefined(parameterIndex) && isUndefined(targetKey)) {
       // constructor
-      const params = Reflect.getMetadata(KEY_INJECT_PARAMS, target) || [];
-      params.push({ type, parameterIndex });
-      Reflect.defineMetadata(KEY_INJECT_PARAMS, params, target);
-
+      const params = getClassConstructorParams(target);
+      params[parameterIndex] = { type, parameterIndex };
+      setClassConstructorParams(target, params);
     }
 
-    setClassInjectInformation(target, classInjections);
+    if (classInjectMeta.size > 0) {
+      setClassInjectInformation(target, classInjectMeta);
+    }
 
   };
 
 }
 
+function getInjectParameter(target: any, targetKey?: any, parameterIndexOrDesc?: any) {
+
+  target = getUnProxyTarget(target);
+
+  const defaultValue = {};
+
+  if (isClassDecorator(target, targetKey, parameterIndexOrDesc)) {
+    const rt = [];
+    const constructorParamLength = target.length || 0;
+    for (let idx = 0; idx < constructorParamLength; idx++) {
+      rt.push(getInjectParameter(target, targetKey, idx));
+    }
+    return rt;
+  } else if (isClassConstructorParameterDecorator(target, targetKey, parameterIndexOrDesc)) {
+    // constructor parameter
+    return Reflect.getOwnMetadata(KEY_INJECT_META_PARAM, target, `__constructor__param__${parameterIndexOrDesc}`) || defaultValue;
+  } else if (isClassMethodDecorator(target, targetKey, parameterIndexOrDesc)) {
+    const rt = [];
+    const methodParamLength = target[targetKey].length || 0;
+    for (let idx = 0; idx < methodParamLength; idx++) {
+      rt.push(getInjectParameter(target, targetKey, idx));
+    }
+    return rt;
+  } else if (isClassMethodParameterDecorator(target, targetKey, parameterIndexOrDesc)) {
+    return Reflect.getMetadata(
+      KEY_INJECT_META_PARAM,
+      target,
+      `${targetKey}__method__param__${parameterIndexOrDesc}`
+    ) || defaultValue;
+  } else if (isClassPropertyDecorator(target, targetKey, parameterIndexOrDesc)) {
+    return Reflect.getMetadata(KEY_INJECT_META_PARAM, target, targetKey) || defaultValue;
+  }
+
+  return defaultValue;
+
+}
+
+function param(key: string, value: any) {
+  return function (target: any, targetKey: any, parameterIndex?: number) {
+    if (isClassConstructorParameterDecorator(target, targetKey, parameterIndex)) {
+      const paramsMeta = getInjectParameter(target, targetKey, parameterIndex);
+      paramsMeta[key] = value;
+      // constructor parameter
+      Reflect.defineMetadata(KEY_INJECT_META_PARAM, paramsMeta, target, `__constructor__param__${parameterIndex}`);
+    }
+    else if (isClassMethodParameterDecorator(target, targetKey, parameterIndex)) {
+      // class method parameter
+      const paramsMeta = getInjectParameter(target, targetKey, parameterIndex);
+      paramsMeta[key] = value;
+      // constructor parameter
+      Reflect.defineMetadata(KEY_INJECT_META_PARAM, paramsMeta, target, `${targetKey}__method__param__${parameterIndex}`);
+    }
+    else if (isClassPropertyDecorator(target, targetKey, parameterIndex)) {
+      // class property
+      const paramsMeta = getInjectParameter(target, targetKey, parameterIndex);
+      paramsMeta[key] = value;
+      Reflect.defineMetadata(KEY_INJECT_META_PARAM, paramsMeta, target, targetKey);
+    }
+  };
+}
+
+inject['param'] = param;
+inject['getInjectParameter'] = getInjectParameter;
