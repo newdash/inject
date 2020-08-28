@@ -426,6 +426,7 @@ export class InjectContainer {
     if (methodInjectionParameterMetadata.length > 0) {
       for (let idx = 0; idx < methodInjectionParameterMetadata.length; idx++) {
         const paramInfo = methodInjectionParameterMetadata[idx];
+        if (paramInfo === undefined) { continue; }
         // if user has define the parameter in `injectExecute`, prefer use that
         if (args[paramInfo.parameterIndex] == undefined) {
           const ic = await this.createSubContainer();
@@ -510,7 +511,7 @@ export class InjectContainer {
 
       if (params.length > 0) {
 
-        params.forEach(({ type }) => {
+        params.filter(p => p !== undefined).forEach(({ type }) => {
           // type, maybe an identifier or a function
 
           if (type instanceof LazyRef) {

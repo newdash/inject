@@ -82,6 +82,7 @@ export class DefaultClassProvider implements InstanceProvider {
     if (constructParametersInfo.length > 0) {
       for (let idx = 0; idx < constructParametersInfo.length; idx++) {
         const paramInfo = constructParametersInfo[idx];
+        if (paramInfo == undefined) { continue; }
         if (args[paramInfo.parameterIndex] == undefined) {
 
           this._registerInjectParam(ic, inject.getInjectParameter(type, undefined, paramInfo.parameterIndex));

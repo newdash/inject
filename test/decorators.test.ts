@@ -55,6 +55,33 @@ describe('Decorators Test Suite', () => {
 
   });
 
+  it('should support @inject in constructor', () => {
+
+    class A { constructor(a, b, c, d) { } }
+    class B { constructor(@inject(A) a, @inject("B") b, c) { } }
+
+    class C { constructor(@inject(A) a, b, @inject("C") c) { } }
+
+    const AConstructorParams = getClassConstructorParams(A);
+    expect(AConstructorParams).toHaveLength(4);
+    expect(AConstructorParams[3]).toBeUndefined;
+
+    const BConstructorParams = getClassConstructorParams(B);
+    expect(BConstructorParams).toHaveLength(3);
+
+    expect(BConstructorParams[0].type).toBe(A);
+    expect(BConstructorParams[0].parameterIndex).toBe(0);
+
+
+    expect(BConstructorParams[1].type).toBe("B");
+    expect(BConstructorParams[1].parameterIndex).toBe(1);
+
+    expect(BConstructorParams[2]).toBeUndefined();
+
+    expect(getClassConstructorParams(C)[1]).toBeUndefined();
+
+  });
+
   it('should support @inject.param() decorator', async () => {
 
 

@@ -192,7 +192,8 @@ export function setClassInjectInformation(target, info) {
  */
 export function getClassConstructorParams(target: Class): InjectParameter[] {
   target = getUnProxyTarget(target);
-  return (Reflect.getMetadata(KEY_INJECT_PARAMETERS, target) || []).filter(item => item != undefined);
+  const defaultItems = isClass(target) ? new Array(target.length).fill(undefined) : [];
+  return (Reflect.getMetadata(KEY_INJECT_PARAMETERS, target) || defaultItems);
 }
 
 export function setClassConstructorParams(target: Class, parameters: InjectParameter[]) {
@@ -201,7 +202,7 @@ export function setClassConstructorParams(target: Class, parameters: InjectParam
 
 export function getClassMethodParams(target, targetKey): InjectParameter[] {
   target = getUnProxyTarget(target);
-  return (Reflect.getMetadata(KEY_INJECT_PARAMETERS, target, targetKey) || []).filter(item => item != undefined);
+  return (Reflect.getMetadata(KEY_INJECT_PARAMETERS, target, targetKey) || []);
 }
 
 export function setClassMethodParameter(target: any, targetKey: any, param: InjectParameter) {
