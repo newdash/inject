@@ -1,5 +1,5 @@
 import { InjectContainer } from "./container";
-import { getClassConstructorParams, getClassInjectionInformation, getUnProxyTarget, inject, isNoWrap, isRequired, LazyRef, noWrap, provider, transient } from "./decorators";
+import { getClassConstructorParams, getClassInjectionInformation, getUnProxyTarget, inject, isNoWrap, isProviderType, isRequired, isTransient, LazyRef, noWrap, provider, transient } from "./decorators";
 import { RequiredNotFoundError } from "./errors";
 import { createLogger } from "./logger";
 
@@ -32,8 +32,10 @@ export const createInstanceProvider = (type: any, instance: any, isTransient = f
 
 export class DefaultClassProvider implements InstanceProvider {
 
+  @noWrap
   type: any;
   transient?: boolean;
+  @noWrap
   container: InjectContainer;
 
   /**
@@ -112,8 +114,10 @@ export class DefaultClassProvider implements InstanceProvider {
     const inst = new type(...constructParams);
 
     // force store current container provided type
-    // @ts-ignore
-    this.container.setStore(this.type, inst);
+    if (!isTransient(this.type) && !isProviderType(type)) {
+      // @ts-ignore
+      this.container.setStore(this.type, inst);
+    }
 
     if (info.size > 0) {
       const propertiesNames = info.keys();

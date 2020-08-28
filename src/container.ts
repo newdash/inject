@@ -23,6 +23,7 @@ function overwriteProvider(type: any, provider: InstanceProvider, ctx: InjectCon
     if (ic._providers.has(type)) {
       // @ts-ignore
       ic._providers.set(type, provider);
+      containerLogger('overwrite provider: %o, %o into container(%o)', type, provider, ic.getFormattedId());
       break;
     }
     ic = ic.getParent();
@@ -56,6 +57,8 @@ export class InjectContainer {
 
   protected _parent: InjectContainer;
 
+  protected _root: InjectContainer;
+
   protected _doNotWrapTypes: Set<any>;
 
   private _providers: Map<any, any>;
@@ -75,8 +78,6 @@ export class InjectContainer {
     this._doNotWrapTypes = new Set();
     this._id = generateContainerId();
   }
-
-
 
   public static New(): InjectContainer {
     return new ChildInjectContainer(new InjectContainer());
@@ -138,6 +139,15 @@ export class InjectContainer {
     return this._parent;
   }
 
+  public getRoot(): InjectContainer {
+    if (this._root === undefined) {
+      return this;
+    } else {
+      return this._root;
+    }
+  }
+
+
   public registerProvider(provider: InstanceProvider): void;
   public registerProvider(provider: Class<InstanceProvider>): void;
   public registerProvider(...providers: Array<InstanceProvider | Class<InstanceProvider>>): void;
@@ -153,9 +163,9 @@ export class InjectContainer {
       }
       if (type != undefined) {
         if (this.hasInProviders(type)) {
-          this._log('overwrite provider: %O', type);
+          this._log('overwrite provider: %O for type: %O', provider, type,);
         } else {
-          this._log('register provider: %O', type);
+          this._log('register provider: %O for type: %O', provider, type);
         }
         // provider must could be wrapped, 
         // otherwise, the 'provide' function could not be injected
@@ -203,6 +213,10 @@ export class InjectContainer {
       type = type.getRef();
     }
 
+    if (this.hasInStore(type)) {
+      return this.getStore(type);
+    }
+
     // if target require inject the 'InjectContainer',
     // just inject a sub container,
     // and it will useful for many scenarios
@@ -214,15 +228,16 @@ export class InjectContainer {
     // if class has cycle dependency in constructor, throw error
     ctx._checkDependency(type);
 
+
     let provider = undefined;
 
     // prefer use context as 'container'
     // user define the provider
     if (ctx.hasInProviders(type)) {
-      provider = ctx.wrap(ctx.getProvider(type));
+      provider = ctx.getProvider(type);
     }
     else if (ctx.hasSubClassProvider(type)) {
-      provider = ctx.wrap(ctx.getSubClassProvider(type));
+      provider = ctx.getSubClassProvider(type);
     }
     // use default provider for classes
     else if (typeof type == 'function') {
@@ -235,7 +250,7 @@ export class InjectContainer {
         overwrite = false;
       }
       // just overwrite the provider type provider
-      provider = await ctx.getWrappedInstance(provider);
+      provider = await ctx.getInstance(provider, ctx);
       if (overwrite) {
         // store provider instance to parent
         overwriteProvider(type, provider, ctx);
@@ -243,10 +258,11 @@ export class InjectContainer {
     }
 
     if (provider) {
-      return ctx._withStore(type, provider);
+      return await ctx._withStore(type, provider);
     }
 
     return undefined;
+
   }
 
   async getWrappedInstance<T extends Class>(type: LazyRef<T>, ctx?: InjectContainer): Promise<InjectWrappedInstance<InstanceType<T>>>;
@@ -266,19 +282,18 @@ export class InjectContainer {
     // the type direct in store
     if (!this.hasInStore(type)) {
 
-      if (this.hasSubClassInstanceInStore(type)) {
-        return this.getSubClassInstance(type); // do not cache it
-      }
+      // do not cache it
+      if (this.hasSubClassInstanceInStore(type)) { return this.getSubClassInstance(type); }
 
-      const inst = await provider.provide(...args);
+      const inst = await this.wrap(provider).provide(...args);
 
-      if (getTransientInfo(provider, "provide")) {
-        return inst;
-      }
+      // do not cache @transient provider
+      if (getTransientInfo(provider, "provide")) { return inst; }
 
-      if (inst != undefined) {
-        this.getParent().setStore(type, inst);
-      }
+      // do not cache provider instance
+      if (isProviderType(type)) { return inst; }
+
+      if (inst != undefined) { this.getParent().setStore(type, inst); }
 
     }
 
@@ -286,6 +301,7 @@ export class InjectContainer {
   }
 
   protected setStore(type, value) {
+    this._log('store type %o with value: %O', type, value);
     this._store.set(type, value);
   }
 
@@ -412,6 +428,13 @@ export class InjectContainer {
         const paramInfo = methodInjectionParameterMetadata[idx];
         // if user has define the parameter in `injectExecute`, prefer use that
         if (args[paramInfo.parameterIndex] == undefined) {
+          const ic = await this.createSubContainer();
+          const injectParams = inject.getInjectParameter(instance, methodName, paramInfo.parameterIndex);
+          Object.keys(injectParams).forEach((key) => {
+            const value = injectParams[key];
+            this._log("provide transient param %o with value: %O", key, value);
+            ic.registerInstance(key, value, true);
+          });
 
           const log = (format, typeName) => {
             this._log(format,
@@ -423,9 +446,9 @@ export class InjectContainer {
             );
           };
           if (isNoWrap(instance, methodName, paramInfo.parameterIndex)) {
-            methodParameters[paramInfo.parameterIndex] = await this.getInstance(paramInfo.type);
+            methodParameters[paramInfo.parameterIndex] = await ic.getInstance(paramInfo.type, ic);
           } else {
-            methodParameters[paramInfo.parameterIndex] = await this.getWrappedInstance(paramInfo.type);
+            methodParameters[paramInfo.parameterIndex] = await ic.getWrappedInstance(paramInfo.type, ic);
           }
           const unProxyObject = getUnProxyTarget(instance);
           if (isClass(unProxyObject)) {
@@ -532,6 +555,7 @@ export class ChildInjectContainer extends InjectContainer {
   constructor(@inject(InjectContainer) parentContainer: InjectContainer) {
     super();
     this._parent = parentContainer;
+    this._root = parentContainer.getRoot();
   }
 
   hasInStore(type) {

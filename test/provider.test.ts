@@ -418,9 +418,8 @@ describe('Inject Provider Test Suite', () => {
     await ic.getInstance("a");
     await ic.getInstance("a");
     await ic.getInstance("a");
-    // provider will be instantiate every time
-    expect(constructNum).toBe(3);
-    // but value cached
+    // provider will be instantiate only one time, because the value has been cached
+    expect(constructNum).toBe(1);
     expect(funcCall).toBe(1);
 
     constructNum = funcCall = 0;

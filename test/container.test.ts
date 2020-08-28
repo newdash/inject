@@ -147,11 +147,10 @@ describe('Container Test Suite', () => {
     }
 
     class AnswerProvider {
+      // please use @transient to avoid container cache value result
       @transient
       @withType("answer")
-      provide(@inject("base") @noWrap base: number) {
-        return base + 41;
-      }
+      provide(@inject("base") @noWrap base: number) { return base + 41; }
     }
 
     class E {
@@ -159,6 +158,12 @@ describe('Container Test Suite', () => {
       theRealAnswer: number;
       @inject.param("base", 99) @inject("answer")
       anotherAnswer: number;
+    }
+
+    class F {
+      getAnswer(@inject.param("base", 42) @inject("answer") answer) {
+        return answer;
+      }
     }
 
     const ic = InjectContainer.New();
@@ -176,7 +181,26 @@ describe('Container Test Suite', () => {
     expect(e.theRealAnswer).toBe(42);
     expect(e.anotherAnswer).toBe(140);
 
+    const f = await ic.getWrappedInstance(F);
+    expect(await f.getAnswer()).toBe(83);
 
+
+  });
+
+  it('should support container.getRoot function', async () => {
+    const ic = InjectContainer.New();
+    const i1 = await ic.createSubContainer();
+    const i2 = await ic.createSubContainer();
+    const i11 = await ic.createSubContainer();
+    const i111 = await ic.createSubContainer();
+
+    const root = ic.getParent();
+
+    expect(ic.getRoot()).toBe(root);
+    expect(i1.getRoot()).toBe(root);
+    expect(i2.getRoot()).toBe(root);
+    expect(i11.getRoot()).toBe(root);
+    expect(i111.getRoot()).toBe(root);
 
   });
 

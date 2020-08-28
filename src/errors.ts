@@ -45,3 +45,7 @@ export class RequiredNotFoundError extends BaseError {
   }
 
 }
+
+export class ResourceBusyError extends BaseError {
+
+}
