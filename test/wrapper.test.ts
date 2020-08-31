@@ -454,6 +454,36 @@ describe('Wrapper Test Suite', () => {
 
   });
 
+  it('should running correctly with complex wrapper', async () => {
+
+    const ic = InjectContainer.New();
+    const ic1 = await ic.createSubContainer();
+    const ic2 = await ic.createSubContainer();
+
+    ic1.registerInstance("v", 1);
+    ic2.registerInstance("v", 2);
+
+    class A {
+      async getV(@inject("v") v) {
+        return v;
+      }
+    }
+
+    class B {
+      async getV(@inject(A) a) {
+        return a.getV();
+      }
+    }
+
+    const b = await ic1.getWrappedInstance(B);
+    expect(await b.getV()).toBe(1);
+
+    const b2 = await ic2.getWrappedInstance(B);
+    expect(await b2.getV()).toBe(2);
+
+
+  });
+
 
 
 });
