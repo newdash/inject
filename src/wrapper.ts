@@ -1,4 +1,4 @@
-import { WRAPPED_OBJECT_CONTAINER_PROPERTY, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_INJECT_INFO, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from "./constants";
+import { WRAPPED_OBJECT_CONTAINER_PROPERTY, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_CONTAINER, WRAPPED_OBJECT_METHOD_INJECT_INFO, WRAPPED_OBJECT_METHOD_ORIGINAL_METHOD, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from "./constants";
 import { InjectContainer } from "./container";
 import { getClassMethodParams, getPropertyInjectedType, getUnProxyTarget, isNoWrap, isTransient } from "./decorators";
 import { DefaultClassProvider } from "./provider";
@@ -62,13 +62,19 @@ export function createWrapper(instance: any, ic: InjectContainer) {
         if (property in target) {
           const methodOrProperty = target[property];
           if (typeof methodOrProperty == 'function') {
+
             const proxyMethod = (...args: any[]) => ic.injectExecute(target, methodOrProperty, ...args);
+
             // overwrite function name
             Object.defineProperty(proxyMethod, "name", {
-              value: `${property.toString()}_wrapped_by_container(${ic.getFormattedId()})`,
+              value: property,
               writable: false
             });
+
             proxyMethod[WRAPPED_OBJECT_METHOD_INJECT_INFO] = getClassMethodParams(target, property);
+            proxyMethod[WRAPPED_OBJECT_METHOD_CONTAINER] = ic;
+            proxyMethod[WRAPPED_OBJECT_METHOD_ORIGINAL_METHOD] = methodOrProperty;
+
             return proxyMethod;
           }
           return methodOrProperty;

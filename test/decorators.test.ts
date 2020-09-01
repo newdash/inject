@@ -84,6 +84,7 @@ describe('Decorators Test Suite', () => {
 
   it('should support @inject.param() decorator', async () => {
 
+    const ic = InjectContainer.New();
 
     class A {
 
@@ -98,6 +99,8 @@ describe('Decorators Test Suite', () => {
 
     const a = new A;
 
+    const wA = ic.wrap(a);
+
     const constructor_param_0 = inject.getInjectParameter(A, undefined, 0);
     expect(constructor_param_0.v).toBe(1);
 
@@ -110,6 +113,11 @@ describe('Decorators Test Suite', () => {
     expect(method_run_param_0.v).toBe(123);
     const method_run_params = inject.getInjectParameter(a, "run", {});
     expect(method_run_params).toHaveLength(1);
+    // support wrapper
+    const w_method_run_param_0 = inject.getInjectParameter(wA, wA['run']['name'], 0);
+    expect(w_method_run_param_0.v).toBe(123);
+    const w_method_run_params = inject.getInjectParameter(wA, wA['run']['name'], {});
+    expect(w_method_run_params).toHaveLength(1);
 
     const property_a_param = inject.getInjectParameter(a, "a");
     expect(property_a_param.v).toBe(245);

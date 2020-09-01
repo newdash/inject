@@ -1,4 +1,5 @@
 import { MSG_ERR_PARAM_REQUIRED } from "./constants";
+import { getUnProxyTarget } from "./decorators";
 import { createLogger } from "./logger";
 import { getClassName, isClass } from "./utils";
 
@@ -26,17 +27,26 @@ export class RequiredNotFoundError extends BaseError {
     const className = typeof target == 'string' ? target : getClassName(target);
 
     const methodOrProperty = targetKey;
-    let callExpr = '';
 
-    if (isClass(target)) {
-      callExpr += "static ";
+    let parts = [];
+
+
+    if (isClass(getUnProxyTarget(target))) {
+      parts.push("static");
     }
 
     if (parameterIndex != undefined) {
-      callExpr += `${className}.${methodOrProperty || "constructor"}(${parameterIndex})`;
+      if (targetKey !== undefined) {
+        parts.push(`${className}.${methodOrProperty}(${parameterIndex})`);
+      } else {
+        parts.push(`${className}.constructor(${parameterIndex})`);
+      }
     } else {
-      callExpr += `${className}.${methodOrProperty}`;
+      parts.push(`${className}.${methodOrProperty}`);
+      parts = ["property"].concat(parts);
     }
+
+    const callExpr = parts.join(" ");
 
     super(`${callExpr} inject failed, ${MSG_ERR_PARAM_REQUIRED}`);
 

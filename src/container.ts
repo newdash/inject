@@ -431,6 +431,7 @@ export class InjectContainer {
         if (args[paramInfo.parameterIndex] == undefined) {
           const ic = await this.createSubContainer();
           const injectParams = inject.getInjectParameter(instance, methodName, paramInfo.parameterIndex);
+
           Object.keys(injectParams).forEach((key) => {
             const value = injectParams[key];
             this._log("provide transient param %o with value: %O", key, value);
@@ -466,7 +467,7 @@ export class InjectContainer {
           if (methodParameters[paramInfo.parameterIndex] == undefined) {
             if (!isWrappedObject(instance)) {
               if (isRequired(instance, methodName, paramInfo.parameterIndex)) {
-                throw new RequiredNotFoundError(type, methodName, paramInfo.parameterIndex);
+                throw new RequiredNotFoundError(instance, methodName, paramInfo.parameterIndex);
               }
             }
           }
