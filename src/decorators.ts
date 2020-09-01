@@ -490,5 +490,6 @@ function param(key: string, value: any) {
   };
 }
 
-inject['param'] = param;
-inject['getInjectParameter'] = getInjectParameter;
+inject.param = param;
+
+inject.getInjectParameter = getInjectParameter;
