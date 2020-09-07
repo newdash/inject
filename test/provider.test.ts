@@ -270,6 +270,26 @@ describe('Inject Provider Test Suite', () => {
 
   });
 
+  it('should support get instance by provider class with @transient @noWrap', async () => {
+
+    class VPlusProvider {
+
+      @provider("v-plus")
+      @transient
+      @noWrap
+      async provide(@inject("v") v: number) {
+        return v + 1;
+      }
+
+    }
+
+    const ic = InjectContainer.New();
+    ic.registerInstance("v", 1);
+    ic.registerProvider(VPlusProvider);
+    expect(await ic.getInstance("v-plus")).toBe(2);
+
+  });
+
   it('should support lazy ref provider inject', async () => {
 
     class BProvider {

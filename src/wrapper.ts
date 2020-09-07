@@ -1,6 +1,6 @@
 import { WRAPPED_OBJECT_CONTAINER_PROPERTY, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_CONTAINER, WRAPPED_OBJECT_METHOD_INJECT_INFO, WRAPPED_OBJECT_METHOD_ORIGINAL_METHOD, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from "./constants";
 import { InjectContainer } from "./container";
-import { getClassMethodParams, getPropertyInjectedType, getUnProxyTarget, isNoWrap, isTransient } from "./decorators";
+import { getClassMethodParams, getPropertyInjectedType, getUnProxyTarget, isNoWrap, isProviderInstance, isTransient } from "./decorators";
 import { DefaultClassProvider } from "./provider";
 import { isClass } from "./utils";
 
@@ -44,23 +44,32 @@ export function createWrapper(instance: any, ic: InjectContainer) {
 
       get: (target, property) => {
 
-        if (isNoWrap(target, property as string)) {
-          return target[property];
-        }
-
-        if (['constructor', 'prototype'].includes(property as string)) {
-          return target[property];
-        }
-
-        // do NOT proxy if the injected has been indicated DO NOT WRAP
-        const injectType = getPropertyInjectedType(target, property);
-        // @ts-ignore
-        if (injectType != undefined && !ic.canWrap(injectType)) {
-          return target[property];
-        }
-
         if (property in target) {
+          // if property existed
+
+          if (!(isProviderInstance(target) && property === "provide")) {
+
+            // if not the Provider.provide function
+            if (isNoWrap(target, property as string)) {
+              return target[property];
+            }
+
+            if (['constructor', 'prototype'].includes(property as string)) {
+              return target[property];
+            }
+
+            // do NOT proxy if the injected has been indicated DO NOT WRAP
+            const injectType = getPropertyInjectedType(target, property);
+
+            // @ts-ignore
+            if (injectType != undefined && !ic.canWrap(injectType)) {
+              return target[property];
+            }
+
+          }
+
           const methodOrProperty = target[property];
+
           if (typeof methodOrProperty == 'function') {
 
             const proxyMethod = (...args: any[]) => ic.injectExecute(target, methodOrProperty, ...args);
