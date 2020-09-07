@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.18](https://github.com/newdash/inject/compare/v0.2.17...v0.2.18) (2020-09-07)
+
+
+### Bug Fixes
+
+* provide functino not work with [@no](https://github.com/no)Wrap ([afdba8a](https://github.com/newdash/inject/commit/afdba8ac7df1b7b26d77ccba36c7f549f5f0e305))
+
 ### [0.2.17](https://github.com/newdash/inject/compare/v0.2.16...v0.2.17) (2020-09-01)
 
 
