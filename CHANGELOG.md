@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.19](https://github.com/newdash/inject/compare/v0.2.18...v0.2.19) (2020-09-17)
+
+
+### Features
+
+* [#6](https://github.com/newdash/inject/issues/6) global container ([a323714](https://github.com/newdash/inject/commit/a3237141a3c37eda4251743f4a821dad15b21db0))
+
 ### [0.2.18](https://github.com/newdash/inject/compare/v0.2.17...v0.2.18) (2020-09-07)
 
 
