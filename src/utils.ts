@@ -26,10 +26,10 @@ export function isClass(obj: any): obj is Class {
  * @param typeOrInstance 
  */
 export function getClassName(typeOrInstance: any): string {
-  if (typeOrInstance?.constructor == Function) {
+  if (isClass(typeOrInstance)) {
     return typeOrInstance.name;
   }
-  if (typeOrInstance?.constructor?.constructor == Function) {
+  if (isClass(typeOrInstance?.constructor)) {
     return typeOrInstance.constructor.name;
   }
   return undefined;

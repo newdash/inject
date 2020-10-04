@@ -1,6 +1,6 @@
 import { alg, Graph } from 'graphlib';
 import { MSG_ERR_NOT_PROVIDER, MSG_ERR_NO_UNDEFINED, MSG_ERR_PROVIDER_DISABLE_WRAP, WRAPPED_OBJECT_METHOD_INJECT_INFO } from './constants';
-import { createInjectDecorator, getClassConstructorParams, getClassMethodParams, getProvideInfo, getTransientInfo, getUnProxyTarget, inject, InjectParameter, isNoWrap, isNoWrapProvider, isProviderInstance, isProviderType, isRequired, isTransient, isWrappedObject, LazyRef, transient } from './decorators';
+import { createInjectDecorator, getClassConstructorParams, getClassMethodParams, getProvideInfo, getTransientInfo, getUnProxyTarget, inject, InjectParameter, isNoWrap, isNoWrapProvider, isProviderInstance, isProviderType, isRequired, isTransient, isWrappedFunction, isWrappedObject, LazyRef, transient } from './decorators';
 import { RequiredNotFoundError } from './errors';
 import { createLogger } from './logger';
 import { createInstanceProvider, DefaultClassProvider, InstanceProvider } from './provider';
@@ -413,7 +413,7 @@ export class InjectContainer {
 
     let methodInjectionParameterMetadata: InjectParameter[] = [];
 
-    if (method[WRAPPED_OBJECT_METHOD_INJECT_INFO]) {
+    if (isWrappedFunction(method)) {
       // get meta from duplicate
       methodInjectionParameterMetadata = method[WRAPPED_OBJECT_METHOD_INJECT_INFO];
     } else {

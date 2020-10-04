@@ -7,12 +7,8 @@ export const WRAPPED_OBJECT_METHOD_CONTAINER = '__wrapped_object_method_containe
 
 export const WRAPPED_OBJECT_METHOD_ORIGINAL_METHOD = '__wrapped_object_method_original_method__';
 
-
-
 export const MSG_ERR_NOT_PROVIDER = "The provider must have the 'provide' method which decorated with '@provider'.";
-
 export const MSG_ERR_NO_UNDEFINED = "Can not accept undefined value.";
-
 export const MSG_ERR_PROVIDER_DISABLE_WRAP = "Provider must could not be disable wrap.";
-
 export const MSG_ERR_PARAM_REQUIRED = "parameter required.";
+

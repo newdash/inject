@@ -1,6 +1,6 @@
 import { isFunction } from '@newdash/newdash/isFunction';
 import isUndefined from '@newdash/newdash/isUndefined';
-import { WRAPPED_OBJECT_INDICATOR, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
+import { WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_ORIGINAL_METHOD, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
 import { createLogger } from './logger';
 import { InstanceProvider } from './provider';
 import { Class, InjectWrappedInstance, isClass, isClassConstructorParameterDecorator, isClassDecorator, isClassMethodDecorator, isClassMethodParameterDecorator, isClassPropertyDecorator, isClassStaticMethodDecorator, isClassStaticMethodParametersDecorator, isClassStaticPropertyDecorator } from './utils';
@@ -48,13 +48,23 @@ export function getUnProxyTarget(target: any) {
     if (isWrappedObject(target)) {
       return getUnProxyTarget(target[WRAPPED_ORIGINAL_OBJECT_PROPERTY]);
     }
+    if (isWrappedFunction(target)) {
+      return getUnProxyTarget(target[WRAPPED_OBJECT_METHOD_ORIGINAL_METHOD]);
+    }
   }
   return target;
 }
 
 export function isWrappedObject(target: any): target is { [WRAPPED_ORIGINAL_OBJECT_PROPERTY]: any } {
-  if (target != undefined) {
+  if (target !== undefined) {
     return Boolean(target[WRAPPED_OBJECT_INDICATOR]);
+  }
+  return false;
+}
+
+export function isWrappedFunction(target: any): target is { [WRAPPED_OBJECT_METHOD_ORIGINAL_METHOD]: any } {
+  if (target !== undefined) {
+    return Boolean(target[WRAPPED_OBJECT_METHOD_ORIGINAL_METHOD]);
   }
   return false;
 }

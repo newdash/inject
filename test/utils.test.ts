@@ -33,9 +33,6 @@ describe('Utilities Test Suite', () => {
     expect(getClassName(null)).toBeUndefined();
     expect(getClassName(undefined)).toBeUndefined();
 
-    expect(getClassName("Object")).toBe("String");
-
-
   });
 
   it('should support isClass check', () => {
