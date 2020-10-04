@@ -13,7 +13,9 @@ export function getOrDefault(map: Map<any, any>, key, value) {
  */
 export function isClass(obj: any): obj is Class {
   if (obj?.constructor === Function) {
-    return true;
+    if (/^class [\s\S]*?$/.test(obj.toString())) {
+      return true;
+    }
   }
   return false;
 }
