@@ -69,24 +69,19 @@ export function createWrapper(instance: any, ic: InjectContainer) {
 
           if (typeof methodOrProperty == 'function') {
 
-            const params = getClassMethodParams(target, propertyName);
+            const proxyMethod = (...args: any[]) => ic.injectExecute(target, methodOrProperty, ...args);
 
-            // only proxy function which parameters decorate with '@inject'
-            if (params?.length > 0) {
-              const proxyMethod = (...args: any[]) => ic.injectExecute(target, methodOrProperty, ...args);
+            // overwrite function name
+            Object.defineProperty(proxyMethod, "name", {
+              value: propertyName,
+              writable: false
+            });
 
-              // overwrite function name
-              Object.defineProperty(proxyMethod, "name", {
-                value: propertyName,
-                writable: false
-              });
+            proxyMethod[WRAPPED_OBJECT_METHOD_INJECT_INFO] = getClassMethodParams(target, propertyName);
+            proxyMethod[WRAPPED_OBJECT_METHOD_CONTAINER] = ic;
+            proxyMethod[WRAPPED_OBJECT_METHOD_ORIGINAL_METHOD] = methodOrProperty;
 
-              proxyMethod[WRAPPED_OBJECT_METHOD_INJECT_INFO] = getClassMethodParams(target, propertyName);
-              proxyMethod[WRAPPED_OBJECT_METHOD_CONTAINER] = ic;
-              proxyMethod[WRAPPED_OBJECT_METHOD_ORIGINAL_METHOD] = methodOrProperty;
-
-              return proxyMethod;
-            }
+            return proxyMethod;
 
           }
 

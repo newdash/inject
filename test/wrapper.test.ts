@@ -527,6 +527,53 @@ describe('Wrapper Test Suite', () => {
 
   });
 
+  it('should support deep wrapper for function', async () => {
+
+    const testValue = uniqueId();
+    const testValue2 = uniqueId();
+    const testValue3 = uniqueId();
+
+
+    const ic = InjectContainer.New();
+
+    class Value1 {
+      getValue1(@required @inject("value1") v?: any) {
+        return v;
+      }
+
+      getValue3(@required @inject("value3") v?: any) {
+        return v;
+      }
+    }
+
+    class Value2 {
+      @inject() v1: Value1
+      getValue() {
+        return this.v1.getValue1();
+      }
+      getValue3() {
+        return this.v1.getValue3();
+      }
+    }
+
+
+    const ic2 = await ic.createSubContainer();
+    ic2.registerInstance("value1", testValue, true);
+    const v2 = await ic2.getWrappedInstance(Value2);
+    expect(await v2.getValue()).toBe(testValue);
+    await expect(() => v2.getValue3()).rejects.toThrowError();
+
+    const ic3 = await ic2.createSubContainer();
+    ic3.registerInstance("value1", testValue2, true);
+    ic3.registerInstance("value3", testValue3, true);
+
+    const v23 = await ic3.getWrappedInstance(Value2);
+    expect(await v23.getValue()).toBe(testValue2);
+    expect(await v23.getValue3()).toBe(testValue3);
+
+
+  });
+
 
 
 });
