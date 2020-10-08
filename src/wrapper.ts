@@ -32,72 +32,80 @@ export function createWrapper(instance: any, ic: InjectContainer) {
       return instance;
     }
 
-    const containerId = ic.getFormattedId();
-
     // if the object has been wrapped by provided container
-    if (instance[WRAPPED_OBJECT_CONTAINER_PROPERTY] == containerId) {
+    if (instance[WRAPPED_OBJECT_CONTAINER_PROPERTY] == ic) {
       return instance;
     }
 
-
     const handler: ProxyHandler<any> = {
 
-      get: (target, property) => {
+      get: (target, propertyName) => {
 
-        if (property in target) {
+        if (propertyName in target) {
           // if property existed
 
-          if (!(isProviderInstance(target) && property === "provide")) {
+          if (!(isProviderInstance(target) && propertyName === "provide")) {
 
             // if not the Provider.provide function
-            if (isNoWrap(target, property as string)) {
-              return target[property];
+            if (isNoWrap(target, propertyName as string)) {
+              return target[propertyName];
             }
 
-            if (['constructor', 'prototype'].includes(property as string)) {
-              return target[property];
+            if (['constructor', 'prototype'].includes(propertyName as string)) {
+              return target[propertyName];
             }
 
             // do NOT proxy if the injected has been indicated DO NOT WRAP
-            const injectType = getPropertyInjectedType(target, property);
+            const injectType = getPropertyInjectedType(target, propertyName);
 
             // @ts-ignore
             if (injectType != undefined && !ic.canWrap(injectType)) {
-              return target[property];
+              return target[propertyName];
             }
 
           }
 
-          const methodOrProperty = target[property];
+          const methodOrProperty = target[propertyName];
 
           if (typeof methodOrProperty == 'function') {
 
-            const proxyMethod = (...args: any[]) => ic.injectExecute(target, methodOrProperty, ...args);
+            const params = getClassMethodParams(target, propertyName);
 
-            // overwrite function name
-            Object.defineProperty(proxyMethod, "name", {
-              value: property,
-              writable: false
-            });
+            // only proxy function which parameters decorate with '@inject'
+            if (params?.length > 0) {
+              const proxyMethod = (...args: any[]) => ic.injectExecute(target, methodOrProperty, ...args);
 
-            proxyMethod[WRAPPED_OBJECT_METHOD_INJECT_INFO] = getClassMethodParams(target, property);
-            proxyMethod[WRAPPED_OBJECT_METHOD_CONTAINER] = ic;
-            proxyMethod[WRAPPED_OBJECT_METHOD_ORIGINAL_METHOD] = methodOrProperty;
+              // overwrite function name
+              Object.defineProperty(proxyMethod, "name", {
+                value: propertyName,
+                writable: false
+              });
 
-            return proxyMethod;
+              proxyMethod[WRAPPED_OBJECT_METHOD_INJECT_INFO] = getClassMethodParams(target, propertyName);
+              proxyMethod[WRAPPED_OBJECT_METHOD_CONTAINER] = ic;
+              proxyMethod[WRAPPED_OBJECT_METHOD_ORIGINAL_METHOD] = methodOrProperty;
+
+              return proxyMethod;
+            }
+
           }
+
+          if (typeof methodOrProperty == 'object') {
+            return createWrapper(methodOrProperty, ic);
+          }
+
           return methodOrProperty;
         }
 
-        if (property == WRAPPED_OBJECT_CONTAINER_PROPERTY) {
-          return containerId;
+        if (propertyName == WRAPPED_OBJECT_CONTAINER_PROPERTY) {
+          return ic;
         }
 
-        if (property == WRAPPED_ORIGINAL_OBJECT_PROPERTY) {
+        if (propertyName == WRAPPED_ORIGINAL_OBJECT_PROPERTY) {
           return instance;
         }
 
-        if (property == WRAPPED_OBJECT_INDICATOR) {
+        if (propertyName == WRAPPED_OBJECT_INDICATOR) {
           return true;
         }
 

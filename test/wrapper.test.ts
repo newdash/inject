@@ -1,4 +1,5 @@
-import { getClassMethodParams, getUnProxyTarget, inject, InjectContainer, InjectWrappedInstance, isWrappedObject, lazyRef, noWrap, required, withType } from "../src";
+import { uniqueId } from "@newdash/newdash";
+import { getClassMethodParams, getUnProxyTarget, inject, InjectContainer, InjectWrappedInstance, isWrappedFunction, isWrappedObject, lazyRef, noWrap, required, withType } from "../src";
 import { MSG_ERR_PROVIDER_DISABLE_WRAP } from "../src/constants";
 
 
@@ -480,6 +481,48 @@ describe('Wrapper Test Suite', () => {
 
     const b2 = await ic2.getWrappedInstance(B);
     expect(await b2.getV()).toBe(2);
+
+
+  });
+
+  it('should proxy method only which parameters are decorated with @inject', async () => {
+
+    const ic = InjectContainer.New();
+    class M1TestA {
+      getA() { }
+      getB(@inject("c") c: any) { }
+    }
+
+    const a = await ic.getWrappedInstance(M1TestA);
+    expect(a.getA).toBe(M1TestA.prototype.getA);
+    expect(isWrappedFunction(a.getB)).toBeTruthy();
+
+  });
+
+
+
+  it('should inject the latest value', async () => {
+    const testValue = uniqueId();
+    const ic = InjectContainer.New();
+
+    class Value1 {
+      getValue(@inject("v") v?: any) {
+        return v;
+      }
+    }
+
+    class Value2 {
+      @inject() v1: Value1
+      getValue() {
+        return this.v1.getValue();
+      }
+    }
+
+    ic.registerInstance("v", testValue);
+
+    const v2 = await ic.getWrappedInstance(Value2);
+    expect(isWrappedObject(v2.v1)).toBeTruthy();
+    expect(await v2.getValue()).toBe(testValue);
 
 
   });
