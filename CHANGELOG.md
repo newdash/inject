@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.20](https://github.com/newdash/inject/compare/v0.2.19...v0.2.20) (2020-10-08)
+
+
+### Features
+
+* [#9](https://github.com/newdash/inject/issues/9) wrap with object ([c337ce3](https://github.com/newdash/inject/commit/c337ce38c6e4246a96d537083879e8102ba7a7cc))
+
 ### [0.2.19](https://github.com/newdash/inject/compare/v0.2.18...v0.2.19) (2020-09-17)
 
 
