@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.22](https://github.com/newdash/inject/compare/v0.2.21...v0.2.22) (2020-10-08)
+
+
+### Features
+
+* reverse createWrapper, add 'casecade' wrapper ([8bde3fc](https://github.com/newdash/inject/commit/8bde3fc660b28761f23236210cf939ff93fb9154))
+
+
+### Bug Fixes
+
+* re-promise type ([c050425](https://github.com/newdash/inject/commit/c050425c943fb16936969f4fa33188914568591f))
+
 ### [0.2.21](https://github.com/newdash/inject/compare/v0.2.20...v0.2.21) (2020-10-08)
 
 
