@@ -1,3 +1,4 @@
+import { UnwrapPromise } from "@newdash/newdash/types";
 
 export function getOrDefault(map: Map<any, any>, key, value) {
   if (!map.has(key)) {
@@ -128,5 +129,5 @@ export interface InjectWrappedClassConstructor<T extends Class> {
 export type InjectWrappedClassType<T extends Class> = InjectWrappedInstance<T> & InjectWrappedClassConstructor<T>
 
 export type InjectWrappedInstance<T> = {
-  [K in keyof T]: T[K] extends (...args: any) => any ? (...args: OptionalParameters<T[K]>) => Promise<ReturnType<T[K]>> : T[K]
+  [K in keyof T]: T[K] extends (...args: any) => any ? (...args: OptionalParameters<T[K]>) => Promise<UnwrapPromise<ReturnType<T[K]>>> : T[K]
 }
