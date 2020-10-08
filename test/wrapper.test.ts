@@ -1,5 +1,5 @@
 import { uniqueId } from "@newdash/newdash";
-import { getClassMethodParams, getUnProxyTarget, inject, InjectContainer, InjectWrappedInstance, isWrappedFunction, isWrappedObject, lazyRef, noWrap, required, withType } from "../src";
+import { getClassMethodParams, getUnProxyTarget, inject, InjectContainer, InjectWrappedInstance, isWrappedObject, lazyRef, noWrap, required, withType } from "../src";
 import { MSG_ERR_PROVIDER_DISABLE_WRAP } from "../src/constants";
 
 
@@ -80,7 +80,9 @@ describe('Wrapper Test Suite', () => {
     const aWW = c3.wrap(aW);
 
     expect(await aW.result()).toBe(2);
-    expect(await aWW.result()).toBe(12); // deep wrapper
+    // c3 not register 'v1' provider
+    // deep wrapper
+    await expect(() => aWW.result()).rejects.toThrowError();
 
   });
 
@@ -272,7 +274,7 @@ describe('Wrapper Test Suite', () => {
 
   });
 
-  it('should support wrapped by different container', async () => {
+  it('should support wrapped by different container (only latest one will apply)', async () => {
 
     const ic1 = InjectContainer.New();
     const ic2 = InjectContainer.New();
@@ -280,18 +282,16 @@ describe('Wrapper Test Suite', () => {
     ic1.registerInstance("v1", 123);
     ic2.registerInstance("v2", 42);
 
-    class A {
-
+    class DiffContainerC1 {
       getValue(@inject("v1") v1, @inject("v2") v2) {
         return [v1, v2];
       }
-
     }
 
-    const a = await ic1.getWrappedInstance(A);
+    const a = await ic1.getWrappedInstance(DiffContainerC1);
     const a2 = ic2.wrap(a);
 
-    expect(await a2.getValue()).toStrictEqual([123, 42]);
+    expect(await a2.getValue()).toStrictEqual([undefined, 42]);
 
   });
 
@@ -484,22 +484,6 @@ describe('Wrapper Test Suite', () => {
 
 
   });
-
-  it('should proxy method only which parameters are decorated with @inject', async () => {
-
-    const ic = InjectContainer.New();
-    class M1TestA {
-      getA() { }
-      getB(@inject("c") c: any) { }
-    }
-
-    const a = await ic.getWrappedInstance(M1TestA);
-    expect(a.getA).toBe(M1TestA.prototype.getA);
-    expect(isWrappedFunction(a.getB)).toBeTruthy();
-
-  });
-
-
 
   it('should inject the latest value', async () => {
     const testValue = uniqueId();

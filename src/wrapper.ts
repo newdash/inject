@@ -1,8 +1,11 @@
 import { WRAPPED_OBJECT_CONTAINER_PROPERTY, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_CONTAINER, WRAPPED_OBJECT_METHOD_INJECT_INFO, WRAPPED_OBJECT_METHOD_ORIGINAL_METHOD, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from "./constants";
 import { InjectContainer } from "./container";
-import { getClassMethodParams, getPropertyInjectedType, getUnProxyTarget, isNoWrap, isProviderInstance, isTransient } from "./decorators";
+import { getClassMethodParams, getPropertyInjectedType, getUnProxyTarget, isNoWrap, isProviderInstance, isTransient, isWrappedFunction, isWrappedObject } from "./decorators";
+import { createLogger } from "./logger";
 import { DefaultClassProvider } from "./provider";
 import { isClass } from "./utils";
+
+const logger = createLogger("proxy");
 
 /**
  * create wrapper (proxy) for object with inject container 
@@ -33,8 +36,11 @@ export function createWrapper(instance: any, ic: InjectContainer) {
     }
 
     // if the object has been wrapped by provided container
-    if (instance[WRAPPED_OBJECT_CONTAINER_PROPERTY] == ic) {
-      return instance;
+    if (isWrappedObject(instance) || isWrappedFunction(instance)) {
+      if (instance[WRAPPED_OBJECT_CONTAINER_PROPERTY] == ic) {
+        return instance;
+      }
+      instance = getUnProxyTarget(instance);
     }
 
     const handler: ProxyHandler<any> = {

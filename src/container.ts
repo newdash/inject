@@ -459,7 +459,7 @@ export class InjectContainer {
           if (methodParameters[paramInfo.parameterIndex] == undefined) {
             if (!isWrappedObject(instance)) {
               if (isRequired(instance, methodName, paramInfo.parameterIndex)) {
-                throw new RequiredNotFoundError(instance, methodName, paramInfo.parameterIndex);
+                throw new RequiredNotFoundError(instance, methodName, paramInfo.parameterIndex, paramInfo.type);
               }
             }
           }

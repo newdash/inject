@@ -1,5 +1,5 @@
 import { MSG_ERR_PARAM_REQUIRED } from "./constants";
-import { getUnProxyTarget } from "./decorators";
+import { getUnProxyTarget, LazyRef } from "./decorators";
 import { createLogger } from "./logger";
 import { getClassName, isClass } from "./utils";
 
@@ -22,7 +22,7 @@ export class RequiredNotFoundError extends BaseError {
    * @param targetKey inject target key
    * @param parameterIndex  inject parameter index
    */
-  constructor(target: any, targetKey?: string, parameterIndex?: number) {
+  constructor(target: any, targetKey?: string, parameterIndex?: number, type?: any) {
 
     const className = typeof target == 'string' ? target : getClassName(target);
 
@@ -45,8 +45,19 @@ export class RequiredNotFoundError extends BaseError {
       parts.push(`${className}.${methodOrProperty}`);
       parts = ["property"].concat(parts);
     }
+    if (type != undefined) {
+      if (type instanceof LazyRef) {
+        type = type.getRef();
+      }
+      if (typeof type == 'string') {
+        parts.push(`type[${type}]`);
+      } else if (isClass(type)) {
+        parts.push(`type[${getClassName(type)}]`);
+      }
+    }
 
     const callExpr = parts.join(" ");
+
 
     super(`${callExpr} inject failed, ${MSG_ERR_PARAM_REQUIRED}`);
 
