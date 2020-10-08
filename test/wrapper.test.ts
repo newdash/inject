@@ -82,7 +82,7 @@ describe('Wrapper Test Suite', () => {
     expect(await aW.result()).toBe(2);
     // c3 not register 'v1' provider
     // deep wrapper
-    await expect(() => aWW.result()).rejects.toThrowError();
+    expect(await aWW.result()).toBe(12);
 
   });
 
@@ -291,7 +291,7 @@ describe('Wrapper Test Suite', () => {
     const a = await ic1.getWrappedInstance(DiffContainerC1);
     const a2 = ic2.wrap(a);
 
-    expect(await a2.getValue()).toStrictEqual([undefined, 42]);
+    expect(await a2.getValue()).toStrictEqual([123, 42]);
 
   });
 
@@ -516,7 +516,6 @@ describe('Wrapper Test Suite', () => {
     const testValue = uniqueId();
     const testValue2 = uniqueId();
     const testValue3 = uniqueId();
-
 
     const ic = InjectContainer.New();
 

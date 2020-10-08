@@ -37,10 +37,8 @@ export function createWrapper(instance: any, ic: InjectContainer) {
 
     // if the object has been wrapped by provided container
     if (isWrappedObject(instance) || isWrappedFunction(instance)) {
-      if (instance[WRAPPED_OBJECT_CONTAINER_PROPERTY] == ic) {
-        return instance;
-      }
-      instance = getUnProxyTarget(instance);
+      const wrappedContainer: InjectContainer = instance[WRAPPED_OBJECT_CONTAINER_PROPERTY];
+      if (wrappedContainer === ic) { return instance; }
     }
 
     const handler: ProxyHandler<any> = {
@@ -73,7 +71,7 @@ export function createWrapper(instance: any, ic: InjectContainer) {
 
           const methodOrProperty = target[propertyName];
 
-          if (typeof methodOrProperty == 'function') {
+          if (typeof methodOrProperty === 'function') {
 
             const proxyMethod = (...args: any[]) => ic.injectExecute(target, methodOrProperty, ...args);
 
@@ -98,15 +96,15 @@ export function createWrapper(instance: any, ic: InjectContainer) {
           return methodOrProperty;
         }
 
-        if (propertyName == WRAPPED_OBJECT_CONTAINER_PROPERTY) {
+        if (propertyName === WRAPPED_OBJECT_CONTAINER_PROPERTY) {
           return ic;
         }
 
-        if (propertyName == WRAPPED_ORIGINAL_OBJECT_PROPERTY) {
+        if (propertyName === WRAPPED_ORIGINAL_OBJECT_PROPERTY) {
           return instance;
         }
 
-        if (propertyName == WRAPPED_OBJECT_INDICATOR) {
+        if (propertyName === WRAPPED_OBJECT_INDICATOR) {
           return true;
         }
 
