@@ -164,15 +164,23 @@ export class InjectContainer {
       if (type != undefined) {
         const sType = typeToString(type);
         if (this.hasInProviders(type)) {
-          this._log('overwrite provider for type: %O with %O ', sType, provider);
-        } else {
-          if (provider instanceof BaseInstanceProvider) {
-            this._log('register instance for type: %O with %O ', sType, provider._providedValue,);
 
+          if (provider instanceof BaseInstanceProvider) {
+            this._log('overwrite instance for type: %O with value %O ', sType, provider._providedValue,);
+          } else {
+            this._log('overwrite provider for type: %O with %O ', sType, provider);
+          }
+
+        } else {
+
+          if (provider instanceof BaseInstanceProvider) {
+            this._log('register instance for type: %O with value %O ', sType, provider._providedValue,);
           } else {
             this._log('register provider for type: %O with %O ', sType, provider);
           }
+
         }
+
         // provider must could be wrapped, 
         // otherwise, the 'provide' function could not be injected
         if (isNoWrap(provider)) {
