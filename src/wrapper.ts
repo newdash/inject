@@ -3,9 +3,10 @@ import { InjectContainer } from "./container";
 import { getClassMethodParams, getPropertyInjectedType, getUnProxyTarget, isNoWrap, isProviderInstance, isTransient, isWrappedFunction, isWrappedObject } from "./decorators";
 import { createLogger } from "./logger";
 import { DefaultClassProvider } from "./provider";
-import { isClass } from "./utils";
+import { getClassName, isClass } from "./utils";
 
 const logger = createLogger("proxy");
+const executionLogger = createLogger("proxy:execution");
 
 /**
  * create wrapper (proxy) for object with inject container 
@@ -73,7 +74,16 @@ export function createWrapper(instance: any, ic: InjectContainer) {
 
           if (typeof methodOrProperty === 'function') {
 
-            const proxyMethod = (...args: any[]) => ic.injectExecute(target, methodOrProperty, ...args);
+            const proxyMethod = (...args: any[]) => {
+              executionLogger(
+                'pre:execute method of [%o.%o] with container [%o]',
+                getClassName(instance),
+                propertyName,
+                ic.getFormattedId()
+              );
+
+              return ic.injectExecute(target, methodOrProperty, ...args);
+            };
 
             // overwrite function name
             Object.defineProperty(proxyMethod, "name", {

@@ -2,6 +2,7 @@ import { InjectContainer } from "./container";
 import { getClassConstructorParams, getClassInjectionInformation, getUnProxyTarget, inject, isNoWrap, isProviderType, isRequired, isTransient, LazyRef, noWrap, provider, transient } from "./decorators";
 import { RequiredNotFoundError } from "./errors";
 import { createLogger } from "./logger";
+import { getClassName } from "./utils";
 
 
 const classProviderLogger = createLogger("classProvider");
@@ -14,10 +15,15 @@ export interface InstanceProvider<T = any> {
   provide: (...args: any[]) => any;
 }
 
+export class BaseInstanceProvider {
+  _providedValue: any
+}
+
 export const createInstanceProvider = (type: any, instance: any, isTransient = false) => {
 
-  const p = class {
+  const p = class extends BaseInstanceProvider {
     provide = async () => instance
+    _providedValue = instance
   };
 
   provider(type)(p);
@@ -30,6 +36,7 @@ export const createInstanceProvider = (type: any, instance: any, isTransient = f
 };
 
 
+@noWrap
 export class DefaultClassProvider implements InstanceProvider {
 
   @noWrap
@@ -96,7 +103,7 @@ export class DefaultClassProvider implements InstanceProvider {
 
           constructParams[paramInfo.parameterIndex] = paramValue;
 
-          this._log("before %o instance creating, inject constructor parameter (%o: %o) with value %O",
+          this._log("pre:constructs %o instance, inject constructor parameter (%o: %o) with value %O",
             getUnProxyTarget(type),
             paramInfo.parameterIndex,
             paramInfo.type,
@@ -125,23 +132,23 @@ export class DefaultClassProvider implements InstanceProvider {
       for (const propertyName of propertiesNames) {
         const propInjectMetadata = info.get(propertyName);
         if (propInjectMetadata.injectType == 'classProperty') {
-          let type = propInjectMetadata.type;
-          if (type instanceof LazyRef) {
-            type = type.getRef();
+          let injectPropType = propInjectMetadata.type;
+          if (injectPropType instanceof LazyRef) {
+            injectPropType = injectPropType.getRef();
           }
 
           this._registerInjectParam(ic, inject.getInjectParameter(inst, propertyName));
 
           // if the instance decorate this field disable wrapper
           if (isNoWrap(inst, propertyName)) {
-            inst[propertyName] = await ic.getInstance(type, ic);
+            inst[propertyName] = await ic.getInstance(injectPropType, ic);
           } else {
-            inst[propertyName] = await ic.getWrappedInstance(type, ic);
+            inst[propertyName] = await ic.getWrappedInstance(injectPropType, ic);
           }
-          this._log("after %o instance created, inject property (%o: %o) with value: %o",
-            getUnProxyTarget(type),
+          this._log("after:constructed %o instance, inject property (%o: %o) with value: %O",
+            getClassName(getUnProxyTarget(type)),
             propertyName,
-            type,
+            injectPropType,
             inst[propertyName],
           );
           if (inst[propertyName] === undefined) {

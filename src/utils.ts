@@ -21,6 +21,14 @@ export function isClass(obj: any): obj is Class {
   return false;
 }
 
+
+export function typeToString(type: any) {
+  if (typeof type === 'object' || typeof type === 'function') {
+    return getClassName(type);
+  }
+  return type;
+}
+
 /**
  * get class name from type or instance
  * 

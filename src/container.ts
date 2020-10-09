@@ -1,10 +1,10 @@
 import { alg, Graph } from 'graphlib';
 import { MSG_ERR_NOT_PROVIDER, MSG_ERR_NO_UNDEFINED, MSG_ERR_PROVIDER_DISABLE_WRAP } from './constants';
-import { createInjectDecorator, getClassConstructorParams, getClassMethodParams, getProvideInfo, getTransientInfo, getUnProxyTarget, inject, InjectParameter, isNoWrap, isNoWrapProvider, isProviderInstance, isProviderType, isRequired, isTransient, isWrappedObject, LazyRef, transient } from './decorators';
+import { createInjectDecorator, getClassConstructorParams, getClassMethodParams, getProvideInfo, getTransientInfo, getUnProxyTarget, inject, InjectParameter, isNoWrap, isNoWrapProvider, isProviderInstance, isProviderType, isRequired, isTransient, isWrappedFunction, isWrappedObject, LazyRef, transient } from './decorators';
 import { RequiredNotFoundError } from './errors';
 import { createLogger } from './logger';
-import { createInstanceProvider, DefaultClassProvider, InstanceProvider } from './provider';
-import { Class, getOrDefault, InjectWrappedClassType, InjectWrappedInstance, isClass, OptionalParameters } from './utils';
+import { BaseInstanceProvider, createInstanceProvider, DefaultClassProvider, InstanceProvider } from './provider';
+import { Class, getOrDefault, InjectWrappedClassType, InjectWrappedInstance, isClass, OptionalParameters, typeToString } from './utils';
 import { createWrapper } from './wrapper';
 
 const containerLogger = createLogger("container");
@@ -162,10 +162,16 @@ export class InjectContainer {
         type = getProvideInfo(provider.prototype, "provide");
       }
       if (type != undefined) {
+        const sType = typeToString(type);
         if (this.hasInProviders(type)) {
-          this._log('overwrite provider: %O for type: %O', provider, type,);
+          this._log('overwrite provider for type: %O with %O ', sType, provider);
         } else {
-          this._log('register provider: %O for type: %O', provider, type);
+          if (provider instanceof BaseInstanceProvider) {
+            this._log('register instance for type: %O with %O ', sType, provider._providedValue,);
+
+          } else {
+            this._log('register provider for type: %O with %O ', sType, provider);
+          }
         }
         // provider must could be wrapped, 
         // otherwise, the 'provide' function could not be injected
@@ -301,7 +307,7 @@ export class InjectContainer {
   }
 
   protected setStore(type, value) {
-    this._log('store type %o with value: %O', type, value);
+    this._log('store type %o with value: %O', typeToString(type), value);
     this._store.set(type, value);
   }
 
@@ -447,17 +453,17 @@ export class InjectContainer {
           const unProxyObject = getUnProxyTarget(instance);
           if (isClass(unProxyObject)) {
             log(
-              "before call static method '%s.%s', inject parameter (%o: %o) with value: %O",
+              "pre:execution static method '%s.%s', inject parameter (%o: %o) with value: %O",
               unProxyObject?.name,
             );
           } else {
             log(
-              "before call '%s.%s', inject parameter (%o: %o) with value: %O",
+              "pre:execution '%s.%s', inject parameter (%o: %o) with value: %O",
               unProxyObject?.constructor?.name,
             );
           }
           if (methodParameters[paramInfo.parameterIndex] == undefined) {
-            if (!isWrappedObject(instance)) {
+            if (!isWrappedObject(instance) && !isWrappedFunction(method)) {
               if (isRequired(instance, methodName, paramInfo.parameterIndex)) {
                 throw new RequiredNotFoundError(instance, methodName, paramInfo.parameterIndex, paramInfo.type);
               }

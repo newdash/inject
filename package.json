@@ -24,6 +24,7 @@
     "@newdash/newdash": "^5.13.0",
     "debug": "^4.1.1",
     "graphlib": "^2.1.8",
+    "object-inspect": "^1.8.0",
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
