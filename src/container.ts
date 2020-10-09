@@ -217,6 +217,8 @@ export class InjectContainer {
   async getInstance(type: any, ctx?: InjectContainer): Promise<any>;
   async getInstance(type: any, ctx?: InjectContainer) {
 
+    this._log("require instance for type %o", typeToString(type));
+
     if (ctx == undefined) {
       ctx = await this.createSubContainer();
     }
@@ -228,6 +230,7 @@ export class InjectContainer {
     }
 
     if (this.hasInStore(type)) {
+      this._log("found type(%o) instance in cache", typeToString(type));
       return this.getStore(type);
     }
 
@@ -248,13 +251,16 @@ export class InjectContainer {
     // prefer use context as 'container'
     // user define the provider
     if (ctx.hasInProviders(type)) {
+      this._log("found provider for type(%o)", typeToString(type));
       provider = ctx.getProvider(type);
     }
     else if (ctx.hasSubClassProvider(type)) {
+      this._log("found sub-class provider for type(%o)", typeToString(type));
       provider = ctx.getSubClassProvider(type);
     }
     // use default provider for classes
-    else if (typeof type == 'function') {
+    else if (isClass(type)) {
+      this._log("not found provider for type(%o), fallback to use DefaultClassProvider", typeToString(type));
       provider = new DefaultClassProvider(type, isTransient(type), ctx);
     }
 

@@ -1,5 +1,5 @@
 import { uniqueId } from "@newdash/newdash";
-import { getClassMethodParams, getUnProxyTarget, inject, InjectContainer, InjectWrappedInstance, isWrappedObject, lazyRef, noWrap, required, withType } from "../src";
+import { getClassMethodParams, getUnProxyTarget, inject, InjectContainer, InjectWrappedInstance, isWrappedObject, lazyRef, noWrap, required, transient, withType } from "../src";
 import { MSG_ERR_PROVIDER_DISABLE_WRAP } from "../src/constants";
 
 
@@ -244,15 +244,22 @@ describe('Wrapper Test Suite', () => {
   it('should support custom ignore wrap object', async () => {
 
     class A { @inject() date: Date }
+    class B { @inject() date: Date }
 
     const ic = InjectContainer.New();
 
-    ic.doNotWrap(Date); // do not wrap 'Date' class please
+    // do not cache 'Date' class
+    transient(Date);
+    // do not wrap 'Date' class please
+    noWrap(Date);
 
     const a = await ic.getWrappedInstance(A);
 
     expect(a.date.getMonth()).not.toBeInstanceOf(Promise);
     expect(a.date.getMonth()).toBe(new Date().getMonth());
+
+    const b = await ic.getWrappedInstance(B);
+    expect(a.date).not.toBe(b.date);
 
 
   });
