@@ -2,12 +2,11 @@ name: Node CI
 
 on:
   push:
-    branches: [ master ]
+    branches: '2'
   pull_request:
-    branches: [ master ]
-  # daily check at 01:00 AM
+    branches: '2'
   schedule:
-    - cron: '0 1 * * *'
+    - cron: '0 2 * * *'
 
 jobs:
   build:
