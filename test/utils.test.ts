@@ -1,5 +1,6 @@
 // @ts-nocheck
-import { getClassName, getOrDefault, isClass, isClassDecorator, isClassMethodDecorator, isClassMethodParameterDecorator, isClassPropertyDecorator, isClassStaticMethodDecorator, isClassStaticPropertyDecorator } from "../src/utils";
+import { isClass } from "@newdash/newdash/isClass";
+import { getClassName, getOrDefault, isClassDecorator, isClassMethodDecorator, isClassMethodParameterDecorator, isClassPropertyDecorator, isClassStaticMethodDecorator, isClassStaticPropertyDecorator } from "../src/utils";
 
 
 describe('Utilities Test Suite', () => {

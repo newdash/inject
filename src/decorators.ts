@@ -1,9 +1,10 @@
+import { isClass } from '@newdash/newdash/isClass';
 import { isFunction } from '@newdash/newdash/isFunction';
 import isUndefined from '@newdash/newdash/isUndefined';
 import { WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_ORIGINAL_METHOD, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
 import { createLogger } from './logger';
 import { InstanceProvider } from './provider';
-import { Class, InjectWrappedInstance, isClass, isClassConstructorParameterDecorator, isClassDecorator, isClassMethodDecorator, isClassMethodParameterDecorator, isClassPropertyDecorator, isClassStaticMethodDecorator, isClassStaticMethodParametersDecorator, isClassStaticPropertyDecorator } from './utils';
+import { Class, InjectWrappedInstance, isClassConstructorParameterDecorator, isClassDecorator, isClassMethodDecorator, isClassMethodParameterDecorator, isClassPropertyDecorator, isClassStaticMethodDecorator, isClassStaticMethodParametersDecorator, isClassStaticPropertyDecorator } from './utils';
 
 const KEY_INJECT = 'inject:key_inject';
 const KEY_INJECT_CLASS = 'inject:key_inject_class';

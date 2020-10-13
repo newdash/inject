@@ -1,9 +1,10 @@
+import { isClass } from "@newdash/newdash/isClass";
 import { WRAPPED_OBJECT_CONTAINER_PROPERTY, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_CONTAINER, WRAPPED_OBJECT_METHOD_INJECT_INFO, WRAPPED_OBJECT_METHOD_ORIGINAL_METHOD, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from "./constants";
 import { InjectContainer } from "./container";
 import { getClassMethodParams, getPropertyInjectedType, getUnProxyTarget, isNoWrap, isProviderInstance, isTransient, isWrappedFunction, isWrappedObject } from "./decorators";
 import { createLogger } from "./logger";
 import { DefaultClassProvider } from "./provider";
-import { getClassName, isClass } from "./utils";
+import { getClassName } from "./utils";
 
 const logger = createLogger("proxy");
 const executionLogger = createLogger("proxy:execution");

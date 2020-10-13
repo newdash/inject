@@ -1,7 +1,8 @@
+import { isClass } from "@newdash/newdash/isClass";
 import { MSG_ERR_PARAM_REQUIRED } from "./constants";
 import { getUnProxyTarget, LazyRef } from "./decorators";
 import { createLogger } from "./logger";
-import { getClassName, isClass } from "./utils";
+import { getClassName } from "./utils";
 
 
 const errorLogger = createLogger("error");

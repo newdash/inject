@@ -1,10 +1,11 @@
+import { isClass } from '@newdash/newdash/isClass';
 import { alg, Graph } from 'graphlib';
 import { MSG_ERR_NOT_PROVIDER, MSG_ERR_NO_UNDEFINED, MSG_ERR_PROVIDER_DISABLE_WRAP } from './constants';
 import { createInjectDecorator, getClassConstructorParams, getClassMethodParams, getProvideInfo, getTransientInfo, getUnProxyTarget, inject, InjectParameter, isNoWrap, isNoWrapProvider, isProviderInstance, isProviderType, isRequired, isTransient, isWrappedFunction, isWrappedObject, LazyRef, transient } from './decorators';
 import { RequiredNotFoundError } from './errors';
 import { createLogger } from './logger';
 import { BaseInstanceProvider, createInstanceProvider, DefaultClassProvider, InstanceProvider } from './provider';
-import { Class, getOrDefault, InjectWrappedClassType, InjectWrappedInstance, isClass, OptionalParameters, typeToString } from './utils';
+import { Class, getOrDefault, InjectWrappedClassType, InjectWrappedInstance, OptionalParameters, typeToString } from './utils';
 import { createWrapper } from './wrapper';
 
 const containerLogger = createLogger("container");
