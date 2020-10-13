@@ -2,9 +2,9 @@ name: Node CI
 
 on:
   push:
-    branches: '2'
+    branches: '*'
   pull_request:
-    branches: '2'
+    branches: '*'
   schedule:
     - cron: '0 2 * * *'
 
