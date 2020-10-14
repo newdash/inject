@@ -1,6 +1,6 @@
 import { isClass } from '@newdash/newdash/isClass';
 import { alg, Graph } from 'graphlib';
-import { MSG_ERR_NOT_PROVIDER, MSG_ERR_NO_UNDEFINED, MSG_ERR_PROVIDER_DISABLE_WRAP } from './constants';
+import { MSG_ERR_NOT_PROVIDER, MSG_ERR_NO_UNDEFINED, MSG_ERR_PROVIDER_DISABLE_WRAP, S_TYPE_FUNCTION } from './constants';
 import { createInjectDecorator, getClassConstructorParams, getClassMethodParams, getProvideInfo, getTransientInfo, getUnProxyTarget, inject, InjectParameter, isNoWrap, isNoWrapProvider, isProviderInstance, isProviderType, isRequired, isTransient, isWrappedFunction, isWrappedObject, LazyRef, transient } from './decorators';
 import { RequiredNotFoundError } from './errors';
 import { createLogger } from './logger';
@@ -48,6 +48,8 @@ function generateContainerId() {
  * tmp inject context, store injection temp object in single construction
  */
 export type InjectContext = Map<any, any>
+
+
 
 /**
  * inject container
@@ -334,9 +336,9 @@ export class InjectContainer {
   }
 
   protected hasSubClassInstanceInStore(type: any): boolean {
-    if (typeof type == 'function') {
+    if (typeof type === S_TYPE_FUNCTION) {
       for (const [k] of this._store) {
-        if (typeof k == 'function') {
+        if (typeof k === S_TYPE_FUNCTION) {
           if (type.prototype instanceof k) {
             return true;
           }

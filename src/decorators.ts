@@ -1,7 +1,7 @@
 import { isClass } from '@newdash/newdash/isClass';
 import { isFunction } from '@newdash/newdash/isFunction';
 import isUndefined from '@newdash/newdash/isUndefined';
-import { WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_ORIGINAL_METHOD, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
+import { S_TYPE_FUNCTION, S_TYPE_NUMBER, S_TYPE_OBJECT, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_ORIGINAL_METHOD, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
 import { createLogger } from './logger';
 import { InstanceProvider } from './provider';
 import { Class, InjectWrappedInstance, isClassConstructorParameterDecorator, isClassDecorator, isClassMethodDecorator, isClassMethodParameterDecorator, isClassPropertyDecorator, isClassStaticMethodDecorator, isClassStaticMethodParametersDecorator, isClassStaticPropertyDecorator } from './utils';
@@ -106,7 +106,7 @@ export function isTransient(target, targetKey?) {
 export function required(target, targetKey)
 export function required(target, targetKey, parameterIndex)
 export function required(target, targetKey, parameterIndex?) {
-  if (typeof parameterIndex == 'number') {
+  if (typeof parameterIndex === S_TYPE_NUMBER) {
     Reflect.defineMetadata(KEY_REQUIRED, true, target, `${targetKey}_param_${parameterIndex}`);
   } else {
     Reflect.defineMetadata(KEY_REQUIRED, true, target, targetKey);
@@ -114,7 +114,7 @@ export function required(target, targetKey, parameterIndex?) {
 }
 
 export function isRequired(target, targetKey, parameterIndex?) {
-  if (typeof parameterIndex == 'number') {
+  if (typeof parameterIndex === S_TYPE_NUMBER) {
     return Boolean(Reflect.getMetadata(KEY_REQUIRED, target, `${targetKey}_param_${parameterIndex}`));
   }
   return Boolean(Reflect.getMetadata(KEY_REQUIRED, target, targetKey));
@@ -143,7 +143,8 @@ export function noWrap(target: any, targetKey?: any, parameterIndex?: any) {
 export function isNoWrapProvider(provider) {
   if (isProviderInstance(provider)) {
     return isNoWrap(provider, "provide");
-  } else if (isProviderType(provider)) {
+  }
+  else if (isProviderType(provider)) {
     return isNoWrap(provider.prototype, "provide");
   }
   return false;
@@ -161,7 +162,7 @@ export function isNoWrap(target: any, targetKey?: any, parameterIndex?: any) {
       (Reflect.getMetadata(KEY_PARAMETER_NO_WRAP, target, targetKey) || [])[parameterIndex]
     );
   }
-  if (typeof target == 'object' || typeof target == 'function') {
+  if (typeof target === S_TYPE_OBJECT || typeof target === S_TYPE_FUNCTION) {
     return Boolean(Reflect.getMetadata(KEY_NO_WRAP, target, targetKey));
   }
   return false;

@@ -1,5 +1,5 @@
 import { isClass } from "@newdash/newdash/isClass";
-import { MSG_ERR_PARAM_REQUIRED } from "./constants";
+import { MSG_ERR_PARAM_REQUIRED, S_TYPE_STRING } from "./constants";
 import { getUnProxyTarget, LazyRef } from "./decorators";
 import { createLogger } from "./logger";
 import { getClassName } from "./utils";
@@ -7,9 +7,7 @@ import { getClassName } from "./utils";
 
 const errorLogger = createLogger("error");
 
-class BaseError extends Error {
-
-}
+class BaseError extends Error { }
 
 /**
  * some instance is required,
@@ -25,7 +23,7 @@ export class RequiredNotFoundError extends BaseError {
    */
   constructor(target: any, targetKey?: string, parameterIndex?: number, type?: any) {
 
-    const className = typeof target == 'string' ? target : getClassName(target);
+    const className = typeof target === S_TYPE_STRING ? target : getClassName(target);
 
     const methodOrProperty = targetKey;
 
@@ -50,7 +48,7 @@ export class RequiredNotFoundError extends BaseError {
       if (type instanceof LazyRef) {
         type = type.getRef();
       }
-      if (typeof type == 'string') {
+      if (typeof type === S_TYPE_STRING) {
         parts.push(`type[${type}]`);
       } else if (isClass(type)) {
         parts.push(`type[${getClassName(type)}]`);
@@ -68,6 +66,4 @@ export class RequiredNotFoundError extends BaseError {
 
 }
 
-export class ResourceBusyError extends BaseError {
-
-}
+export class ResourceBusyError extends BaseError { }

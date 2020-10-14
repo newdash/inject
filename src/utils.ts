@@ -1,5 +1,6 @@
 import { isClass } from "@newdash/newdash/isClass";
 import { UnwrapPromise } from "@newdash/newdash/types";
+import { S_TYPE_FUNCTION, S_TYPE_NUMBER, S_TYPE_OBJECT } from "./constants";
 
 export function getOrDefault(map: Map<any, any>, key, value) {
   if (!map.has(key)) {
@@ -9,7 +10,7 @@ export function getOrDefault(map: Map<any, any>, key, value) {
 }
 
 export function typeToString(type: any) {
-  if (typeof type === 'object' || typeof type === 'function') {
+  if (typeof type === S_TYPE_OBJECT || typeof type === S_TYPE_FUNCTION) {
     return getClassName(type);
   }
   return type;
@@ -49,11 +50,11 @@ export function isClassDecorator(target: any, targetKey?: any, parameterIndex?: 
  * @param parameterIndex 
  */
 export function isClassStaticMethodParametersDecorator(target, targetKey, parameterIndex) {
-  return isClass(target) && targetKey != undefined && typeof parameterIndex == 'number';
+  return isClass(target) && targetKey != undefined && typeof parameterIndex === 'number';
 }
 
 export function isClassStaticMethodDecorator(target, targetKey, parameterIndex) {
-  return isClass(target) && targetKey != undefined && typeof parameterIndex == 'object';
+  return isClass(target) && targetKey != undefined && typeof parameterIndex === S_TYPE_OBJECT;
 }
 
 export function isClassStaticPropertyDecorator(target, targetKey, parameterIndex) {
@@ -79,7 +80,7 @@ export function isClassConstructorParameterDecorator(target, targetKey, paramete
  * @param desc 
  */
 export function isClassMethodDecorator(target, targetKey, desc) {
-  return target !== undefined && !isClass(target) && targetKey !== undefined && typeof desc == 'object';
+  return target !== undefined && !isClass(target) && targetKey !== undefined && typeof desc === S_TYPE_OBJECT;
 }
 
 /**
@@ -90,7 +91,7 @@ export function isClassMethodDecorator(target, targetKey, desc) {
  * @param parameterIndex 
  */
 export function isClassMethodParameterDecorator(target, targetKey, parameterIndex) {
-  return target !== undefined && !isClass(target) && targetKey !== undefined && typeof parameterIndex == 'number';
+  return target !== undefined && !isClass(target) && targetKey !== undefined && typeof parameterIndex === S_TYPE_NUMBER;
 }
 
 /**
@@ -101,7 +102,7 @@ export function isClassMethodParameterDecorator(target, targetKey, parameterInde
  * @param parameterIndex 
  */
 export function isClassPropertyDecorator(target, targetKey, parameterIndex) {
-  return target !== undefined && !isClass(target) && targetKey !== undefined && parameterIndex == undefined;
+  return target !== undefined && !isClass(target) && targetKey !== undefined && parameterIndex === undefined;
 }
 
 export type Class<T = any> = new (...args: any[]) => T

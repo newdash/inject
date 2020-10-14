@@ -131,7 +131,7 @@ export class DefaultClassProvider implements InstanceProvider {
       const propertiesNames = info.keys();
       for (const propertyName of propertiesNames) {
         const propInjectMetadata = info.get(propertyName);
-        if (propInjectMetadata.injectType == 'classProperty') {
+        if (propInjectMetadata.injectType === 'classProperty') {
           let injectPropType = propInjectMetadata.type;
           if (injectPropType instanceof LazyRef) {
             injectPropType = injectPropType.getRef();
