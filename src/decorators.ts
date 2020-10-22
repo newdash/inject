@@ -1,6 +1,6 @@
 import { isClass } from '@newdash/newdash/isClass';
 import { isFunction } from '@newdash/newdash/isFunction';
-import isUndefined from '@newdash/newdash/isUndefined';
+import { isUndefined } from '@newdash/newdash/isUndefined';
 import { S_TYPE_FUNCTION, S_TYPE_NUMBER, S_TYPE_OBJECT, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_ORIGINAL_METHOD, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from './constants';
 import { createLogger } from './logger';
 import { InstanceProvider } from './provider';
