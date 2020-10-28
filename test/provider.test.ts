@@ -79,7 +79,7 @@ describe('Inject Provider Test Suite', () => {
 
   });
 
-  it('should support cycle inject', async () => new Promise((resolve, reject) => {
+  it('should support cycle inject', async () => {
 
     class E {
       @inject(LazyRef.create(() => F))
@@ -91,19 +91,13 @@ describe('Inject Provider Test Suite', () => {
       _e: any
     }
 
-    setTimeout(async () => {
-      try {
-        const container = InjectContainer.New();
-        container.doNotWrap(E, F);
-        const e = await container.getInstance(E);
-        expect(e._f._e).toBe(e);
-        resolve();
-      } catch (error) {
-        reject(error);
-      }
+    const container = InjectContainer.New();
+    container.doNotWrap(E, F);
+    const e = await container.getInstance(E);
+    expect(e._f._e).toBe(e);
 
-    }, 0);
-  }));
+
+  });
 
   it('should support cycle inject itself', async () => {
 
