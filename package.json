@@ -21,7 +21,7 @@
     "node": ">=10"
   },
   "dependencies": {
-    "@newdash/newdash": "^5.16.0",
+    "@newdash/newdash": "^5.17.0",
     "debug": "^4.2.0",
     "graphlib": "^2.1.8",
     "reflect-metadata": "^0.1.13"
