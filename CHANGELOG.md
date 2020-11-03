@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.23](https://github.com/newdash/inject/compare/v0.2.22...v0.2.23) (2020-11-03)
+
+
+### Features
+
+* [#11](https://github.com/newdash/inject/issues/11) more debug info ([4cd525d](https://github.com/newdash/inject/commit/4cd525d7ee969ed0ffcb774ba506ec0dd5350cb8))
+* new decorator [@n](https://github.com/n)Inject & [@with](https://github.com/with)NoWrapType ([343ba10](https://github.com/newdash/inject/commit/343ba1011efcf8c3bd7c0a6f706ecae196b37971))
+
+
+### Bug Fixes
+
+* **ci:** issue ([8b7cb0a](https://github.com/newdash/inject/commit/8b7cb0a8735d387a939ea0cffcfb9cdfb50a557c))
+* [#11](https://github.com/newdash/inject/issues/11) native class issue ([891b269](https://github.com/newdash/inject/commit/891b269899d43d855b223da128e2b973fa1e31ed))
+
 ### [0.2.22](https://github.com/newdash/inject/compare/v0.2.21...v0.2.22) (2020-10-08)
 
 
