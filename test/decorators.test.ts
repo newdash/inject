@@ -151,7 +151,6 @@ describe('Decorators Test Suite', () => {
 
   it('should support @provider decorator', () => {
 
-    @provider("v1")
     class A {
 
       @provider("v2")
@@ -174,10 +173,6 @@ describe('Decorators Test Suite', () => {
 
     const cp1 = new DefaultClassProvider(A, true, InjectContainer.New());
 
-    // class type
-    expect(getProvideInfo(A)).toBe("v1");
-    // @ts-ignore
-    expect(getProvideInfo((new A).constructor)).toBe("v1");
     // class method
     expect(getProvideInfo(new A, "createV2")).toBe("v2");
     // lazy ref

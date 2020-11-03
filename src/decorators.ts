@@ -140,7 +140,12 @@ export function noWrap(target: any, targetKey?: any, parameterIndex?: any) {
   }
 }
 
-export function isNoWrapProvider(provider) {
+/**
+ * check provider require not wrap the instance 
+ * 
+ * @param provider 
+ */
+export function isNoWrapProvider(provider: any): boolean {
   if (isProviderInstance(provider)) {
     return isNoWrap(provider, "provide");
   }
@@ -150,9 +155,24 @@ export function isNoWrapProvider(provider) {
   return false;
 }
 
-export function isNoWrap(classType: any)
-export function isNoWrap(target: any, propertyName: string)
-export function isNoWrap(target: any, methodName: any, parameterIndex: number)
+/**
+ * class is decorated with @noWrap
+ * @param classType 
+ */
+export function isNoWrap(classType: any): boolean
+/**
+ * class property is decorated with @noWrap
+ * @param target 
+ * @param propertyName 
+ */
+export function isNoWrap(target: any, propertyName: string): boolean
+/**
+ * class method parameter is decorated with @noWrap
+ * @param target 
+ * @param methodName 
+ * @param parameterIndex 
+ */
+export function isNoWrap(target: any, methodName: any, parameterIndex: number): boolean
 export function isNoWrap(target: any, targetKey?: any, parameterIndex?: any) {
   if (
     isClassMethodParameterDecorator(target, targetKey, parameterIndex) ||
@@ -256,7 +276,12 @@ export function lazyRef<T>(type: () => T) {
   return LazyRef.create<T>(type);
 }
 
-export function isProviderType(target): target is Class<InstanceProvider> {
+/**
+ * check object is a provider class
+ * 
+ * @param target 
+ */
+export function isProviderType(target: any): target is Class<InstanceProvider> {
   target = getUnProxyTarget(target);
   if (target?.constructor == Function) {
     // own 'type' and 'provide' property
@@ -270,7 +295,12 @@ export function isProviderType(target): target is Class<InstanceProvider> {
   return false;
 }
 
-export function isProviderInstance(target): target is InstanceProvider {
+/**
+ * check provider is a provider instance
+ * 
+ * @param target 
+ */
+export function isProviderInstance(target: any): target is InstanceProvider {
   target = getUnProxyTarget(target);
   const typeInfo = getProvideInfo(target, "provide") || target.type;
   if (!isUndefined(typeInfo)) {
@@ -281,10 +311,24 @@ export function isProviderInstance(target): target is InstanceProvider {
   return false;
 }
 
-export function provider(type?: LazyRef): (target, targetKey?) => void
-export function provider(type?: string): (target, targetKey?) => void
-export function provider(type?: Class): (target, targetKey?) => void
-export function provider(type?: any) {
+/**
+ * provide instance for lazy ref
+ * 
+ * @param type 
+ */
+export function provider(type?: LazyRef): MethodDecorator
+/**
+ * provide instance for key
+ * @param type 
+ */
+export function provider(type?: string): MethodDecorator
+/**
+ * provide instance for class
+ * 
+ * @param type 
+ */
+export function provider(type?: Class): MethodDecorator
+export function provider(type?: any): MethodDecorator {
   return function (target, targetKey?) {
     Reflect.defineMetadata(KEY_PROVIDE, type, target, targetKey);
   };
@@ -294,6 +338,30 @@ export function provider(type?: any) {
  * alias of @provider decorator
  */
 export const withType = provider;
+/**
+ * combine @withType & @noWrap
+ * 
+ * @param type 
+ */
+export function withNoWrapType(type: LazyRef): MethodDecorator
+/**
+ * combine @withType & @noWrap
+ * 
+ * @param type 
+ */
+export function withNoWrapType(type: Class): MethodDecorator
+/**
+ * combine @withType & @noWrap
+ * 
+ * @param type 
+ */
+export function withNoWrapType(type: string): MethodDecorator
+export function withNoWrapType(type: any): MethodDecorator {
+  return function (target, targetKey, desc) {
+    provider(type)(target, targetKey, desc);
+    noWrap(target, targetKey);
+  };
+};
 
 /**
  * get transient information
@@ -347,7 +415,23 @@ export function createInjectDecorator(type: any) {
 }
 
 /**
- * inject parameter
+ * inject parameter without wrapper
+ *
+ * @param type
+ */
+export function nInject(type: LazyRef): ParameterDecorator & PropertyDecorator;
+export function nInject(type: Class): ParameterDecorator & PropertyDecorator;
+export function nInject(type: string): ParameterDecorator & PropertyDecorator;
+export function nInject(): PropertyDecorator;
+export function nInject(type?: any) {
+  return function (target, targetKey?, parameterIndex?) {
+    inject(type)(target, targetKey, parameterIndex);
+    noWrap(target, targetKey, parameterIndex);
+  };
+}
+
+/**
+ * inject parameter with wrapper
  *
  * @param type
  */

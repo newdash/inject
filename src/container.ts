@@ -189,7 +189,9 @@ export class InjectContainer {
         if (isNoWrap(provider)) {
           throw new TypeError(MSG_ERR_PROVIDER_DISABLE_WRAP);
         }
+        // register the type is not should be wrapped globally
         if (isNoWrapProvider(provider) || isNoWrap(type)) { this.doNotWrap(type); }
+
         this._providers.set(type, provider);
       }
       else { throw new TypeError(MSG_ERR_NOT_PROVIDER); }

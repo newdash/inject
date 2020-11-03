@@ -26,8 +26,7 @@ export const createInstanceProvider = (type: any, instance: any, isTransient = f
     _providedValue = instance
   };
 
-  provider(type)(p);
-  provider(type)(p.prototype, "provide");
+  provider(type)(p.prototype, "provide", undefined);
   if (isTransient) {
     transient(p.prototype, "provide");
   }
@@ -53,7 +52,7 @@ export class DefaultClassProvider implements InstanceProvider {
    * @param container should be a sub container
    */
   constructor(type: any, bTransient = false, container?: InjectContainer) {
-    provider(type)(this, "provide");
+    provider(type)(this, "provide", undefined);
     if (bTransient) { transient(this, "provide"); }
     if (isNoWrap(type)) { noWrap(this, "provide"); }
     this.type = type;

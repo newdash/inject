@@ -1,5 +1,5 @@
 import { v4 } from 'uuid';
-import { createInstanceProvider, inject, InjectContainer, InjectWrappedInstance, InstanceProvider, LazyRef, noWrap, provider, transient } from '../src';
+import { createInstanceProvider, inject, InjectContainer, InjectWrappedInstance, InstanceProvider, isWrappedObject, LazyRef, nInject, noWrap, provider, transient, withNoWrapType } from '../src';
 import { MSG_ERR_NOT_PROVIDER, MSG_ERR_NO_UNDEFINED } from '../src/constants';
 
 
@@ -465,6 +465,44 @@ describe('Inject Provider Test Suite', () => {
 
   });
 
+  it('should support @noWrap on provider', async () => {
+
+    class C { }
+    class B { @inject() c: C }
+    class A { @inject() b: B }
+
+    class CProvider implements InstanceProvider {
+      @withNoWrapType(C)
+      provide() { return new C; }
+    }
+
+    const ic = InjectContainer.New();
+    ic.registerProvider(CProvider);
+
+    const a = await ic.getWrappedInstance(A);
+
+    expect(isWrappedObject(a)).toBeTruthy();
+    expect(isWrappedObject(a.b)).toBeTruthy();
+    expect(isWrappedObject(a.b.c)).toBeFalsy();
+
+  });
+
+
+  it('should support @nInject on provider', async () => {
+
+    class C { }
+    class B { @nInject() c: C }
+    class A { @inject() b: B }
+
+    const ic = InjectContainer.New();
+
+    const a = await ic.getWrappedInstance(A);
+
+    expect(isWrappedObject(a)).toBeTruthy();
+    expect(isWrappedObject(a.b)).toBeTruthy();
+    expect(isWrappedObject(a.b.c)).toBeFalsy();
+
+  });
 
 
 });

@@ -12,7 +12,6 @@ export const MSG_ERR_NO_UNDEFINED = "Can not accept undefined value.";
 export const MSG_ERR_PROVIDER_DISABLE_WRAP = "Provider must could not be disable wrap.";
 export const MSG_ERR_PARAM_REQUIRED = "parameter required.";
 
-
 export const S_TYPE_FUNCTION = 'function';
 export const S_TYPE_STRING = 'string';
 export const S_TYPE_NUMBER = 'number';
