@@ -10,7 +10,7 @@
     "test": "jest --detectOpenHandles --passWithNoTests",
     "build": "tsc",
     "lint": "eslint src/** --fix",
-    "release": "standard-version --no-verify && git push --follow-tags origin master",
+    "release": "standard-version --no-verify && git push --follow-tags origin main",
     "coverage": "npm test -- --coverage --no-cache"
   },
   "repository": {
