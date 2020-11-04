@@ -1,14 +1,36 @@
 import { isClass } from '@newdash/newdash/isClass';
 import { alg, Graph } from 'graphlib';
-import { MSG_ERR_NOT_PROVIDER, MSG_ERR_NO_UNDEFINED, MSG_ERR_PROVIDER_DISABLE_WRAP, S_TYPE_FUNCTION } from './constants';
+import { I_INJECT_CTX, MSG_ERR_NOT_PROVIDER, MSG_ERR_NO_UNDEFINED, MSG_ERR_PROVIDER_DISABLE_WRAP, MSG_ERR_TYPE_NOT_VALID, S_TYPE_FUNCTION } from './constants';
 import { createInjectDecorator, getClassConstructorParams, getClassMethodParams, getProvideInfo, getTransientInfo, getUnProxyTarget, inject, InjectParameter, isNoWrap, isNoWrapProvider, isProviderInstance, isProviderType, isRequired, isTransient, isWrappedFunction, isWrappedObject, LazyRef, transient } from './decorators';
 import { RequiredNotFoundError } from './errors';
 import { createLogger } from './logger';
-import { BaseInstanceProvider, createInstanceProvider, DefaultClassProvider, InstanceProvider } from './provider';
+import { BaseInstanceProvider, DefaultClassProvider, InstanceProvider } from './provider';
 import { Class, getOrDefault, InjectWrappedClassType, InjectWrappedInstance, OptionalParameters, typeToString } from './utils';
 import { createWrapper } from './wrapper';
 
 const containerLogger = createLogger("container");
+
+/**
+ * the context of injection
+ */
+export interface InjectContext {
+  /**
+   * parent object
+   */
+  injectParent?: any
+  injectProperty?: any
+  injectParameterIdx?: any
+  /**
+   * inject params
+   */
+  injectParam?: any
+  /**
+   * inject args
+   */
+  injectArgs?: any[]
+
+}
+
 
 /**
  * overwrite provider instance from sub to parent container
@@ -34,7 +56,6 @@ function overwriteProvider(type: any, provider: InstanceProvider, ctx: InjectCon
   }
 }
 
-
 /**
  * used to generate id sequence for containers
  */
@@ -43,11 +64,6 @@ let containerIdSequence = 0;
 function generateContainerId() {
   return containerIdSequence++;
 }
-
-/**
- * tmp inject context, store injection temp object in single construction
- */
-export type InjectContext = Map<any, any>
 
 
 
@@ -205,11 +221,11 @@ export class InjectContainer {
    * @param instance 
    * @param transient 
    * 
-   * @returns the inject decorator of the type
    */
-  public registerInstance(type: any, instance: any, transient: boolean = false) {
-    this.registerProvider(createInstanceProvider(type, instance, transient));
-    return createInjectDecorator(type);
+  public registerInstance(type: any, instance: any) {
+    type = this._getType(type)
+    this.setStore(type, instance)
+    return createInjectDecorator(type)
   }
 
   public async createSubContainer(): Promise<InjectContainer> {
@@ -217,20 +233,25 @@ export class InjectContainer {
     return new ChildInjectContainer(this);
   }
 
-  async getInstance<T extends Class>(type: LazyRef<T>): Promise<InstanceType<T>>;
-  async getInstance<T extends Class>(type: T): Promise<InstanceType<T>>;
-  async getInstance(type: any): Promise<any>;
-  async getInstance(type: any) {
-
-    this._log("require instance for type %o", typeToString(type));
-
-    const ctx = this;
-
+  private _getType(type: any): any {
     type = getUnProxyTarget(type);
-
+    if (type === undefined || type === null) {
+      throw new Error(MSG_ERR_TYPE_NOT_VALID)
+    }
     if (type instanceof LazyRef) {
       type = type.getRef();
     }
+    return type
+  }
+
+  async getInstance<T extends Class>(type: LazyRef<T>, ctx?: InjectContext): Promise<InstanceType<T>>;
+  async getInstance<T extends Class>(type: T, ctx?: InjectContext): Promise<InstanceType<T>>;
+  async getInstance(type: any, ctx?: InjectContext): Promise<any>;
+  async getInstance(type: any, ctx?: InjectContext) {
+
+    this._log("require instance for type %o", typeToString(type));
+
+    type = this._getType(type)
 
     if (this.hasInStore(type)) {
       this._log("found type(%o) instance in cache", typeToString(type));
@@ -246,25 +267,25 @@ export class InjectContainer {
     }
 
     // if class has cycle dependency in constructor, throw error
-    ctx._checkDependency(type);
+    this._checkDependency(type);
 
 
     let provider = undefined;
 
     // prefer use context as 'container'
     // user define the provider
-    if (ctx.hasInProviders(type)) {
+    if (this.hasInProviders(type)) {
       this._log("found provider for type(%o)", typeToString(type));
-      provider = ctx.getProvider(type);
+      provider = this.getProvider(type);
     }
-    else if (ctx.hasSubClassProvider(type)) {
+    else if (this.hasSubClassProvider(type)) {
       this._log("found sub-class provider for type(%o)", typeToString(type));
-      provider = ctx.getSubClassProvider(type);
+      provider = this.getSubClassProvider(type);
     }
     // use default provider for classes
     else if (isClass(type)) {
       this._log("not found provider for type(%o), fallback to use DefaultClassProvider", typeToString(type));
-      provider = new DefaultClassProvider(type, isTransient(type), ctx);
+      provider = new DefaultClassProvider(type, isTransient(type), this);
     }
 
     if (isProviderType(provider)) {
@@ -273,26 +294,26 @@ export class InjectContainer {
         overwrite = false;
       }
       // just overwrite the provider type provider
-      provider = await ctx.getInstance(provider);
+      provider = await this.getInstance(provider);
       if (overwrite) {
         // store provider instance to parent
-        overwriteProvider(type, provider, ctx);
+        overwriteProvider(type, provider, this);
       }
     }
 
     if (provider) {
-      return await ctx._withStore(type, provider);
+      return await this._withStore(type, provider, ctx);
     }
 
     return undefined;
 
   }
 
-  async getWrappedInstance<T extends Class>(type: LazyRef<T>): Promise<InjectWrappedInstance<InstanceType<T>>>;
-  async getWrappedInstance<T extends Class>(type: T): Promise<InjectWrappedInstance<InstanceType<T>>>;
-  async getWrappedInstance(type: any): Promise<any>;
-  async getWrappedInstance(type: any) {
-    const inst = await this.getInstance(type);
+  async getWrappedInstance<T extends Class>(type: LazyRef<T>, params?: any): Promise<InjectWrappedInstance<InstanceType<T>>>;
+  async getWrappedInstance<T extends Class>(type: T, params?: any): Promise<InjectWrappedInstance<InstanceType<T>>>;
+  async getWrappedInstance(type: any, params?: any): Promise<any>;
+  async getWrappedInstance(type: any, params?: any) {
+    const inst = await this.getInstance(type, params);
 
     if (this.canWrap(type)) {
       return this.wrap(inst);
@@ -300,7 +321,7 @@ export class InjectContainer {
     return inst;
   }
 
-  private async _withStore(type, provider: InstanceProvider, ...args: any[]) {
+  private async _withStore(type, provider: InstanceProvider, ctx: InjectContext) {
 
     // the type direct in store
     if (!this.hasInStore(type)) {
@@ -308,7 +329,7 @@ export class InjectContainer {
       // do not cache it
       if (this.hasSubClassInstanceInStore(type)) { return this.getSubClassInstance(type); }
 
-      const inst = await this.wrap(provider).provide(...args);
+      const inst = await this.injectExecute(provider, provider.provide, ctx)
 
       // do not cache @transient provider
       if (getTransientInfo(provider, "provide")) { return inst; }
@@ -421,9 +442,9 @@ export class InjectContainer {
    * @param instance
    * @param method
    */
-  async injectExecute<F extends (...args: any[]) => any>(instance: any, method: F, ...args: OptionalParameters<F>): Promise<ReturnType<F>>;
-  async injectExecute<F extends (...args: any[]) => any>(instance: any, method: F, ...args: any[]): Promise<ReturnType<F>>;
-  async injectExecute(instance, method, ...args) {
+  async injectExecute<F extends (...args: any[]) => any>(instance: any, method: F, ctx: InjectContext, ...args: OptionalParameters<F>): Promise<ReturnType<F>>;
+  async injectExecute<F extends (...args: any[]) => any>(instance: any, method: F, ctx: InjectContext, ...args: any[]): Promise<ReturnType<F>>;
+  async injectExecute(instance: any, method: Function, ctx: InjectContext, ...args: any[]) {
 
     const methodName = method.name;
     let type;
@@ -443,17 +464,23 @@ export class InjectContainer {
         const paramInfo = methodInjectionParameterMetadata[idx];
         if (paramInfo === undefined) { continue; }
         // if user has define the parameter in `injectExecute`, prefer use that
-        if (args[paramInfo.parameterIndex] == undefined) {
+        if (args[paramInfo.parameterIndex] === undefined) {
           const ic = await this.createSubContainer();
-          const injectParams = inject.getInjectParameter(instance, methodName, paramInfo.parameterIndex);
 
-          Object.keys(injectParams).forEach((key) => {
-            const value = injectParams[key];
-            this._log("provide transient param %o with value: %O", key, value);
-            ic.registerInstance(key, value, true);
-          });
+          let itemCtx: InjectContext
 
-          const log = (format, typeName) => {
+          if (isProviderInstance(instance) && methodName === 'provide') {
+            itemCtx = ctx
+          } else {
+            itemCtx = {
+              injectParent: instance,
+              injectProperty: methodName,
+              injectParameterIdx: paramInfo.parameterIndex,
+              injectParam: inject.getInjectParameter(instance, methodName, paramInfo.parameterIndex),
+            }
+          }
+
+          const log = (format: string, typeName: string) => {
             this._log(format,
               typeName,
               methodName,
@@ -462,11 +489,20 @@ export class InjectContainer {
               methodParameters[paramInfo.parameterIndex],
             );
           };
-          if (isNoWrap(instance, methodName, paramInfo.parameterIndex)) {
-            methodParameters[paramInfo.parameterIndex] = await ic.getInstance(paramInfo.type);
-          } else {
-            methodParameters[paramInfo.parameterIndex] = await ic.getWrappedInstance(paramInfo.type);
+
+          if (ctx?.injectParam && paramInfo.type in ctx?.injectParam) {
+            methodParameters[paramInfo.parameterIndex] = ctx.injectParam[paramInfo.type]
           }
+          else if (paramInfo.type === I_INJECT_CTX) {
+            methodParameters[paramInfo.parameterIndex] = itemCtx
+          }
+          else if (isNoWrap(instance, methodName, paramInfo.parameterIndex)) {
+            methodParameters[paramInfo.parameterIndex] = await ic.getInstance(paramInfo.type, itemCtx);
+          }
+          else {
+            methodParameters[paramInfo.parameterIndex] = await ic.getWrappedInstance(paramInfo.type, itemCtx);
+          }
+
           const unProxyObject = getUnProxyTarget(instance);
           if (isClass(unProxyObject)) {
             log(

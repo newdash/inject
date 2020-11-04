@@ -548,14 +548,14 @@ describe('Wrapper Test Suite', () => {
 
 
     const ic2 = await ic.createSubContainer();
-    ic2.registerInstance("value1", testValue, true);
+    ic2.registerInstance("value1", testValue);
     const v2 = await ic2.getWrappedInstance(Value2);
     expect(await v2.getValue()).toBe(testValue);
     await expect(() => v2.getValue3()).rejects.toThrowError();
 
     const ic3 = await ic2.createSubContainer();
-    ic3.registerInstance("value1", testValue2, true);
-    ic3.registerInstance("value3", testValue3, true);
+    ic3.registerInstance("value1", testValue2);
+    ic3.registerInstance("value3", testValue3);
 
     const v23 = await ic3.getWrappedInstance(Value2);
     expect(await v23.getValue()).toBe(testValue2);

@@ -1,7 +1,7 @@
 import { isClass } from "@newdash/newdash/isClass";
 import { WRAPPED_OBJECT_CONTAINER_PROPERTY, WRAPPED_OBJECT_INDICATOR, WRAPPED_OBJECT_METHOD_CONTAINER, WRAPPED_OBJECT_METHOD_INJECT_INFO, WRAPPED_OBJECT_METHOD_ORIGINAL_METHOD, WRAPPED_ORIGINAL_OBJECT_PROPERTY } from "./constants";
-import { InjectContainer } from "./container";
-import { getClassMethodParams, getPropertyInjectedType, getUnProxyTarget, isNoWrap, isProviderInstance, isTransient, isWrappedFunction, isWrappedObject } from "./decorators";
+import { InjectContainer, InjectContext } from "./container";
+import { getClassMethodParams, getPropertyInjectedType, getUnProxyTarget, inject, isNoWrap, isProviderInstance, isTransient, isWrappedFunction, isWrappedObject } from "./decorators";
 import { createLogger } from "./logger";
 import { DefaultClassProvider } from "./provider";
 import { getClassName } from "./utils";
@@ -83,7 +83,13 @@ export function createWrapper(instance: any, ic: InjectContainer) {
                 ic.getFormattedId()
               );
 
-              return ic.injectExecute(target, methodOrProperty, ...args);
+              const itemCtx: InjectContext = {
+                injectParent: instance,
+                injectProperty: methodOrProperty,
+                injectParam: inject.getInjectParameter(instance, methodOrProperty)
+              }
+
+              return ic.injectExecute(target, methodOrProperty, itemCtx, ...args);
             };
 
             // overwrite function name
@@ -136,7 +142,11 @@ export function createWrapper(instance: any, ic: InjectContainer) {
           isTransient(target),
           await ic.createSubContainer()
         );
-        const inst = await provider.provide(...args);
+        const itemCtx: InjectContext = {
+          injectParent: instance,
+          injectArgs: args
+        }
+        const inst = await provider.provide(itemCtx);
         // the proxies constructor will FORCE overwrite storage
         // with `new wrappedClass()`
         if (!isTransient(target)) {

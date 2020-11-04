@@ -1,4 +1,5 @@
-import { InjectContainer } from "./container";
+import { I_INJECT_CTX, I_INJECT_CTX_SKIP } from "./constants";
+import { InjectContainer, InjectContext } from "./container";
 import { getClassConstructorParams, getClassInjectionInformation, getUnProxyTarget, inject, isNoWrap, isProviderType, isRequired, isTransient, LazyRef, noWrap, provider, transient } from "./decorators";
 import { RequiredNotFoundError } from "./errors";
 import { createLogger } from "./logger";
@@ -38,6 +39,8 @@ export const createInstanceProvider = (type: any, instance: any, isTransient = f
 @noWrap
 export class DefaultClassProvider implements InstanceProvider {
 
+  static [I_INJECT_CTX_SKIP] = true
+
   @noWrap
   type: any;
   transient?: boolean;
@@ -70,51 +73,55 @@ export class DefaultClassProvider implements InstanceProvider {
     );
   }
 
-  private _registerInjectParam(ic: InjectContainer, injectParams: any) {
-    Object.keys(injectParams).forEach(key => {
-      const value = injectParams[key];
-      this._log("provide transient param %o with value: %O", key, value);
-      ic.registerInstance(key, value, true);
-    });
-  }
-
-  async provide(...args: any[]) {
+  async provide(@inject(I_INJECT_CTX) ctx: InjectContext = {}) {
     const type = this.type;
     const info = getClassInjectionInformation(type.prototype);
     const constructParametersInfo = getClassConstructorParams(type);
-    const constructParams = args || [];
+    const constructParams = ctx?.injectArgs ?? [];
     const ic = this.container;
 
     if (constructParametersInfo.length > 0) {
       for (let idx = 0; idx < constructParametersInfo.length; idx++) {
         const paramInfo = constructParametersInfo[idx];
         if (paramInfo == undefined) { continue; }
-        if (args[paramInfo.parameterIndex] == undefined) {
+        if (constructParams[paramInfo.parameterIndex] !== undefined) { continue; }
 
-          this._registerInjectParam(ic, inject.getInjectParameter(type, undefined, paramInfo.parameterIndex));
+        const itemCtx: InjectContext = {
+          injectParent: type,
+          injectParameterIdx: paramInfo.parameterIndex,
+          injectParam: inject.getInjectParameter(type, undefined, paramInfo.parameterIndex)
+        }
 
-          let paramValue = undefined;
-          if (isNoWrap(type, undefined, paramInfo.parameterIndex)) {
-            paramValue = await ic.getInstance(paramInfo.type);
-          } else {
-            paramValue = await ic.getWrappedInstance(paramInfo.type);
-          }
+        let paramValue = undefined;
 
-          constructParams[paramInfo.parameterIndex] = paramValue;
+        if (ctx?.injectParam && paramInfo.type in ctx?.injectParam) {
+          paramValue = ctx.injectParam[paramInfo.type]
+        }
+        else if (paramInfo.type === I_INJECT_CTX) {
+          paramValue = itemCtx
+        }
+        else if (isNoWrap(type, undefined, paramInfo.parameterIndex)) {
+          paramValue = await ic.getInstance(paramInfo.type, itemCtx);
+        }
+        else {
+          paramValue = await ic.getWrappedInstance(paramInfo.type, itemCtx);
+        }
 
-          this._log("pre:constructs %o instance, inject constructor parameter (%o: %o) with value %O",
-            getUnProxyTarget(type),
-            paramInfo.parameterIndex,
-            paramInfo.type,
-            paramValue,
-          );
+        constructParams[paramInfo.parameterIndex] = paramValue;
 
-          if (paramValue === undefined) {
-            if (isRequired(type, undefined, paramInfo.parameterIndex)) {
-              throw new RequiredNotFoundError(type, undefined, paramInfo.parameterIndex);
-            }
+        this._log("pre:constructs %o instance, inject constructor parameter (%o: %o) with value %O",
+          getUnProxyTarget(type),
+          paramInfo.parameterIndex,
+          paramInfo.type,
+          paramValue,
+        );
+
+        if (paramValue === undefined) {
+          if (isRequired(type, undefined, paramInfo.parameterIndex)) {
+            throw new RequiredNotFoundError(type, undefined, paramInfo.parameterIndex);
           }
         }
+
       }
     }
 
@@ -136,14 +143,26 @@ export class DefaultClassProvider implements InstanceProvider {
             injectPropType = injectPropType.getRef();
           }
 
-          this._registerInjectParam(ic, inject.getInjectParameter(inst, propertyName));
+          const itemCtx: InjectContext = {
+            injectParent: inst,
+            injectProperty: propertyName,
+            injectParam: inject.getInjectParameter(inst, propertyName)
+          }
 
           // if the instance decorate this field disable wrapper
-          if (isNoWrap(inst, propertyName)) {
-            inst[propertyName] = await ic.getInstance(injectPropType);
-          } else {
-            inst[propertyName] = await ic.getWrappedInstance(injectPropType);
+          if (ctx?.injectParam && injectPropType in ctx?.injectParam) {
+            inst[propertyName] = ctx.injectParam[injectPropType]
           }
+          else if (injectPropType === I_INJECT_CTX) {
+            inst[propertyName] = itemCtx
+          }
+          else if (isNoWrap(inst, propertyName)) {
+            inst[propertyName] = await ic.getInstance(injectPropType, itemCtx);
+          }
+          else {
+            inst[propertyName] = await ic.getWrappedInstance(injectPropType, itemCtx);
+          }
+
           this._log("after:constructed %o instance, inject property (%o: %o) with value: %O",
             getClassName(getUnProxyTarget(type)),
             propertyName,

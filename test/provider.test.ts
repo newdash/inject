@@ -1,6 +1,6 @@
 import { v4 } from 'uuid';
 import { createInstanceProvider, inject, InjectContainer, InjectWrappedInstance, InstanceProvider, isWrappedObject, LazyRef, nInject, noWrap, provider, transient, withNoWrapType } from '../src';
-import { MSG_ERR_NOT_PROVIDER, MSG_ERR_NO_UNDEFINED } from '../src/constants';
+import { MSG_ERR_NOT_PROVIDER, MSG_ERR_NO_UNDEFINED, MSG_ERR_TYPE_NOT_VALID } from '../src/constants';
 
 
 describe('Inject Provider Test Suite', () => {
@@ -159,19 +159,15 @@ describe('Inject Provider Test Suite', () => {
 
   it('should support inject container itself', async () => {
 
-
     class I {
-
-      @inject()
-      ctx: InjectContainer
-
+      @inject() ctx: InjectContainer
     }
 
     const container = InjectContainer.New();
 
     const i = await container.getInstance(I);
 
-    expect(i.ctx.getParent().getParent()).toBe(container);
+    expect(i.ctx).toBe(container);
 
   });
 
@@ -460,7 +456,7 @@ describe('Inject Provider Test Suite', () => {
     expect((() => ic.registerProvider(undefined))).toThrow(MSG_ERR_NO_UNDEFINED);
     expect((() => ic.registerProvider(null))).toThrow(MSG_ERR_NO_UNDEFINED);
 
-    expect((() => ic.registerInstance(undefined, "1"))).toThrow(MSG_ERR_NOT_PROVIDER);
+    expect((() => ic.registerInstance(undefined, "1"))).toThrow(MSG_ERR_TYPE_NOT_VALID);
 
 
   });
