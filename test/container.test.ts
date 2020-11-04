@@ -37,8 +37,8 @@ describe('Container Test Suite', () => {
   it('should support transient providers', async () => {
 
     const c1 = InjectContainer.New();
-    const c2 = await c1.getInstance(ChildInjectContainer);
-    const c3 = await c1.getInstance(ChildInjectContainer);
+    const c2 = await c1.createSubContainer();
+    const c3 = await c1.createSubContainer();
 
     class UUIDProvider {
       @transient

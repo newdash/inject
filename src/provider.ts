@@ -95,9 +95,9 @@ export class DefaultClassProvider implements InstanceProvider {
 
           let paramValue = undefined;
           if (isNoWrap(type, undefined, paramInfo.parameterIndex)) {
-            paramValue = await ic.getInstance(paramInfo.type, ic);
+            paramValue = await ic.getInstance(paramInfo.type);
           } else {
-            paramValue = await ic.getWrappedInstance(paramInfo.type, ic);
+            paramValue = await ic.getWrappedInstance(paramInfo.type);
           }
 
           constructParams[paramInfo.parameterIndex] = paramValue;
@@ -140,9 +140,9 @@ export class DefaultClassProvider implements InstanceProvider {
 
           // if the instance decorate this field disable wrapper
           if (isNoWrap(inst, propertyName)) {
-            inst[propertyName] = await ic.getInstance(injectPropType, ic);
+            inst[propertyName] = await ic.getInstance(injectPropType);
           } else {
-            inst[propertyName] = await ic.getWrappedInstance(injectPropType, ic);
+            inst[propertyName] = await ic.getWrappedInstance(injectPropType);
           }
           this._log("after:constructed %o instance, inject property (%o: %o) with value: %O",
             getClassName(getUnProxyTarget(type)),

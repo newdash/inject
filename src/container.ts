@@ -217,16 +217,14 @@ export class InjectContainer {
     return new ChildInjectContainer(this);
   }
 
-  async getInstance<T extends Class>(type: LazyRef<T>, ctx?: InjectContainer): Promise<InstanceType<T>>;
-  async getInstance<T extends Class>(type: T, ctx?: InjectContainer): Promise<InstanceType<T>>;
-  async getInstance(type: any, ctx?: InjectContainer): Promise<any>;
-  async getInstance(type: any, ctx?: InjectContainer) {
+  async getInstance<T extends Class>(type: LazyRef<T>): Promise<InstanceType<T>>;
+  async getInstance<T extends Class>(type: T): Promise<InstanceType<T>>;
+  async getInstance(type: any): Promise<any>;
+  async getInstance(type: any) {
 
     this._log("require instance for type %o", typeToString(type));
 
-    if (ctx == undefined) {
-      ctx = await this.createSubContainer();
-    }
+    const ctx = this;
 
     type = getUnProxyTarget(type);
 
@@ -244,7 +242,7 @@ export class InjectContainer {
     // and it will useful for many scenarios
     // :)
     if (type == InjectContainer || type == ChildInjectContainer) {
-      return await this.createSubContainer();
+      return this;
     }
 
     // if class has cycle dependency in constructor, throw error
@@ -275,7 +273,7 @@ export class InjectContainer {
         overwrite = false;
       }
       // just overwrite the provider type provider
-      provider = await ctx.getInstance(provider, ctx);
+      provider = await ctx.getInstance(provider);
       if (overwrite) {
         // store provider instance to parent
         overwriteProvider(type, provider, ctx);
@@ -290,11 +288,11 @@ export class InjectContainer {
 
   }
 
-  async getWrappedInstance<T extends Class>(type: LazyRef<T>, ctx?: InjectContainer): Promise<InjectWrappedInstance<InstanceType<T>>>;
-  async getWrappedInstance<T extends Class>(type: T, ctx?: InjectContainer): Promise<InjectWrappedInstance<InstanceType<T>>>;
-  async getWrappedInstance(type: any, ctx?: InjectContainer): Promise<any>;
-  async getWrappedInstance(type: any, ctx?: InjectContainer) {
-    const inst = await this.getInstance(type, ctx);
+  async getWrappedInstance<T extends Class>(type: LazyRef<T>): Promise<InjectWrappedInstance<InstanceType<T>>>;
+  async getWrappedInstance<T extends Class>(type: T): Promise<InjectWrappedInstance<InstanceType<T>>>;
+  async getWrappedInstance(type: any): Promise<any>;
+  async getWrappedInstance(type: any) {
+    const inst = await this.getInstance(type);
 
     if (this.canWrap(type)) {
       return this.wrap(inst);
@@ -465,9 +463,9 @@ export class InjectContainer {
             );
           };
           if (isNoWrap(instance, methodName, paramInfo.parameterIndex)) {
-            methodParameters[paramInfo.parameterIndex] = await ic.getInstance(paramInfo.type, ic);
+            methodParameters[paramInfo.parameterIndex] = await ic.getInstance(paramInfo.type);
           } else {
-            methodParameters[paramInfo.parameterIndex] = await ic.getWrappedInstance(paramInfo.type, ic);
+            methodParameters[paramInfo.parameterIndex] = await ic.getWrappedInstance(paramInfo.type);
           }
           const unProxyObject = getUnProxyTarget(instance);
           if (isClass(unProxyObject)) {
