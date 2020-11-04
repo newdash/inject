@@ -127,7 +127,7 @@ export function createWrapper(instance: any, ic: InjectContainer) {
     };
 
     // for class, support proxy constructor
-    if (isClass(instance)) {
+    if (isClass(getUnProxyTarget(instance))) {
 
       handler.construct = async (target, args) => {
         target = getUnProxyTarget(target);
