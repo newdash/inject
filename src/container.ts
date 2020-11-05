@@ -442,9 +442,9 @@ export class InjectContainer {
    * @param instance
    * @param method
    */
-  async injectExecute<F extends (...args: any[]) => any>(instance: any, method: F, ctx: InjectContext, ...args: OptionalParameters<F>): Promise<ReturnType<F>>;
-  async injectExecute<F extends (...args: any[]) => any>(instance: any, method: F, ctx: InjectContext, ...args: any[]): Promise<ReturnType<F>>;
-  async injectExecute(instance: any, method: Function, ctx: InjectContext, ...args: any[]) {
+  async injectExecute<F extends (...args: any[]) => any>(instance: any, method: F, ctx?: InjectContext, ...args: OptionalParameters<F>): Promise<ReturnType<F>>;
+  async injectExecute<F extends (...args: any[]) => any>(instance: any, method: F, ctx?: InjectContext, ...args: any[]): Promise<ReturnType<F>>;
+  async injectExecute(instance: any, method: Function, ctx: InjectContext = {}, ...args: any[]) {
 
     const methodName = method.name;
     let type;
