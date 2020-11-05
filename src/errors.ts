@@ -1,8 +1,8 @@
 import { isClass } from "@newdash/newdash/isClass";
 import { MSG_ERR_PARAM_REQUIRED, S_TYPE_STRING } from "./constants";
-import { getUnProxyTarget, LazyRef } from "./decorators";
+import { getUnProxyTarget } from "./decorators";
 import { createLogger } from "./logger";
-import { getClassName } from "./utils";
+import { getClassName, typeToString } from "./utils";
 
 
 const errorLogger = createLogger("error");
@@ -29,7 +29,6 @@ export class RequiredNotFoundError extends BaseError {
 
     let parts = [];
 
-
     if (isClass(getUnProxyTarget(target))) {
       parts.push("static");
     }
@@ -44,15 +43,9 @@ export class RequiredNotFoundError extends BaseError {
       parts.push(`${className}.${methodOrProperty}`);
       parts = ["property"].concat(parts);
     }
+
     if (type != undefined) {
-      if (type instanceof LazyRef) {
-        type = type.getRef();
-      }
-      if (typeof type === S_TYPE_STRING) {
-        parts.push(`type[${type}]`);
-      } else if (isClass(type)) {
-        parts.push(`type[${getClassName(type)}]`);
-      }
+      parts.push(`type ${typeToString(type)}`);
     }
 
     const callExpr = parts.join(" ");
