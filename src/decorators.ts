@@ -399,17 +399,21 @@ export function getPropertyInjectedType(target, targetKey) {
 
 /**
  * create a new decorator for inject specific type
+ * 
  * @param type 
  */
-export function createInjectDecorator(type?: LazyRef): (target, targetKey, parameterIndex?) => void;
-export function createInjectDecorator(type: any): (target, targetKey, parameterIndex?) => void;
-export function createInjectDecorator(type: any) {
+export function createInjectDecorator(type?: LazyRef, noWrap?: boolean): ParameterDecorator & PropertyDecorator;
+export function createInjectDecorator(type: any, noWrap?: boolean): ParameterDecorator & PropertyDecorator;
+export function createInjectDecorator(type: any, noWrap = false) {
   if (isProviderType(type)) {
     const provideType = getProvideInfo(type.prototype, "provide");
     decoratorLogger('%o is a provider class, will use the provided type %o to create decorator', type, provideType);
     return createInjectDecorator(provideType);
   }
-  return function (target, targetKey, parameterIndex) {
+  return function (target: any, targetKey: any, parameterIndex?: any) {
+    if (noWrap) {
+      return nInject(type)(target, targetKey, parameterIndex);
+    }
     return inject(type)(target, targetKey, parameterIndex);
   };
 }

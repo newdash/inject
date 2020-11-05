@@ -87,7 +87,7 @@ export function createWrapper(instance: any, ic: InjectContainer) {
                 injectParent: instance,
                 injectProperty: methodOrProperty,
                 injectParam: inject.getInjectParameter(instance, methodOrProperty)
-              }
+              };
 
               return ic.injectExecute(target, methodOrProperty, itemCtx, ...args);
             };
@@ -145,7 +145,7 @@ export function createWrapper(instance: any, ic: InjectContainer) {
         const itemCtx: InjectContext = {
           injectParent: instance,
           injectArgs: args
-        }
+        };
         const inst = await provider.provide(itemCtx);
         // the proxies constructor will FORCE overwrite storage
         // with `new wrappedClass()`

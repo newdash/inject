@@ -5,7 +5,7 @@ import { createInjectDecorator, getClassConstructorParams, getClassMethodParams,
 import { RequiredNotFoundError } from './errors';
 import { createLogger } from './logger';
 import { BaseInstanceProvider, DefaultClassProvider, InstanceProvider } from './provider';
-import { Class, getOrDefault, InjectWrappedClassType, InjectWrappedInstance, OptionalParameters, typeToString } from './utils';
+import { Class, getOrDefault, InjectWrappedClassType, InjectWrappedInstance, OptionalParameters, typeToString, valueToString } from './utils';
 import { createWrapper } from './wrapper';
 
 const containerLogger = createLogger("container");
@@ -46,7 +46,12 @@ function overwriteProvider(type: any, provider: InstanceProvider, ctx: InjectCon
     if (ic._providers.has(type)) {
       // @ts-ignore
       ic._providers.set(type, provider);
-      containerLogger('overwrite provider: %o, %o into container(%o)', type, provider, ic.getFormattedId());
+      containerLogger(
+        'overwrite provider: %o, %o into container(%o)',
+        typeToString(type),
+        valueToString(provider),
+        ic.getFormattedId()
+      );
       break;
     }
     ic = ic.getParent();
@@ -181,24 +186,9 @@ export class InjectContainer {
         type = getProvideInfo(provider.prototype, "provide");
       }
       if (type != undefined) {
+
         const sType = typeToString(type);
-        if (this.hasInProviders(type)) {
-
-          if (provider instanceof BaseInstanceProvider) {
-            this._log('overwrite instance for type: %O with value %O ', sType, provider._providedValue,);
-          } else {
-            this._log('overwrite provider for type: %O with %O ', sType, provider);
-          }
-
-        } else {
-
-          if (provider instanceof BaseInstanceProvider) {
-            this._log('register instance for type: %O with value %O ', sType, provider._providedValue,);
-          } else {
-            this._log('register provider for type: %O with %O ', sType, provider);
-          }
-
-        }
+        const isInstanceProvider = provider instanceof BaseInstanceProvider;
 
         // provider must could be wrapped, 
         // otherwise, the 'provide' function could not be injected
@@ -208,7 +198,18 @@ export class InjectContainer {
         // register the type is not should be wrapped globally
         if (isNoWrapProvider(provider) || isNoWrap(type)) { this.doNotWrap(type); }
 
-        this._providers.set(type, provider);
+        // just set instance value to storage
+        if (isInstanceProvider) {
+          this.registerInstance(type, provider._providedValue);
+        }
+        else {
+          if (this.hasInProviders(type)) {
+            this._log('overwrite provider for type: %O with %O ', sType, provider);
+          } else {
+            this._log('register provider for type: %O with %O ', sType, provider);
+          }
+          this._providers.set(type, provider);
+        }
       }
       else { throw new TypeError(MSG_ERR_NOT_PROVIDER); }
     });
@@ -223,25 +224,24 @@ export class InjectContainer {
    * 
    */
   public registerInstance(type: any, instance: any) {
-    type = this._getType(type)
-    this.setStore(type, instance)
-    return createInjectDecorator(type)
+    type = this._getType(type);
+    this.setStore(type, instance);
+    return createInjectDecorator(type);
   }
 
   public async createSubContainer(): Promise<InjectContainer> {
-    // @ts-ignore
     return new ChildInjectContainer(this);
   }
 
   private _getType(type: any): any {
     type = getUnProxyTarget(type);
     if (type === undefined || type === null) {
-      throw new Error(MSG_ERR_TYPE_NOT_VALID)
+      throw new Error(MSG_ERR_TYPE_NOT_VALID);
     }
     if (type instanceof LazyRef) {
       type = type.getRef();
     }
-    return type
+    return type;
   }
 
   async getInstance<T extends Class>(type: LazyRef<T>, ctx?: InjectContext): Promise<InstanceType<T>>;
@@ -251,17 +251,13 @@ export class InjectContainer {
 
     this._log("require instance for type %o", typeToString(type));
 
-    type = this._getType(type)
+    type = this._getType(type);
 
     if (this.hasInStore(type)) {
       this._log("found type(%o) instance in cache", typeToString(type));
       return this.getStore(type);
     }
 
-    // if target require inject the 'InjectContainer',
-    // just inject a sub container,
-    // and it will useful for many scenarios
-    // :)
     if (type == InjectContainer || type == ChildInjectContainer) {
       return this;
     }
@@ -270,21 +266,25 @@ export class InjectContainer {
     this._checkDependency(type);
 
 
+    if (ctx === undefined) {
+      ctx = { injectParent: type };
+    }
+
     let provider = undefined;
 
     // prefer use context as 'container'
     // user define the provider
     if (this.hasInProviders(type)) {
-      this._log("found provider for type(%o)", typeToString(type));
+      this._log("found provider for type %o", typeToString(type));
       provider = this.getProvider(type);
     }
     else if (this.hasSubClassProvider(type)) {
-      this._log("found sub-class provider for type(%o)", typeToString(type));
+      this._log("found sub-class provider for type %o", typeToString(type));
       provider = this.getSubClassProvider(type);
     }
     // use default provider for classes
     else if (isClass(type)) {
-      this._log("not found provider for type(%o), fallback to use DefaultClassProvider", typeToString(type));
+      this._log(`not found provider for type %o , fallback to use [Class DefaultClassProvider]`, typeToString(type));
       provider = new DefaultClassProvider(type, isTransient(type), this);
     }
 
@@ -329,7 +329,7 @@ export class InjectContainer {
       // do not cache it
       if (this.hasSubClassInstanceInStore(type)) { return this.getSubClassInstance(type); }
 
-      const inst = await this.injectExecute(provider, provider.provide, ctx)
+      const inst = await this.injectExecute(provider, provider.provide, ctx);
 
       // do not cache @transient provider
       if (getTransientInfo(provider, "provide")) { return inst; }
@@ -337,7 +337,7 @@ export class InjectContainer {
       // do not cache provider instance
       if (isProviderType(type)) { return inst; }
 
-      if (inst != undefined) { this.getParent().setStore(type, inst); }
+      if (inst != undefined) { this.setStore(type, inst); }
 
     }
 
@@ -467,17 +467,17 @@ export class InjectContainer {
         if (args[paramInfo.parameterIndex] === undefined) {
           const ic = await this.createSubContainer();
 
-          let itemCtx: InjectContext
+          let itemCtx: InjectContext;
 
           if (isProviderInstance(instance) && methodName === 'provide') {
-            itemCtx = ctx
+            itemCtx = ctx;
           } else {
             itemCtx = {
               injectParent: instance,
               injectProperty: methodName,
               injectParameterIdx: paramInfo.parameterIndex,
               injectParam: inject.getInjectParameter(instance, methodName, paramInfo.parameterIndex),
-            }
+            };
           }
 
           const log = (format: string, typeName: string) => {
@@ -485,16 +485,16 @@ export class InjectContainer {
               typeName,
               methodName,
               paramInfo.parameterIndex,
-              paramInfo.type,
-              methodParameters[paramInfo.parameterIndex],
+              typeToString(paramInfo.type),
+              valueToString(methodParameters[paramInfo.parameterIndex]),
             );
           };
 
           if (ctx?.injectParam && paramInfo.type in ctx?.injectParam) {
-            methodParameters[paramInfo.parameterIndex] = ctx.injectParam[paramInfo.type]
+            methodParameters[paramInfo.parameterIndex] = ctx.injectParam[paramInfo.type];
           }
           else if (paramInfo.type === I_INJECT_CTX) {
-            methodParameters[paramInfo.parameterIndex] = itemCtx
+            methodParameters[paramInfo.parameterIndex] = itemCtx;
           }
           else if (isNoWrap(instance, methodName, paramInfo.parameterIndex)) {
             methodParameters[paramInfo.parameterIndex] = await ic.getInstance(paramInfo.type, itemCtx);

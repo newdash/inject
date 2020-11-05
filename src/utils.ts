@@ -1,6 +1,12 @@
 import { isClass } from "@newdash/newdash/isClass";
+import { isPlainObject } from "@newdash/newdash/isPlainObject";
 import { UnwrapPromise } from "@newdash/newdash/types";
-import { S_TYPE_FUNCTION, S_TYPE_NUMBER, S_TYPE_OBJECT } from "./constants";
+import { upperFirst } from "@newdash/newdash/upperFirst";
+import { S_TYPE_NUMBER, S_TYPE_OBJECT } from "./constants";
+import { getUnProxyTarget, LazyRef } from "./decorators";
+
+
+
 
 export function getOrDefault(map: Map<any, any>, key, value) {
   if (!map.has(key)) {
@@ -9,11 +15,59 @@ export function getOrDefault(map: Map<any, any>, key, value) {
   return map.get(key);
 }
 
-export function typeToString(type: any) {
-  if (typeof type === S_TYPE_OBJECT || typeof type === S_TYPE_FUNCTION) {
-    return getClassName(type);
+export function typeToString(type: any): string {
+  if (type instanceof LazyRef) {
+    type = type.getRef();
   }
-  return type;
+  return valueToString(type);
+}
+
+export function valueToString(value: any): string {
+
+  value = getUnProxyTarget(value);
+
+  const valueType = typeof value;
+
+  if (valueType === 'undefined') {
+    return '[Undefined]';
+  }
+  if (value === null) {
+    return '[Null]';
+  }
+  if (valueType === 'number') {
+    return `[Number '${value}']`;
+  }
+
+  if (valueType === 'string') {
+    return `[String '${value}']`;
+  }
+
+  if (valueType === 'symbol') {
+    return `[Symbol '${value.toString()}']`;
+  }
+
+  if (valueType === 'bigint') {
+    return `[BigInt '${value.toString()}']`;
+  }
+
+  if (isPlainObject(value)) {
+    return `[Object with properties [${Object.getOwnPropertyNames(value).join(", ")}]]`;
+  }
+
+  if (isClass(value)) {
+    return `[Class '${getClassName(value)}']`;
+  }
+
+  if (valueType === 'function') {
+    return `[Function '${value.name || 'UnknownFunc'}' with ${value.length} arguments]`;
+  }
+
+  if (value.toString && typeof value.toString === 'function') {
+    return `[${upperFirst(valueType)} '${value.toString()}']`;
+  }
+
+  return `[Unknown ${valueType}]`;
+
 }
 
 /**
