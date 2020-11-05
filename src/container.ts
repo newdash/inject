@@ -345,7 +345,7 @@ export class InjectContainer {
   }
 
   protected setStore(type, value) {
-    this._log('store type %o with value: %O', typeToString(type), value);
+    this._log('store type %o with value: %O', typeToString(type), valueToString(value));
     this._store.set(type, value);
   }
 

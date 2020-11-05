@@ -50,12 +50,20 @@ export function valueToString(value: any): string {
     return `[BigInt '${value.toString()}']`;
   }
 
+  if (valueType === 'boolean') {
+    return `[Boolean '${value}']`;
+  }
+
   if (isPlainObject(value)) {
     return `[Object with properties [${Object.getOwnPropertyNames(value).join(", ")}]]`;
   }
 
   if (isClass(value)) {
     return `[Class '${getClassName(value)}']`;
+  }
+
+  if (isClass(value?.constructor)) {
+    return `[Object instance of class '${getClassName(value)}']`;
   }
 
   if (valueType === 'function') {
