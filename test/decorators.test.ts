@@ -1,5 +1,5 @@
 import { Server } from 'http';
-import { createInjectDecorator, DefaultClassProvider, getClassConstructorParams, getClassInjectionInformation, getNamespace, getPropertyInjectedType, getProvideInfo, getTransientInfo, inject, InjectContainer, isNoWrap, isNoWrapProvider, isRequired, isTransient, LazyRef, namespace, noWrap, provider, required, transient, withType } from '../src/index';
+import { createInjectDecorator, DefaultClassProvider, getClassConstructorParams, getClassInjectionInformation, getNamespace, getPropertyInjectedType, getProvideInfo, getTransientInfo, inject, InjectContainer, isNoWrap, isNoWrapProvider, isRequired, isTransient, lazyRef, namespace, noWrap, provider, required, transient, withType } from '../src/index';
 
 describe('Decorators Test Suite', () => {
 
@@ -164,7 +164,7 @@ describe('Decorators Test Suite', () => {
       provideT() { }
 
       @transient
-      @provider(LazyRef.create(() => C))
+      @provider(lazyRef(() => C))
       provideLazy() { }
 
     }

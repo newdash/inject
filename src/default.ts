@@ -6,6 +6,6 @@ import { InjectContainer } from "./container";
 export const GlobalContainer = InjectContainer.New();
 
 /**
- * register provider for the GlobalContainer
+ * register a provider to the `GlobalContainer`
  */
 export const registerGlobal = GlobalContainer.registerProvider.bind(GlobalContainer);

@@ -103,6 +103,9 @@ export class InjectContainer {
     this._id = generateContainerId();
   }
 
+  /**
+   * create a new `InjectContainer` instance
+   */
   public static New(): InjectContainer {
     return new ChildInjectContainer(new InjectContainer());
   }
@@ -113,12 +116,13 @@ export class InjectContainer {
   }
 
   /**
-   * indicate the type should not be wrapped,
+   * indicate container DO NOT wrap some types,
    * 
    * it means the inject container will NEVER return the Proxy of this type object
    */
   public doNotWrap(...types: any[]) {
     types.forEach(type => {
+      type = this._getType(type); // unwrap types
       if (!this._doNotWrapTypes.has(type)) {
         this._log('disable wrapper: %o', type);
         this._doNotWrapTypes.add(type);

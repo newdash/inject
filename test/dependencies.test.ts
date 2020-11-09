@@ -1,4 +1,4 @@
-import { inject, InjectContainer, LazyRef, provider } from '../src';
+import { inject, InjectContainer, lazyRef, provider } from '../src';
 
 
 describe('Dependencies Check Suite', () => {
@@ -6,11 +6,11 @@ describe('Dependencies Check Suite', () => {
   it('should throw error when constructor has direct dependent with each other', async () => {
 
     class D1 {
-      constructor(@inject(LazyRef.create(() => D2)) d2) { }
+      constructor(@inject(lazyRef(() => D2)) d2) { }
     }
 
     class D2 {
-      constructor(@inject(LazyRef.create(() => D1)) d1) { }
+      constructor(@inject(lazyRef(() => D1)) d1) { }
     }
 
     const container = InjectContainer.New();

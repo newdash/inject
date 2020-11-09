@@ -1,5 +1,5 @@
 import { v4 } from 'uuid';
-import { createInstanceProvider, inject, InjectContainer, InjectWrappedInstance, InstanceProvider, isWrappedObject, LazyRef, nInject, noWrap, provider, transient, withNoWrapType } from '../src';
+import { createInstanceProvider, inject, InjectContainer, InjectWrappedInstance, InstanceProvider, isWrappedObject, lazyRef, nInject, noWrap, provider, transient, withNoWrapType } from '../src';
 import { MSG_ERR_NOT_PROVIDER, MSG_ERR_NO_UNDEFINED, MSG_ERR_TYPE_NOT_VALID } from '../src/constants';
 
 
@@ -82,12 +82,12 @@ describe('Inject Provider Test Suite', () => {
   it('should support cycle inject', async () => {
 
     class E {
-      @inject(LazyRef.create(() => F))
+      @inject(lazyRef(() => F))
       _f: any
     }
 
     class F {
-      @inject(LazyRef.create(() => E))
+      @inject(lazyRef(() => E))
       _e: any
     }
 
@@ -284,7 +284,7 @@ describe('Inject Provider Test Suite', () => {
 
     class BProvider {
 
-      @provider(LazyRef.create(() => B))
+      @provider(lazyRef(() => B))
       async provide() {
         const rt = new B;
         rt.v = 123;

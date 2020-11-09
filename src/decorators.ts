@@ -262,6 +262,10 @@ export class LazyRef<T = any> {
     return this._ref();
   }
 
+  /**
+   * @deprecated please use `lazyRef` function to create new instance
+   * @param type 
+   */
   static create<T>(type: () => T) {
     return new LazyRef<T>(type);
   }

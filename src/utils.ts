@@ -5,9 +5,6 @@ import { upperFirst } from "@newdash/newdash/upperFirst";
 import { S_TYPE_NUMBER, S_TYPE_OBJECT } from "./constants";
 import { getUnProxyTarget, LazyRef } from "./decorators";
 
-
-
-
 export function getOrDefault(map: Map<any, any>, key, value) {
   if (!map.has(key)) {
     map.set(key, value);
