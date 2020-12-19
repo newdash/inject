@@ -1,5 +1,5 @@
 import { Server } from 'http';
-import { createInjectDecorator, DefaultClassProvider, getClassConstructorParams, getClassInjectionInformation, getNamespace, getPropertyInjectedType, getProvideInfo, getTransientInfo, inject, InjectContainer, isNoWrap, isNoWrapProvider, isRequired, isTransient, lazyRef, namespace, noWrap, provider, required, transient, withType } from '../src/index';
+import { createInjectDecorator, DefaultClassProvider, getClassConstructorParams, getClassInjectionInformation, getClassMethodParams, getNamespace, getPropertyInjectedType, getProvideInfo, getTransientInfo, inject, InjectContainer, isNoWrap, isNoWrapProvider, isRequired, isTransient, lazyRef, namespace, noWrap, provider, required, transient, withType } from '../src/index';
 
 describe('Decorators Test Suite', () => {
 
@@ -237,6 +237,28 @@ describe('Decorators Test Suite', () => {
 
     expect(params).toHaveLength(1);
     expect(params[0].type).toBe("v");
+
+  });
+
+
+  it('should support get class method parameter types', () => {
+
+    class V11 {
+      a: string;
+    }
+    class V12 {
+      public m1(@inject() v11: V11): V11 { return v11; };
+      public m2(@inject() v11) { return v11; };
+    }
+    const v12 = new V12();
+
+    const params = getClassMethodParams(v12, 'm1');
+    expect(params[0]).not.toBeUndefined();
+    expect(params[0].type).toBe(V11);
+
+    const params2 = getClassMethodParams(v12, 'm2');
+    expect(params2[0]).not.toBeUndefined();
+    expect(params2[0].type).toBe('v11');
 
   });
 

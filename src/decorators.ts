@@ -25,6 +25,13 @@ const KEY_PROVIDE = 'inject:provide';
 
 const decoratorLogger = createLogger("decorator");
 
+
+
+const STRIP_COMMENTS = /(\/\/.*$)|(\/\*[\s\S]*?\*\/)|(\s*=[^,\)]*(('(?:\\'|[^'\r\n])*')|("(?:\\"|[^"\r\n])*"))|(\s*=[^,\)]*))/mg;
+const ARGUMENT_NAMES = /([^\s,]+)/g;
+
+
+
 export interface InjectInformation {
   injectType: 'classProperty' | 'classMethod'
   parameters?: InjectParameter[]
@@ -35,6 +42,22 @@ export interface InjectParameter {
   type: any;
   parameterIndex: number;
 }
+
+/**
+ * get parameter array of function
+ * 
+ * @param func 
+ */
+const getParamNames = (func: Function) => {
+  if (typeof func === 'function') {
+    const fnStr = func.toString().replace(STRIP_COMMENTS, '');
+    let result = fnStr.slice(fnStr.indexOf('(') + 1, fnStr.indexOf(')')).match(ARGUMENT_NAMES);
+    if (result === null)
+      result = [];
+    return result;
+  }
+  return [];
+};
 
 
 /**
@@ -446,7 +469,7 @@ export function nInject(type?: any) {
 export function inject(type: LazyRef): ParameterDecorator & PropertyDecorator;
 export function inject(type: Class): ParameterDecorator & PropertyDecorator;
 export function inject(type: string): ParameterDecorator & PropertyDecorator;
-export function inject(): PropertyDecorator;
+export function inject(): ParameterDecorator & PropertyDecorator;
 export function inject(type?: any) {
 
   return function (target, targetKey?, parameterIndex?) {
@@ -458,6 +481,19 @@ export function inject(type?: any) {
       const reflectType = Reflect.getMetadata('design:type', target, targetKey);
 
       if (typeof parameterIndex == 'number') {
+
+
+        if (type === undefined) {
+          const paramTypes = Reflect.getMetadata('design:paramtypes', target, targetKey);
+          if (paramTypes?.[parameterIndex] !== Object) {
+            type = paramTypes[parameterIndex];
+          }
+        }
+
+        if (type === undefined) {
+          const paramNames = getParamNames(target?.[targetKey]);
+          type = paramNames?.[parameterIndex];
+        }
 
         const param: InjectParameter = { type, parameterIndex };
 
