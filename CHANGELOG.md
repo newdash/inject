@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.28](https://github.com/newdash/inject/compare/v0.2.27...v0.2.28) (2021-06-07)
+
+
+### Features
+
+* [#14](https://github.com/newdash/inject/issues/14) support native param design types ([a949660](https://github.com/newdash/inject/commit/a94966089f97b6ba5d1de8fb847cabdbe578727c))
+
 ### [0.2.27](https://github.com/newdash/inject/compare/v0.2.26...v0.2.27) (2020-11-05)
 
 
