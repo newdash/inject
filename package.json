@@ -1,6 +1,6 @@
 {
   "name": "@newdash/inject",
-  "version": "0.2.28",
+  "version": "0.2.29",
   "main": "lib/index.js",
   "license": "MIT",
   "description": "typescript dependency inject container",
