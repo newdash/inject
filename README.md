@@ -15,7 +15,7 @@ Yet another `dependency injection` container for `typescript`
 npm i -S reflect-metadata @newdash/inject
 ```
 
-```json
+```json5
 // tsconfig.json
 // remember enable decorator related flags
 {
