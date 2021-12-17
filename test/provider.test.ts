@@ -31,7 +31,7 @@ describe('Inject Provider Test Suite', () => {
   it('should support create class instance with instance inject', async () => {
 
     class B {
-      _id: string
+      _id: string;
       constructor(@inject('id') id) {
         this._id = id;
       }
@@ -62,7 +62,7 @@ describe('Inject Provider Test Suite', () => {
     class D { }
 
     class C {
-      _d: D
+      _d: D;
       constructor(@inject(D) d) {
         this._d = d;
       }
@@ -83,12 +83,12 @@ describe('Inject Provider Test Suite', () => {
 
     class E {
       @inject(lazyRef(() => F))
-      _f: any
+        _f: any;
     }
 
     class F {
       @inject(lazyRef(() => E))
-      _e: any
+        _e: any;
     }
 
     const container = InjectContainer.New();
@@ -101,7 +101,7 @@ describe('Inject Provider Test Suite', () => {
 
   it('should support cycle inject itself', async () => {
 
-    class A { @noWrap @inject() a: A }
+    class A { @noWrap @inject() a: A; }
 
     const ic = InjectContainer.New();
 
@@ -118,7 +118,7 @@ describe('Inject Provider Test Suite', () => {
     class G {
 
       @inject('value')
-      value: any
+        value: any;
 
     }
 
@@ -137,7 +137,7 @@ describe('Inject Provider Test Suite', () => {
 
     class H {
       @inject('value')
-      value: any
+        value: any;
     }
 
     const container = InjectContainer.New();
@@ -160,7 +160,7 @@ describe('Inject Provider Test Suite', () => {
   it('should support inject container itself', async () => {
 
     class I {
-      @inject() ctx: InjectContainer
+      @inject() ctx: InjectContainer;
     }
 
     const container = InjectContainer.New();
@@ -174,7 +174,7 @@ describe('Inject Provider Test Suite', () => {
   it('should support provide sub class instance', async () => {
 
     class A {
-      v: string
+      v: string;
 
       constructor() {
         this.v = 'a';
@@ -228,7 +228,7 @@ describe('Inject Provider Test Suite', () => {
   it('should support get provider instance', async () => {
 
     class VPlusProvider {
-      type = 'v-plus'
+      type = 'v-plus';
       async provide(@inject("v") v: number) {
         return v + 1;
       }
@@ -294,7 +294,7 @@ describe('Inject Provider Test Suite', () => {
     }
 
     class B {
-      v: number
+      v: number;
     }
 
     const ic = InjectContainer.New();
@@ -331,14 +331,14 @@ describe('Inject Provider Test Suite', () => {
   it('should support deep constructor injection', async () => {
 
     class A {
-      v: number
+      v: number;
       constructor(@inject("v") v) {
         this.v = v;
       }
     }
 
     class B {
-      a: InjectWrappedInstance<A>
+      a: InjectWrappedInstance<A>;
       constructor(@inject(A) a) {
         this.a = a;
       }
@@ -464,8 +464,8 @@ describe('Inject Provider Test Suite', () => {
   it('should support @noWrap on provider', async () => {
 
     class C { }
-    class B { @inject() c: C }
-    class A { @inject() b: B }
+    class B { @inject() c: C; }
+    class A { @inject() b: B; }
 
     class CProvider implements InstanceProvider {
       @withNoWrapType(C)
@@ -487,8 +487,8 @@ describe('Inject Provider Test Suite', () => {
   it('should support @nInject on provider', async () => {
 
     class C { }
-    class B { @nInject() c: C }
-    class A { @inject() b: B }
+    class B { @nInject() c: C; }
+    class A { @inject() b: B; }
 
     const ic = InjectContainer.New();
 

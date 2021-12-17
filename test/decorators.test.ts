@@ -194,7 +194,7 @@ describe('Decorators Test Suite', () => {
 
     class C {
       @injectV
-      v: number
+        v: number;
     }
 
     ic.registerInstance("v", 123);
@@ -212,7 +212,7 @@ describe('Decorators Test Suite', () => {
 
     @namespace("inject.test.demo2")
     class C {
-      a = 1
+      a = 1;
     }
 
     expect(getNamespace(A)).toBe("inject.test.demo1");
@@ -266,7 +266,7 @@ describe('Decorators Test Suite', () => {
 
     class A {
       @required
-      a: any
+        a: any;
       f(@required v: any) { }
 
       constructor(@required v?) { }

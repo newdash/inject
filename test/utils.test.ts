@@ -67,7 +67,7 @@ describe('Utilities Test Suite', () => {
     class A { }
     expect(isClassDecorator(...tmp)).toBeTruthy();
 
-    class B { @dec a: number }
+    class B { @dec a: number; }
     expect(isClassPropertyDecorator(...tmp)).toBeTruthy();
     expect(isClassMethodDecorator(...tmp)).toBeFalsy();
 
@@ -78,7 +78,7 @@ describe('Utilities Test Suite', () => {
     class D { run(@dec a?) { } }
     expect(isClassMethodParameterDecorator(...tmp)).toBeTruthy();
 
-    class E { @dec static a }
+    class E { @dec static a; }
     expect(isClassStaticPropertyDecorator(...tmp)).toBeTruthy();
     expect(isClassStaticMethodDecorator(...tmp)).toBeFalsy();
 

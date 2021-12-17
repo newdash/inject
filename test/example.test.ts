@@ -22,9 +22,9 @@ describe('Example Test Suite', () => {
 
       // injected property 
       @inject(A)
-      a: InjectWrappedInstance<A>
+        a: InjectWrappedInstance<A>;
       // normal property
-      v: number
+      v: number;
 
       async getValue() {
         // after inject, all methods of the 'A' instance will be wrapped, and become 'async' methods
@@ -49,9 +49,9 @@ describe('Example Test Suite', () => {
   it('should support inject instance provider', async () => {
 
     class P1 {
-      private idx = 0
+      private idx = 0;
       @inject("count")
-      count: number
+        count: number;
       @provider("v")
       provide() {
         this.idx++;
@@ -60,9 +60,9 @@ describe('Example Test Suite', () => {
     }
 
     class P2 {
-      private idx = 0
+      private idx = 0;
       @inject("count")
-      count: number
+        count: number;
       @transient
       @provider("v2") // transient provider
       provide() {

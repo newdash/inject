@@ -9,7 +9,7 @@ describe('Module Test Suite', () => {
 
     class A { @inject("v") v: string; }
 
-    class B { @inject() a: A }
+    class B { @inject() a: A; }
 
     @registerGlobal
     class VProvider { @withType("v") provide() { return 'hello'; } }

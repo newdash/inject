@@ -1,5 +1,5 @@
+import { alg, Graph } from '@newdash/graphlib';
 import { isClass } from '@newdash/newdash/isClass';
-import { alg, Graph } from 'graphlib';
 import { I_INJECT_CTX, MSG_ERR_NOT_PROVIDER, MSG_ERR_NO_UNDEFINED, MSG_ERR_PROVIDER_DISABLE_WRAP, MSG_ERR_TYPE_NOT_VALID, S_TYPE_FUNCTION } from './constants';
 import { createInjectDecorator, getClassConstructorParams, getClassMethodParams, getProvideInfo, getTransientInfo, getUnProxyTarget, inject, InjectParameter, isNoWrap, isNoWrapProvider, isProviderInstance, isProviderType, isRequired, isTransient, isWrappedFunction, isWrappedObject, LazyRef, transient } from './decorators';
 import { RequiredNotFoundError } from './errors';

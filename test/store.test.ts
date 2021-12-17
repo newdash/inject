@@ -6,8 +6,8 @@ describe('Storage Policy Test Suite', () => {
   it('should cache instance when deep automatic create class instance', async () => {
 
     class A { }
-    class B { @inject() a: A }
-    class C { @inject() b: B }
+    class B { @inject() a: A; }
+    class C { @inject() b: B; }
 
     const ic = InjectContainer.New();
     ic.doNotWrap(A, B, C);
@@ -29,8 +29,8 @@ describe('Storage Policy Test Suite', () => {
     @noWrap
     class A { }
     @transient
-    class B { @inject() @noWrap a: A }
-    class C { @inject() @noWrap b: B }
+    class B { @inject() @noWrap a: A; }
+    class C { @inject() @noWrap b: B; }
 
     const ic = InjectContainer.New();
 
@@ -57,8 +57,8 @@ describe('Storage Policy Test Suite', () => {
     }
 
     class B {
-      @inject() a: A
-      @inject('c') c: string
+      @inject() a: A;
+      @inject('c') c: string;
     }
 
     class CProvider {

@@ -15,7 +15,7 @@ describe('Wrapper Test Suite', () => {
 
     class A extends Base {
       @inject('v')
-      v: number;
+        v: number;
 
       sum(@inject('v1') v1: number, @inject('v2') v2: number): number {
         return v1 + v2;
@@ -243,8 +243,8 @@ describe('Wrapper Test Suite', () => {
 
   it('should support custom ignore wrap object', async () => {
 
-    class A { @inject() date: Date }
-    class B { @inject() date: Date }
+    class A { @inject() date: Date; }
+    class B { @inject() date: Date; }
 
     const ic = InjectContainer.New();
 
@@ -308,9 +308,9 @@ describe('Wrapper Test Suite', () => {
     class C { }
     class B {
       @inject()
-      a: A
+        a: A;
       @inject()
-      c: C
+        c: C;
     }
 
     const ic = InjectContainer.New();
@@ -331,7 +331,7 @@ describe('Wrapper Test Suite', () => {
     const ic = InjectContainer.New();
     const injectAValue = ic.registerInstance("aValue", 324);
 
-    class A { @injectAValue aValue: number }
+    class A { @injectAValue aValue: number; }
 
     const WA = ic.wrap(A);
 
@@ -393,8 +393,8 @@ describe('Wrapper Test Suite', () => {
 
     class A { }
     class B {
-      a1: InjectWrappedInstance<A>
-      a2: A
+      a1: InjectWrappedInstance<A>;
+      a2: A;
       constructor(@inject(A) a1, @inject(A) @noWrap a2) {
         this.a1 = a1;
         this.a2 = a2;
@@ -416,8 +416,8 @@ describe('Wrapper Test Suite', () => {
     class D { }
 
     class E {
-      @inject() @noWrap d: D
-      @inject() d2: D
+      @inject() @noWrap d: D;
+      @inject() d2: D;
     }
 
     const e = await ic.getInstance(E);
@@ -447,12 +447,12 @@ describe('Wrapper Test Suite', () => {
   it('should support @noWrap for LazyRef', async () => {
     const ic = InjectContainer.New();
     class E {
-      @noWrap @inject(lazyRef(() => F)) _f: any
-      @inject(lazyRef(() => F)) _f2: any
+      @noWrap @inject(lazyRef(() => F)) _f: any;
+      @inject(lazyRef(() => F)) _f2: any;
     }
     class F {
-      @noWrap @inject(lazyRef(() => E)) _e: any
-      @inject(lazyRef(() => E)) _e2: any
+      @noWrap @inject(lazyRef(() => E)) _e: any;
+      @inject(lazyRef(() => E)) _e2: any;
     }
 
     const f = await ic.getInstance(F);
@@ -503,7 +503,7 @@ describe('Wrapper Test Suite', () => {
     }
 
     class Value2 {
-      @inject() v1: Value1
+      @inject() v1: Value1;
       getValue() {
         return this.v1.getValue();
       }
@@ -537,7 +537,7 @@ describe('Wrapper Test Suite', () => {
     }
 
     class Value2 {
-      @inject() v1: Value1
+      @inject() v1: Value1;
       getValue() {
         return this.v1.getValue1();
       }

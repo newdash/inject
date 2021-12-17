@@ -110,7 +110,7 @@ describe('Container Test Suite', () => {
     class A {
       @required
       @inject("v")
-      aV: string;
+        aV: string;
     }
 
     class B {
@@ -137,12 +137,12 @@ describe('Container Test Suite', () => {
   it('should support inject @inject.param() parameters', async () => {
 
     @transient
-    class A { @inject("a") a: number }
+    class A { @inject("a") a: number; }
 
-    class B { @inject.param("a", 1) @noWrap @inject(A) a: A }
+    class B { @inject.param("a", 1) @noWrap @inject(A) a: A; }
 
     class C {
-      a: A
+      a: A;
       constructor(@inject.param("a", 42) @noWrap @inject(A) a: A) { this.a = a; }
     }
 
@@ -155,9 +155,9 @@ describe('Container Test Suite', () => {
 
     class E {
       @inject.param("base", 1) @inject("answer")
-      theRealAnswer: number;
+        theRealAnswer: number;
       @inject.param("base", 99) @inject("answer")
-      anotherAnswer: number;
+        anotherAnswer: number;
     }
 
     class F {

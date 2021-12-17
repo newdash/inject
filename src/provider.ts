@@ -16,14 +16,14 @@ export interface InstanceProvider<T = any> {
 }
 
 export class BaseInstanceProvider {
-  _providedValue: any
+  _providedValue: any;
 }
 
 export const createInstanceProvider = (type: any, instance: any, isTransient = false) => {
 
   const p = class extends BaseInstanceProvider {
-    provide = async () => instance
-    _providedValue = instance
+    provide = async () => instance;
+    _providedValue = instance;
   };
 
   provider(type)(p.prototype, "provide", undefined);
@@ -38,13 +38,13 @@ export const createInstanceProvider = (type: any, instance: any, isTransient = f
 @noWrap
 export class DefaultClassProvider implements InstanceProvider {
 
-  static [I_INJECT_CTX_SKIP] = true
+  static [I_INJECT_CTX_SKIP] = true;
 
   @noWrap
-  type: any;
+    type: any;
   transient?: boolean;
   @noWrap
-  container: InjectContainer;
+    container: InjectContainer;
 
   /**
    * 
