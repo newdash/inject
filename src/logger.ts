@@ -1,3 +1,3 @@
-import { debug } from "debug";
+import { debuglog } from "util";
 
-export const createLogger = (topic = 'default') => debug(`@newdash/inject:${topic}`);
+export const createLogger = (topic = 'default') => debuglog(`@newdash/inject:${topic}`);

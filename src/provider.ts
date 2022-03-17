@@ -40,11 +40,9 @@ export class DefaultClassProvider implements InstanceProvider {
 
   static [I_INJECT_CTX_SKIP] = true;
 
-  @noWrap
-    type: any;
+  @noWrap type: any;
   transient?: boolean;
-  @noWrap
-    container: InjectContainer;
+  @noWrap container: InjectContainer;
 
   /**
    * 
@@ -128,8 +126,7 @@ export class DefaultClassProvider implements InstanceProvider {
 
     // force store current container provided type
     if (!isTransient(this.type) && !isProviderType(type)) {
-      // @ts-ignore
-      this.container.setStore(this.type, inst);
+      this.container['setStore'](this.type, inst);
     }
 
     if (info.size > 0) {

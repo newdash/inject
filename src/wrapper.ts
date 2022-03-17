@@ -6,7 +6,6 @@ import { createLogger } from "./logger";
 import { DefaultClassProvider } from "./provider";
 import { getClassName } from "./utils";
 
-const logger = createLogger("proxy");
 const executionLogger = createLogger("proxy:execution");
 
 /**
@@ -64,8 +63,7 @@ export function createWrapper(instance: any, ic: InjectContainer) {
             // do NOT proxy if the injected has been indicated DO NOT WRAP
             const injectType = getPropertyInjectedType(target, propertyName);
 
-            // @ts-ignore
-            if (injectType != undefined && !ic.canWrap(injectType)) {
+            if (injectType != undefined && !ic['canWrap'](injectType)) {
               return target[propertyName];
             }
 
@@ -150,8 +148,7 @@ export function createWrapper(instance: any, ic: InjectContainer) {
         // the proxies constructor will FORCE overwrite storage
         // with `new wrappedClass()`
         if (!isTransient(target)) {
-          // @ts-ignore
-          ic.setStore(target, inst);
+          ic['setStore'](target, inst);
         }
         return inst;
       };

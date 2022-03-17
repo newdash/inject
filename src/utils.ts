@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import { isClass } from "@newdash/newdash/isClass";
 import { isPlainObject } from "@newdash/newdash/isPlainObject";
 import { UnwrapPromise } from "@newdash/newdash/types";

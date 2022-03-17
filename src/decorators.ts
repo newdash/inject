@@ -48,7 +48,7 @@ export interface InjectParameter {
  * 
  * @param func 
  */
-const getParamNames = (func: Function) => {
+const getParamNames = (func: (...args: any[]) => any) => {
   if (typeof func === 'function') {
     const fnStr = func.toString().replace(STRIP_COMMENTS, '');
     let result = fnStr.slice(fnStr.indexOf('(') + 1, fnStr.indexOf(')')).match(ARGUMENT_NAMES);
@@ -388,7 +388,7 @@ export function withNoWrapType(type: any): MethodDecorator {
     provider(type)(target, targetKey, desc);
     noWrap(target, targetKey);
   };
-};
+}
 
 /**
  * get transient information

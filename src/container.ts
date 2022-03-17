@@ -42,10 +42,8 @@ export interface InjectContext {
 function overwriteProvider(type: any, provider: InstanceProvider, ctx: InjectContainer) {
   let ic: InjectContainer = ctx;
   for (; ;) {
-    // @ts-ignore
-    if (ic._providers.has(type)) {
-      // @ts-ignore
-      ic._providers.set(type, provider);
+    if (ic['_providers'].has(type)) {
+      ic['_providers'].set(type, provider);
       containerLogger(
         'overwrite provider: %o, %o into container(%o)',
         typeToString(type),
@@ -137,6 +135,7 @@ export class InjectContainer {
    */
   public getFormattedId(): string {
     if (this._formattedId == undefined) {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
       let c: InjectContainer = this;
       const ids = [];
       for (; ;) {
@@ -448,7 +447,7 @@ export class InjectContainer {
    */
   async injectExecute<F extends (...args: any[]) => any>(instance: any, method: F, ctx?: InjectContext, ...args: OptionalParameters<F>): Promise<ReturnType<F>>;
   async injectExecute<F extends (...args: any[]) => any>(instance: any, method: F, ctx?: InjectContext, ...args: any[]): Promise<ReturnType<F>>;
-  async injectExecute(instance: any, method: Function, ctx: InjectContext = {}, ...args: any[]) {
+  async injectExecute(instance: any, method: any, ctx: InjectContext = {}, ...args: any[]) {
 
     const methodName = method.name;
     let type;
@@ -616,8 +615,7 @@ export class ChildInjectContainer extends InjectContainer {
   }
 
   hasInStore(type) {
-    // @ts-ignore
-    return super.hasInStore(type) || this._parent.hasInStore(type);
+    return super.hasInStore(type) || this._parent['hasInStore'](type);
   }
 
   getStore(type) {
@@ -625,15 +623,13 @@ export class ChildInjectContainer extends InjectContainer {
       if (super.hasInStore(type)) {
         return super.getStore(type);
       }
-      // @ts-ignore
-      return this._parent.getStore(type);
+      return this._parent['getStore'](type);
     }
     return undefined;
   }
 
   hasInProviders(type) {
-    // @ts-ignore
-    return super.hasInProviders(type) || this._parent.hasInProviders(type);
+    return super.hasInProviders(type) || this._parent['hasInProviders'](type);
   }
 
   getProvider(type) {
@@ -641,8 +637,7 @@ export class ChildInjectContainer extends InjectContainer {
       if (super.hasInProviders(type)) {
         return super.getProvider(type);
       }
-      // @ts-ignore
-      return this._parent.getProvider(type);
+      return this._parent['getProvider'](type);
     }
     return undefined;
   }
@@ -652,15 +647,13 @@ export class ChildInjectContainer extends InjectContainer {
     if (super.hasSubClassInstanceInStore(type)) {
       return true;
     }
-    // @ts-ignore
-    return this._parent.hasSubClassInstanceInStore(type);
+    return this._parent['hasSubClassInstanceInStore'](type);
   }
 
   protected getSubClassInstance(type: any): boolean {
     let rt = super.getSubClassInstance(type);
     if (rt == undefined) {
-      // @ts-ignore
-      rt = this._parent.getSubClassInstance(type);
+      rt = this._parent['getSubClassInstance'](type);
     }
     return rt;
   }
@@ -670,22 +663,19 @@ export class ChildInjectContainer extends InjectContainer {
     if (super.hasSubClassProvider(type)) {
       return true;
     }
-    // @ts-ignore
-    return this._parent.hasSubClassProvider(type);
+    return this._parent['hasSubClassProvider'](type);
   }
 
   protected getSubClassProvider(type) {
     let rt = super.getSubClassProvider(type);
     if (rt == undefined) {
-      // @ts-ignore
-      rt = this._parent.getSubClassProvider(type);
+      rt = this._parent['getSubClassProvider'](type);
     }
     return rt;
   }
 
   protected canWrap(type: any) {
-    // @ts-ignore
-    return super.canWrap(type) && this._parent.canWrap(type);
+    return super.canWrap(type) && this._parent['canWrap'](type);
   }
 
 }

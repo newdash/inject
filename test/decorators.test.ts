@@ -247,8 +247,8 @@ describe('Decorators Test Suite', () => {
       a: string;
     }
     class V12 {
-      public m1(@inject() v11: V11): V11 { return v11; };
-      public m2(@inject() v11) { return v11; };
+      public m1(@inject() v11: V11): V11 { return v11; }
+      public m2(@inject() v11) { return v11; }
     }
     const v12 = new V12();
 

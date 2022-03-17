@@ -9,7 +9,11 @@
     "es6": true
   },
   "parserOptions": {
-    "ecmaVersion": 2016,
+    "project": [
+      "./tsconfig.json",
+      "./test/tsconfig.json"
+    ],
+    "ecmaVersion": "latest",
     "sourceType": "module",
     "ecmaFeatures": {
       "impliedStrict": true,
@@ -17,7 +21,7 @@
     }
   },
   "extends": [
-    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended"
   ],
   "rules": {
     "semi": [
@@ -29,7 +33,7 @@
     "@typescript-eslint/no-explicit-any": [
       0
     ],
-    "indent": [
+    "@typescript-eslint/indent": [
       "error",
       2,
       {
