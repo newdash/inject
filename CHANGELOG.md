@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.2.31](https://github.com/newdash/inject/compare/v0.2.30...v0.2.31) (2022-04-04)
+
 ### [0.2.30](https://github.com/newdash/inject/compare/v0.2.29...v0.2.30) (2021-12-17)
 
 ### [0.2.29](https://github.com/newdash/inject/compare/v0.2.28...v0.2.29) (2021-06-18)
