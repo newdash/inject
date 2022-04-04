@@ -20,26 +20,26 @@
     "node": ">=10"
   },
   "dependencies": {
-    "@newdash/graphlib": "^3.1.1",
-    "@newdash/newdash": "^5.21.1",
+    "@newdash/graphlib": "^3.1.2",
+    "@newdash/newdash": "^5.21.2",
     "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
-    "@commitlint/config-conventional": "^15.0.0",
+    "@commitlint/config-conventional": "^16",
     "@types/debug": "^4.1.7",
     "@types/jest": "^27.4.1",
     "@types/node": "^16.11.26",
     "@types/uuid": "^8.3.4",
-    "@typescript-eslint/eslint-plugin": "^5.15.0",
-    "@typescript-eslint/parser": "^5.15.0",
-    "commitlint": "^15.0.0",
-    "eslint": "^8.11.0",
+    "@typescript-eslint/eslint-plugin": "^5.17.0",
+    "@typescript-eslint/parser": "^5.17.0",
+    "commitlint": "^16",
+    "eslint": "^8.12.0",
     "husky": "^4.3.8",
     "jest": "^27.5.1",
     "rimraf": "^3.0.2",
-    "ts-jest": "^27.1.3",
+    "ts-jest": "^27.1.4",
     "ts-node": "^10.7.0",
-    "typescript": "^4.6.2",
+    "typescript": "^4.6.3",
     "uuid": "^8.3.2"
   },
   "husky": {
