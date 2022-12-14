@@ -1,7 +1,21 @@
 import { Server } from 'http';
-import { createInjectDecorator, DefaultClassProvider, getClassConstructorParams, getClassInjectionInformation, getClassMethodParams, getNamespace, getPropertyInjectedType, getProvideInfo, getTransientInfo, inject, InjectContainer, isNoWrap, isNoWrapProvider, isRequired, isTransient, lazyRef, namespace, noWrap, provider, required, transient, withType } from '../src/index';
+import { createInjectDecorator, DefaultClassProvider, getClassConstructorParams, getClassInjectionInformation, getClassMethodParams, getNamespace, getParamNames, getPropertyInjectedType, getProvideInfo, getTransientInfo, inject, InjectContainer, isNoWrap, isNoWrapProvider, isRequired, isTransient, lazyRef, namespace, noWrap, provider, required, transient, withType } from '../src/index';
 
 describe('Decorators Test Suite', () => {
+
+  it('should support get param name of function', () => {
+    function f(a1, a2, a3) { }
+    async function f2(a2, a3, a1) { }
+    const i = new class C {
+      m(a1, a2) { }
+      async m2(a11, a222, a33) { }
+    }
+    expect(getParamNames(f)).toEqual(['a1', 'a2', 'a3'])
+    expect(getParamNames(f2)).toEqual(['a2', 'a3', 'a1'])
+    expect(getParamNames((a1, a2, a3) => { })).toEqual(['a1', 'a2', 'a3'])
+    expect(getParamNames(i.m)).toEqual(['a1', 'a2'])
+    expect(getParamNames(i.m2)).toEqual(['a11', 'a222', 'a33'])
+  });
 
   it('should support use @inject() with parameters', () => {
 
@@ -194,7 +208,7 @@ describe('Decorators Test Suite', () => {
 
     class C {
       @injectV
-        v: number;
+      v: number;
     }
 
     ic.registerInstance("v", 123);
@@ -266,7 +280,7 @@ describe('Decorators Test Suite', () => {
 
     class A {
       @required
-        a: any;
+      a: any;
       f(@required v: any) { }
 
       constructor(@required v?) { }

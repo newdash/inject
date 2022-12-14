@@ -46,18 +46,20 @@ export interface InjectParameter {
 /**
  * get parameter array of function
  * 
+ * @internal
  * @param func 
  */
-const getParamNames = (func: (...args: any[]) => any) => {
+export function getParamNames(func: (...args: any[]) => any): Array<string> {
   if (typeof func === 'function') {
     const fnStr = func.toString().replace(STRIP_COMMENTS, '');
-    let result = fnStr.slice(fnStr.indexOf('(') + 1, fnStr.indexOf(')')).match(ARGUMENT_NAMES);
-    if (result === null)
-      result = [];
+    const result = fnStr.slice(fnStr.indexOf('(') + 1, fnStr.indexOf(')')).match(ARGUMENT_NAMES);
+    if (result === null) {
+      return [];
+    }
     return result;
   }
   return [];
-};
+}
 
 
 /**
