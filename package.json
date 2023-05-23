@@ -27,7 +27,7 @@
     "fsevents": "^2.3.2"
   },
   "devDependencies": {
-    "@types/debug": "4.1.7",
+    "@types/debug": "4.1.8",
     "@types/jest": "29.5.1",
     "@types/node": "18.16.14",
     "@types/uuid": "9.0.1",
